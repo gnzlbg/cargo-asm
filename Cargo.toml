@@ -2,5 +2,12 @@
 name = "cargo-asm"
 version = "0.1.0"
 authors = ["gnzlbg <gonzalobg88@gmail.com>"]
+description = "A cargo subcommand to disassembly Rust functions."
+license = "MIT/Apache-2.0"
+repository = "https://github.com/gnzlbg/cargo-asm"
+homepage = "https://github.com/gnzlbg/cargo-asm"
+readme = "readme.md"
 
 [dependencies]
+
+[dev-dependencies]
