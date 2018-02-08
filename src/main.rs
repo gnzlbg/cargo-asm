@@ -1,23 +1,26 @@
 #![allow(non_snake_case)]
 
+extern crate rustc_demangle;
+extern crate structopt;
 #[macro_use]
 extern crate structopt_derive;
-extern crate structopt;
 extern crate walkdir;
-extern crate rustc_demangle;
 
 mod options;
 use options::Options;
-
 
 fn build_project(opt: &Options) -> (Vec<String>, std::time::SystemTime) {
     use std::process::Command;
 
     let rustflags = std::env::var_os("RUSTFLAGS")
-        .unwrap_or_default().into_string()
+        .unwrap_or_default()
+        .into_string()
         .expect("RUSTFLAGS are not valid UTF-8");
 
-    Command::new("cargo").arg("clean").output().expect("failed to run cargo clean");
+    Command::new("cargo")
+        .arg("clean")
+        .output()
+        .expect("failed to run cargo clean");
 
     let build_start = std::time::SystemTime::now();
 
@@ -57,15 +60,20 @@ fn build_project(opt: &Options) -> (Vec<String>, std::time::SystemTime) {
     let mut outdirs = Vec::<String>::new();
 
     for l in stderr.lines() {
-        l.trim().split_whitespace().skip_while(|s| s != &"--out-dir").skip(1).take(1)
-         .for_each(|v| outdirs.push(v.to_string()));
+        l.trim()
+            .split_whitespace()
+            .skip_while(|s| s != &"--out-dir")
+            .skip(1)
+            .take(1)
+            .for_each(|v| outdirs.push(v.to_string()));
     }
 
     (outdirs, build_start)
 }
 
-fn find_files(dirs: Vec<String>, build_time: std::time::SystemTime)
-  -> Vec<std::path::PathBuf> {
+fn find_files(
+    dirs: Vec<String>, build_time: std::time::SystemTime
+) -> Vec<std::path::PathBuf> {
     let mut files = Vec::new();
     for dir in dirs {
         for entry in walkdir::WalkDir::new(dir) {
@@ -73,8 +81,11 @@ fn find_files(dirs: Vec<String>, build_time: std::time::SystemTime)
             let p = e.path();
             let m = std::fs::metadata(p).unwrap();
             let tm = m.modified().unwrap();
-            if tm >= build_time &&
-                p.extension().map(|v| v.to_str().unwrap_or("")).unwrap_or("") == "s" {
+            if tm >= build_time
+                && p.extension()
+                    .map(|v| v.to_str().unwrap_or(""))
+                    .unwrap_or("") == "s"
+            {
                 files.push(p.to_path_buf());
             }
         }
@@ -97,8 +108,7 @@ fn has_hash(name: &str) -> bool {
             return false;
         }
     }
-    bytes.next() == Some(b'h')
-        && bytes.next() == Some(b':')
+    bytes.next() == Some(b'h') && bytes.next() == Some(b':')
         && bytes.next() == Some(b':')
 }
 
@@ -142,14 +152,19 @@ fn parse_file(file: &std::path::Path, path: &String) {
             }
             if l.starts_with(".file") {
                 println!("HERE");
-                let fname = l.split(|c: char| c.is_whitespace()).skip(2).next().unwrap();
+                let fname = l.split(|c: char| c.is_whitespace())
+                    .skip(2)
+                    .next()
+                    .unwrap();
                 println!("fname: {}", fname);
             }
             if l.starts_with(".") && !l.starts_with(".loc") {
                 continue;
             }
             if l.ends_with(":") {
-                if l.starts_with("Ltmp") | l.starts_with("Lcf") | l.starts_with("Lfunc") {
+                if l.starts_with("Ltmp") | l.starts_with("Lcf")
+                    | l.starts_with("Lfunc")
+                {
                     continue;
                 }
                 println!("  {}", l);
@@ -157,7 +172,6 @@ fn parse_file(file: &std::path::Path, path: &String) {
                 if l.starts_with("call") {
                     let r = l.split_whitespace().skip(1).next().unwrap();
                     println!("    call {}", demangle(r));
-
                 } else {
                     println!("    {}", l.replace("\t", " "));
                 }
