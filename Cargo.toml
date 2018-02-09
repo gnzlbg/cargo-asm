@@ -13,5 +13,3 @@ structopt = "0.1.*"
 structopt-derive = "0.1.*"
 walkdir = "2.*"
 rustc-demangle = "0.1.*"
-
-[dev-dependencies]

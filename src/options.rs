@@ -14,19 +14,26 @@ enum Options_ {
           path: String,
           #[structopt(long = "target", help = "Build for the target triple.")]
           TRIPLE: Option<String>,
-          #[structopt(long = "clean", help = "Runs cargo clean before emitting assembly.", default_value = "true")]
+          #[structopt(long = "clean", help = "Runs cargo clean before emitting assembly.")]
           clean: bool,
-          #[structopt(long = "verbose", help = "Verbose mode.", default_value = "true")]
+          #[structopt(long = "verbose", help = "Verbose mode.")]
           verbose: bool,
-          #[structopt(long = "color", help = "Color output.", default_value = "true")]
+          #[structopt(long = "color", help = "Color output.")]
           color: bool,
           #[structopt(long = "asm-style", help = "Assembly style: intel, at&t.", default_value = "intel")]
           asm_style: Style,
           #[structopt(long = "build-type", help = "Build type: debug, release.", default_value = "release")]
           build_type: Type,
+          #[structopt(long = "rust", help = "Print interleaved Rust code.")]
+          rust: bool,
+          #[structopt(long = "comments", help = "Print assembly comments.")]
+          comments: bool,
+          #[structopt(long = "directives", help = "Print assembly directives.")]
+          directives: bool,
       }
 }
 
+#[derive(Debug)]
 pub struct Options {
     pub path: String,
     pub TRIPLE: Option<String>,
@@ -35,6 +42,9 @@ pub struct Options {
     pub color: bool,
     pub asm_style: Style,
     pub build_type: Type,
+    pub rust: bool,
+    pub comments: bool,
+    pub directives: bool,
 }
 
 pub fn get() -> Options {
@@ -48,6 +58,9 @@ pub fn get() -> Options {
             color,
             asm_style,
             build_type,
+            rust,
+            comments,
+            directives,
         } => Options {
             path,
             TRIPLE,
@@ -56,6 +69,9 @@ pub fn get() -> Options {
             color,
             asm_style,
             build_type,
+            rust,
+            comments,
+            directives,
         },
     }
 }

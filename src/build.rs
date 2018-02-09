@@ -65,7 +65,7 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
         format!("{} --emit asm -g {}", rustflags, asm_syntax),
     );
 
-    let build_start = ::std::time::SystemTime::now();
+    // let build_start = ::std::time::SystemTime::now();
     let error_msg = "cargo build failed";
     let (_stdout, stderr) =
         process::exec(&mut cargo_build, error_msg, opt.verbose)
@@ -87,6 +87,13 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
             .for_each(|v| output_directories.push(v.to_string()));
     }
 
+    // Append the typical output directory:
+    let build_dir = match opt.build_type {
+        Type::Release => "release",
+        Type::Debug => "debug",
+    };
+    output_directories.push(format!("target/{}/deps", build_dir));
+
     // Scan the output directories for assembly files ".s" that have been
     // generated after the build start.
     let mut output_files = Vec::new();
@@ -94,12 +101,14 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
         for entry in ::walkdir::WalkDir::new(dir) {
             let e = entry.unwrap();
             let p = e.path();
-            let modified_after_build_start =
-                ::std::fs::metadata(p).unwrap().modified().unwrap()
-                    >= build_start;
+            //let modified_after_build_start =
+            //    ::std::fs::metadata(p).unwrap().modified().unwrap()
+            //        >= build_start;
             let is_assembly_file =
                 p.extension().map_or("", |v| v.to_str().unwrap_or("")) == "s";
-            if modified_after_build_start && is_assembly_file {
+            if
+            //modified_after_build_start &&
+            is_assembly_file {
                 output_files.push(p.to_path_buf());
             }
         }
