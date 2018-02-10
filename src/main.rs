@@ -44,5 +44,52 @@ fn main() {
             &format!("[ERROR]: could not find function at path \"{}\" in the generated assembly",
                      &opts.path));
 
-    display::print(function, &opts);
+    let rust = if opts.rust {
+        parse_rust_code(&function)
+    } else {
+        Vec::new()
+    };
+
+    display::print(function, rust, &opts);
+}
+
+fn parse_rust_code(function: &asm::ast::Function) -> Vec<(usize, String)> {
+    use std::io::BufRead;
+    use asm::ast::{Statement, Directive};
+
+    if function.file.is_none() {
+        panic!("Could not find Rust code for {}!",
+               function.id
+        );
+    }
+
+    if function.loc.is_none() {
+        panic!("TODO {}!",
+               function.id
+        );
+    }
+
+    let fh = ::std::fs::File::open(function.file.as_ref().map(|v| v.path.clone()).unwrap()).unwrap();
+    let file_buf = ::std::io::BufReader::new(&fh);
+
+    let first_loc = function.loc.as_ref().map(|v| v.offset).unwrap();
+    let last_loc = function.statements.iter().filter(|v| {
+        match v {
+            &&Statement::Directive(Directive::Loc(ref l)) => l.file_idx == function.file.as_ref().map(|f| f.index).unwrap(),
+            _ => false,
+        }
+    }).map(|v| {
+        match v {
+            &Statement::Directive(Directive::Loc(ref l)) => l.offset,
+            _ => 0,
+        }
+    }).max().unwrap();
+
+    let mut r = Vec::new();
+    for (line_idx, line) in file_buf.lines().enumerate() {
+        if line_idx >= first_loc - 1 && line_idx < last_loc {
+            r.push((line_idx + 1, line.unwrap()));
+        }
+    }
+    r
 }

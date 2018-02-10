@@ -40,13 +40,14 @@ impl Label {
         }
         None
     }
-    pub fn line_offset(&self) -> usize {
-        self.line_off
+    pub fn rust_loc(&self) -> Option<Loc> {
+        self.rust_loc_off
     }
-    pub fn should_print(&self, opts: &options::Options) -> bool {
-        true
+    pub fn should_print(&self, _opts: &options::Options) -> bool {
+        !self.id.starts_with("Lcfi") && !self.id.starts_with("Ltmp")
+            && !self.id.starts_with("Lfunc_end")
     }
-    pub fn format(&self, opts: &options::Options) -> String {
+    pub fn format(&self, _opts: &options::Options) -> String {
         format!("  {}:", self.id)
     }
 }
@@ -79,8 +80,8 @@ impl File {
             line_off,
         })
     }
-    pub fn line_offset(&self) -> usize {
-        self.line_off
+    pub fn rust_loc(&self) -> Option<Loc> {
+        None
     }
 }
 
@@ -105,8 +106,8 @@ impl Loc {
             line_off,
         })
     }
-    pub fn line_offset(&self) -> usize {
-        self.line_off
+    pub fn rust_loc(&self) -> Option<Loc> {
+        None
     }
 }
 
@@ -126,8 +127,8 @@ impl GenericDirective {
         }
         None
     }
-    pub fn line_offset(&self) -> usize {
-        self.line_off
+    pub fn rust_loc(&self) -> Option<Loc> {
+        None
     }
 }
 
@@ -147,11 +148,11 @@ impl Directive {
         }
         None
     }
-    pub fn line_offset(&self) -> usize {
+    pub fn rust_loc(&self) -> Option<Loc> {
         match *self {
-            Directive::File(ref f) => f.line_offset(),
-            Directive::Loc(ref f) => f.line_offset(),
-            Directive::Generic(ref f) => f.line_offset(),
+            Directive::File(ref f) => f.rust_loc(),
+            Directive::Loc(ref f) => f.rust_loc(),
+            Directive::Generic(ref f) => f.rust_loc(),
         }
     }
     pub fn file(&self) -> Option<File> {
@@ -169,7 +170,7 @@ impl Directive {
     pub fn should_print(&self, opts: &options::Options) -> bool {
         opts.directives
     }
-    pub fn format(&self, opts: &options::Options) -> String {
+    pub fn format(&self, _opts: &options::Options) -> String {
         format!("{:?}", self)
     }
 }
@@ -191,13 +192,13 @@ impl Comment {
         }
         None
     }
-    pub fn line_offset(&self) -> usize {
-        self.line_off
+    pub fn rust_loc(&self) -> Option<Loc> {
+        None
     }
     pub fn should_print(&self, opts: &options::Options) -> bool {
         opts.comments
     }
-    pub fn format(&self, opts: &options::Options) -> String {
+    pub fn format(&self, _opts: &options::Options) -> String {
         format!("  {}", self.string)
     }
 }
@@ -232,14 +233,18 @@ impl Instruction {
             rust_loc_off,
         });
     }
-    pub fn line_offset(&self) -> usize {
-        self.line_off
+    pub fn rust_loc(&self) -> Option<Loc> {
+        self.rust_loc_off
     }
-    pub fn should_print(&self, opts: &options::Options) -> bool {
+    pub fn should_print(&self, _opts: &options::Options) -> bool {
         true
     }
     pub fn format(&self, opts: &options::Options) -> String {
-        format!("    {} {}", self.instr, self.args.join(" "))
+        if opts.verbose {
+            format!("    {} {} | rloc: {:?}", self.instr, self.args.join(" "), self.rust_loc().as_ref().map(|v| (v.file_idx, v.offset)))
+        } else {
+            format!("    {} {}", self.instr, self.args.join(" "))
+        }
     }
 }
 
@@ -260,4 +265,17 @@ impl Statement {
             &Statement::Comment(ref l) => l.format(opts),
         }
     }
+    pub fn rust_loc(&self, file: &File) -> Option<usize> {
+        let loc = match self {
+            &Statement::Label(ref l) => l.rust_loc(),
+            &Statement::Directive(ref l) => l.rust_loc(),
+            &Statement::Instruction(ref l) => l.rust_loc(),
+            &Statement::Comment(ref l) => l.rust_loc(),
+        };
+        if loc.is_none() { return None; }
+        let loc = loc.unwrap();
+        if loc.file_idx != file.index { return None; }
+        Some(loc.offset)
+    }
+
 }
