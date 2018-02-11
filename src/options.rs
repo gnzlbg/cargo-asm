@@ -5,8 +5,6 @@ use asm::Style;
 use build::Type;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "asm",
-            about = "Shows the assembly generated for a Rust function.")]
 pub struct Options {
     /// Name of the symbol to disassembly.
     #[structopt(help = "Path of the function to disassebly, e.g., foo::bar::baz() .")]
@@ -34,6 +32,8 @@ pub struct Options {
 #[derive(StructOpt, Debug)]
 #[structopt(bin_name = "cargo")]
 enum Options_ {
+    #[structopt(name = "asm",
+                about = "Shows the assembly generated for a Rust function.")]
     Asm(Options),
 }
 

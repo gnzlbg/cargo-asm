@@ -23,21 +23,21 @@ pub enum Statement {
 #[derive(Debug, Clone)]
 pub struct Label {
     pub id: String,
-    rust_loc_off: Option<Loc>,
+    rust_loc: Option<Loc>,
 }
 
 impl Label {
-    pub fn new(s: &str, rust_loc_off: Option<Loc>) -> Option<Self> {
+    pub fn new(s: &str, rust_loc: Option<Loc>) -> Option<Self> {
         if s.ends_with(":") {
             return Some(Self {
                 id: s.split_at(s.len() - 1).0.to_string(),
-                rust_loc_off,
+                rust_loc,
             });
         }
         None
     }
     pub fn rust_loc(&self) -> Option<Loc> {
-        self.rust_loc_off
+        self.rust_loc
     }
     pub fn should_print(&self, _opts: &options::Options) -> bool {
         !self.id.starts_with("Lcfi") && !self.id.starts_with("Ltmp")
@@ -213,11 +213,11 @@ impl Comment {
 pub struct Instruction {
     instr: String,
     args: Vec<String>,
-    rust_loc_off: Option<Loc>,
+    rust_loc: Option<Loc>,
 }
 
 impl Instruction {
-    pub fn new(s: &str, rust_loc_off: Option<Loc>) -> Option<Self> {
+    pub fn new(s: &str, rust_loc: Option<Loc>) -> Option<Self> {
         let mut iter = s.split_whitespace();
         let instr = iter.next().unwrap().to_string();
         let mut args = Vec::new();
@@ -231,11 +231,11 @@ impl Instruction {
         return Some(Self {
             instr,
             args,
-            rust_loc_off,
+            rust_loc,
         });
     }
     pub fn rust_loc(&self) -> Option<Loc> {
-        self.rust_loc_off
+        self.rust_loc
     }
     pub fn should_print(&self, _opts: &options::Options) -> bool {
         true
@@ -273,20 +273,12 @@ impl Statement {
             &Statement::Comment(ref l) => l.format(opts),
         }
     }
-    pub fn rust_loc(&self, file: &File) -> Option<usize> {
-        let loc = match self {
+    pub fn rust_loc(&self) -> Option<Loc> {
+        match self {
             &Statement::Label(ref l) => l.rust_loc(),
             &Statement::Directive(ref l) => l.rust_loc(),
             &Statement::Instruction(ref l) => l.rust_loc(),
             &Statement::Comment(ref l) => l.rust_loc(),
-        };
-        if loc.is_none() {
-            return None;
         }
-        let loc = loc.unwrap();
-        if loc.file_index != file.index {
-            return None;
-        }
-        Some(loc.file_line)
     }
 }

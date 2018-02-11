@@ -107,7 +107,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
 /// Parses the assembly function at `path` from the file `file`.
 pub fn function(
     file: &::std::path::Path, path: &str
-) -> Option<ast::Function> {
+) -> Option<(ast::Function, ::std::collections::HashMap<usize, ast::File>)> {
     use std::io::BufRead;
 
     let fh = ::std::fs::File::open(file).unwrap();
@@ -208,7 +208,51 @@ pub fn function(
         }
     }
 
-    function
+    if let None = function {
+        return None;
+    }
+
+    let function = function.unwrap();
+
+    // Add all local .file directives in the body of the function to the table:
+    if let &Some(ref f) = &function.file {
+        if !file_directive_table.contains_key(&f.index) {
+            file_directive_table.insert(f.index, f.clone());
+        }
+    }
+    for s in function.statements.iter() {
+        match s {
+            &Statement::Directive(Directive::File(ref f)) => {
+                if !file_directive_table.contains_key(&f.index) {
+                    file_directive_table.insert(f.index, f.clone());
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // Check that we have found all .file directives for all .loc statements
+    // within the function:
+    let mut done = true;
+    for s in function.statements.iter() {
+        match s {
+            &Statement::Directive(Directive::Loc(ref l)) => {
+                if !file_directive_table.contains_key(&l.file_index) {
+                    done = false;
+                    eprintln!("[ERROR]: File directive for location not found! Location: {:?}", l);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    if done {
+        return Some((function, file_directive_table));
+    }
+
+    unimplemented!(
+        "TODO: need to continue scanning the file for file directives"
+    )
 }
 
 #[cfg(test)]
