@@ -61,7 +61,7 @@ pub fn print(function: asm::ast::Function, mut rust: Vec<(usize, String)>, opts:
                     });
 
                     if let Some(n) = n {
-                        println!("HERE {:?}", n);
+                        //println!("HERE {:?}", n);
                         use asm::ast::{Statement, Directive};
                         match n {
                             &Statement::Directive(Directive::Loc(ref n)) => {

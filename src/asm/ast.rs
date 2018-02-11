@@ -23,18 +23,16 @@ pub enum Statement {
 #[derive(Debug, Clone)]
 pub struct Label {
     pub id: String,
-    line_off: usize,
     rust_loc_off: Option<Loc>,
 }
 
 impl Label {
     pub fn new(
-        s: &str, line_off: usize, rust_loc_off: Option<Loc>
+        s: &str, rust_loc_off: Option<Loc>
     ) -> Option<Self> {
         if s.ends_with(":") {
             return Some(Self {
                 id: s.split_at(s.len() - 1).0.to_string(),
-                line_off,
                 rust_loc_off,
             });
         }
@@ -64,11 +62,10 @@ pub enum Directive {
 pub struct File {
     pub path: String,
     pub index: usize,
-    line_off: usize,
 }
 
 impl File {
-    pub fn new(s: &str, line_off: usize) -> Option<Self> {
+    pub fn new(s: &str) -> Option<Self> {
         if !s.starts_with(".file") {
             return None;
         }
@@ -77,7 +74,6 @@ impl File {
         Some(Self {
             path: path.to_string(),
             index: index.parse().unwrap(),
-            line_off,
         })
     }
     pub fn rust_loc(&self) -> Option<Loc> {
@@ -87,23 +83,21 @@ impl File {
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct Loc {
-    pub file_idx: usize,
+    pub file_index: usize,
     pub offset: usize,
-    line_off: usize,
 }
 
 impl Loc {
-    pub fn new(s: &str, line_off: usize) -> Option<Self> {
+    pub fn new(s: &str) -> Option<Self> {
         if !s.starts_with(".loc") {
             return None;
         }
         let mut it = s.split_whitespace();
-        let file_idx = it.nth(1).unwrap();
+        let file_index = it.nth(1).unwrap();
         let offset = it.next().unwrap();
         Some(Self {
-            file_idx: file_idx.parse().unwrap(),
+            file_index: file_index.parse().unwrap(),
             offset: offset.parse().unwrap(),
-            line_off,
         })
     }
     pub fn rust_loc(&self) -> Option<Loc> {
@@ -114,15 +108,13 @@ impl Loc {
 #[derive(Clone, Debug)]
 pub struct GenericDirective {
     string: String,
-    line_off: usize,
 }
 
 impl GenericDirective {
-    pub fn new(s: &str, line_off: usize) -> Option<Self> {
+    pub fn new(s: &str) -> Option<Self> {
         if s.starts_with(".") {
             return Some(Self {
                 string: s.to_string(),
-                line_off,
             });
         }
         None
@@ -133,17 +125,17 @@ impl GenericDirective {
 }
 
 impl Directive {
-    pub fn new(s: &str, line_off: usize) -> Option<Self> {
+    pub fn new(s: &str) -> Option<Self> {
         if s.starts_with(".") {
-            if let Some(file) = File::new(s, line_off) {
+            if let Some(file) = File::new(s) {
                 return Some(Directive::File(file));
             }
-            if let Some(loc) = Loc::new(s, line_off) {
+            if let Some(loc) = Loc::new(s) {
                 return Some(Directive::Loc(loc));
             }
 
             return Some(Directive::Generic(
-                GenericDirective::new(s, line_off).unwrap(),
+                GenericDirective::new(s).unwrap(),
             ));
         }
         None
@@ -179,15 +171,13 @@ impl Directive {
 #[derive(Debug, Clone)]
 pub struct Comment {
     string: String,
-    line_off: usize,
 }
 
 impl Comment {
-    pub fn new(s: &str, line_off: usize) -> Option<Self> {
+    pub fn new(s: &str) -> Option<Self> {
         if s.starts_with(";") {
             return Some(Self {
                 string: s.to_string(),
-                line_off,
             });
         }
         None
@@ -208,13 +198,12 @@ impl Comment {
 pub struct Instruction {
     instr: String,
     args: Vec<String>,
-    line_off: usize,
     rust_loc_off: Option<Loc>,
 }
 
 impl Instruction {
     pub fn new(
-        s: &str, line_off: usize, rust_loc_off: Option<Loc>
+        s: &str, rust_loc_off: Option<Loc>
     ) -> Option<Self> {
         let mut iter = s.split_whitespace();
         let instr = iter.next().unwrap().to_string();
@@ -229,7 +218,6 @@ impl Instruction {
         return Some(Self {
             instr,
             args,
-            line_off,
             rust_loc_off,
         });
     }
@@ -241,7 +229,7 @@ impl Instruction {
     }
     pub fn format(&self, opts: &options::Options) -> String {
         if opts.verbose {
-            format!("    {} {} | rloc: {:?}", self.instr, self.args.join(" "), self.rust_loc().as_ref().map(|v| (v.file_idx, v.offset)))
+            format!("    {} {} | rloc: {:?}", self.instr, self.args.join(" "), self.rust_loc().as_ref().map(|v| (v.file_index, v.offset)))
         } else {
             format!("    {} {}", self.instr, self.args.join(" "))
         }
@@ -274,7 +262,7 @@ impl Statement {
         };
         if loc.is_none() { return None; }
         let loc = loc.unwrap();
-        if loc.file_idx != file.index { return None; }
+        if loc.file_index != file.index { return None; }
         Some(loc.offset)
     }
 

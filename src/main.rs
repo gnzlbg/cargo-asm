@@ -75,7 +75,7 @@ fn parse_rust_code(function: &asm::ast::Function) -> Vec<(usize, String)> {
     let first_loc = function.loc.as_ref().map(|v| v.offset).unwrap();
     let last_loc = function.statements.iter().filter(|v| {
         match v {
-            &&Statement::Directive(Directive::Loc(ref l)) => l.file_idx == function.file.as_ref().map(|f| f.index).unwrap(),
+            &&Statement::Directive(Directive::Loc(ref l)) => l.file_index == function.file.as_ref().map(|f| f.index).unwrap(),
             _ => false,
         }
     }).map(|v| {

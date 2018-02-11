@@ -16,7 +16,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
     //
     // The first line corresponds to the function path, we skip it since we
     // already know it.
-    for (line_off, line) in function_lines
+    for (_line_off, line) in function_lines
         .into_iter()
         .skip(1)
         .map(|l| l.trim().to_string())
@@ -33,13 +33,13 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
             };
 
         // If the line contains a comment, we parse that first:
-        if let Some(comment) = Comment::new(comment_str, line_off) {
+        if let Some(comment) = Comment::new(comment_str) {
             function.statements.push(Statement::Comment(comment));
         }
 
         // Then we parse the AST statements.
 
-        if let Some(directive) = Directive::new(node_str, line_off) {
+        if let Some(directive) = Directive::new(node_str) {
             // We set the first .file directive we parse as the functions file
             // path:
             if function.file.is_none() {
@@ -51,7 +51,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
                     // directives in the body when code from other files gets
                     // inlined:
                     if let &Some(ref loc) = &function.loc {
-                        if loc.file_idx == file.index {
+                        if loc.file_index == file.index {
                             function.file = Some(file);
                         }
                     } else {
@@ -75,7 +75,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
                     // If there is a function file already set, we check
                     // that the new location matches the file idx.
                     if let &Some(ref file) = &function.file {
-                        assert_eq!(new_loc.file_idx, file.index);
+                        assert_eq!(new_loc.file_index, file.index);
                     }
                     function.loc = Some(new_loc);
                 }
@@ -84,13 +84,13 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
             continue;
         }
 
-        if let Some(label) = Label::new(node_str, line_off, current_loc) {
+        if let Some(label) = Label::new(node_str, current_loc) {
             function.statements.push(Statement::Label(label));
             continue;
         }
 
         if let Some(instruction) =
-            Instruction::new(node_str, line_off, current_loc)
+            Instruction::new(node_str, current_loc)
         {
             function
                 .statements
@@ -100,7 +100,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
 
         panic!(
             "cannot parse function: {}\n  line off: {}\n{}",
-            path, line_off, line
+            path, _line_off, line
         );
     }
     function
@@ -133,7 +133,7 @@ pub fn function(
             // Assembly functions are label that start with `__`
             // and have mangled names:
             if line.starts_with("_") {
-                if let Some(label) = ast::Label::new(&line, 0, None) {
+                if let Some(label) = ast::Label::new(&line, None) {
                     let demangled_function_name =
                         ::demangle::demangle(&label.id);
                     if demangled_function_name != path {
@@ -181,7 +181,7 @@ pub fn function(
 
         // If the line does not begin an assembly function try to parse the
         // line as a .file directive.
-        if let Some(file) = ast::File::new(&line, 0) {
+        if let Some(file) = ast::File::new(&line) {
             let idx = file.index;
 
             // If the file directive is already in the table, check that
@@ -202,8 +202,8 @@ pub fn function(
         if let Some(ref mut function) = function {
             assert!(function.file.is_none());
             assert!(function.loc.is_some());
-            let file_idx = function.loc.unwrap().file_idx;
-            if let Some(file) = file_directive_table.remove(&file_idx) {
+            let file_index = function.loc.unwrap().file_index;
+            if let Some(file) = file_directive_table.remove(&file_index) {
                 function.file = Some(file);
                 break;
             }
