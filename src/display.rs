@@ -7,7 +7,7 @@ fn format_function_name(function: &asm::ast::Function) -> String {
             if let &Some(ref loc) = &function.loc {
                 return format!(
                     "{} ({}:{})",
-                    function.id, file.path, loc.offset
+                    function.id, file.path, loc.file_line
                 );
             }
         }
@@ -19,7 +19,10 @@ fn format_function_name(function: &asm::ast::Function) -> String {
     }
 }
 
-pub fn print(function: asm::ast::Function, mut rust: Vec<(usize, String)>, opts: &options::Options) {
+pub fn print(
+    function: asm::ast::Function, mut rust: Vec<(usize, String)>,
+    opts: &options::Options,
+) {
     println!("{}:", format_function_name(&function));
 
     if !opts.rust {
@@ -34,7 +37,11 @@ pub fn print(function: asm::ast::Function, mut rust: Vec<(usize, String)>, opts:
         let mut rust_line = 1;
         for (stmt_idx, stmt) in function.statements.iter().enumerate() {
             if stmt.should_print(&opts) {
-                let off = stmt.rust_loc(&function.file.as_ref().map(|v| v.clone()).unwrap());
+                let off = stmt.rust_loc(&function
+                    .file
+                    .as_ref()
+                    .map(|v| v.clone())
+                    .unwrap());
                 if let Some(off) = off {
                     while let Some(r) = rust.last().map(|v| v.clone()) {
                         if r.0 <= off {
@@ -55,41 +62,52 @@ pub fn print(function: asm::ast::Function, mut rust: Vec<(usize, String)>, opts:
                     let (_, tail) = function.statements.split_at(stmt_idx);
 
                     let n = tail.iter().find(|v| {
-                        v.rust_loc(
-                            &function.file.as_ref().map(|v| v.clone()).unwrap())
+                        v.rust_loc(&function
+                            .file
+                            .as_ref()
+                            .map(|v| v.clone())
+                            .unwrap())
                             .is_some()
                     });
 
                     if let Some(n) = n {
                         //println!("HERE {:?}", n);
-                        use asm::ast::{Statement, Directive};
+                        use asm::ast::{Directive, Statement};
                         match n {
                             &Statement::Directive(Directive::Loc(ref n)) => {
-                        if n.offset > rust_line {
-                            while rust_line != n.offset && !rust.is_empty() {
-                                while let Some(r) = rust.last().map(|v| v.clone()) {
+                                if n.file_line > rust_line {
+                                    while rust_line != n.file_line
+                                        && !rust.is_empty()
+                                    {
+                                        while let Some(r) =
+                                            rust.last().map(|v| v.clone())
+                                        {
+                                            if opts.verbose {
+                                                println!(
+                                                    "{} | rloc: {}",
+                                                    r.1, r.0
+                                                );
+                                            } else {
+                                                println!("{}", r.1);
+                                            }
+                                            rust.pop();
+                                            rust_line += 1;
+                                        }
+                                    }
+                                }
+                            }
+                            _ => {}
+                        }
+                    } else {
+                        while !rust.is_empty() {
+                            while let Some(r) = rust.last().map(|v| v.clone())
+                            {
                                 if opts.verbose {
                                     println!("{} | rloc: {}", r.1, r.0);
                                 } else {
                                     println!("{}", r.1);
                                 }
                                 rust.pop();
-                                    rust_line += 1;
-                                }
-                            }
-                        }
-                            }
-                            _ => {},
-                        }
-                    } else {
-                        while !rust.is_empty() {
-                            while let Some(r) = rust.last().map(|v| v.clone()) {
-                            if opts.verbose {
-                                println!("{} | rloc: {}", r.1, r.0);
-                            } else {
-                                println!("{}", r.1);
-                            }
-                            rust.pop();
                                 rust_line += 1;
                             }
                         }

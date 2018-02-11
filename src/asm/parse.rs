@@ -89,9 +89,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
             continue;
         }
 
-        if let Some(instruction) =
-            Instruction::new(node_str, current_loc)
-        {
+        if let Some(instruction) = Instruction::new(node_str, current_loc) {
             function
                 .statements
                 .push(Statement::Instruction(instruction));

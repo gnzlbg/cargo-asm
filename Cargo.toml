@@ -9,7 +9,6 @@ homepage = "https://github.com/gnzlbg/cargo-asm"
 readme = "readme.md"
 
 [dependencies]
-structopt = "0.1.*"
-structopt-derive = "0.1.*"
+structopt = "0.2.*"
 walkdir = "2.*"
 rustc-demangle = "0.1.*"

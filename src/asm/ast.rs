@@ -27,9 +27,7 @@ pub struct Label {
 }
 
 impl Label {
-    pub fn new(
-        s: &str, rust_loc_off: Option<Loc>
-    ) -> Option<Self> {
+    pub fn new(s: &str, rust_loc_off: Option<Loc>) -> Option<Self> {
         if s.ends_with(":") {
             return Some(Self {
                 id: s.split_at(s.len() - 1).0.to_string(),
@@ -79,12 +77,16 @@ impl File {
     pub fn rust_loc(&self) -> Option<Loc> {
         None
     }
+    pub fn format(&self, _opts: &options::Options) -> String {
+        format!(".file {} \"{}\"", self.index, self.path)
+    }
 }
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct Loc {
     pub file_index: usize,
-    pub offset: usize,
+    pub file_line: usize,
+    pub file_column: usize,
 }
 
 impl Loc {
@@ -94,14 +96,22 @@ impl Loc {
         }
         let mut it = s.split_whitespace();
         let file_index = it.nth(1).unwrap();
-        let offset = it.next().unwrap();
+        let file_line = it.next().unwrap();
+        let file_column = it.next().unwrap_or("0");
         Some(Self {
             file_index: file_index.parse().unwrap(),
-            offset: offset.parse().unwrap(),
+            file_line: file_line.parse().unwrap(),
+            file_column: file_column.parse().unwrap(),
         })
     }
     pub fn rust_loc(&self) -> Option<Loc> {
         None
+    }
+    pub fn format(&self, _opts: &options::Options) -> String {
+        format!(
+            ".loc {} {} {}",
+            self.file_index, self.file_line, self.file_column
+        )
     }
 }
 
@@ -122,6 +132,9 @@ impl GenericDirective {
     pub fn rust_loc(&self) -> Option<Loc> {
         None
     }
+    pub fn format(&self, _opts: &options::Options) -> String {
+        format!("{}", self.string)
+    }
 }
 
 impl Directive {
@@ -134,9 +147,7 @@ impl Directive {
                 return Some(Directive::Loc(loc));
             }
 
-            return Some(Directive::Generic(
-                GenericDirective::new(s).unwrap(),
-            ));
+            return Some(Directive::Generic(GenericDirective::new(s).unwrap()));
         }
         None
     }
@@ -162,8 +173,12 @@ impl Directive {
     pub fn should_print(&self, opts: &options::Options) -> bool {
         opts.directives
     }
-    pub fn format(&self, _opts: &options::Options) -> String {
-        format!("{:?}", self)
+    pub fn format(&self, opts: &options::Options) -> String {
+        match *self {
+            Directive::File(ref f) => f.format(opts),
+            Directive::Loc(ref f) => f.format(opts),
+            Directive::Generic(ref f) => f.format(opts),
+        }
     }
 }
 
@@ -202,9 +217,7 @@ pub struct Instruction {
 }
 
 impl Instruction {
-    pub fn new(
-        s: &str, rust_loc_off: Option<Loc>
-    ) -> Option<Self> {
+    pub fn new(s: &str, rust_loc_off: Option<Loc>) -> Option<Self> {
         let mut iter = s.split_whitespace();
         let instr = iter.next().unwrap().to_string();
         let mut args = Vec::new();
@@ -229,7 +242,14 @@ impl Instruction {
     }
     pub fn format(&self, opts: &options::Options) -> String {
         if opts.verbose {
-            format!("    {} {} | rloc: {:?}", self.instr, self.args.join(" "), self.rust_loc().as_ref().map(|v| (v.file_index, v.offset)))
+            format!(
+                "    {} {} | rloc: {:?}",
+                self.instr,
+                self.args.join(" "),
+                self.rust_loc()
+                    .as_ref()
+                    .map(|v| (v.file_index, v.file_line))
+            )
         } else {
             format!("    {} {}", self.instr, self.args.join(" "))
         }
@@ -260,10 +280,13 @@ impl Statement {
             &Statement::Instruction(ref l) => l.rust_loc(),
             &Statement::Comment(ref l) => l.rust_loc(),
         };
-        if loc.is_none() { return None; }
+        if loc.is_none() {
+            return None;
+        }
         let loc = loc.unwrap();
-        if loc.file_index != file.index { return None; }
-        Some(loc.offset)
+        if loc.file_index != file.index {
+            return None;
+        }
+        Some(loc.file_line)
     }
-
 }

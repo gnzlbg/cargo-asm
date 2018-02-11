@@ -1,9 +1,8 @@
 #![allow(non_snake_case)]
 
 extern crate rustc_demangle;
-extern crate structopt;
 #[macro_use]
-extern crate structopt_derive;
+extern crate structopt;
 extern crate walkdir;
 
 mod options;
@@ -55,35 +54,38 @@ fn main() {
 
 fn parse_rust_code(function: &asm::ast::Function) -> Vec<(usize, String)> {
     use std::io::BufRead;
-    use asm::ast::{Statement, Directive};
+    use asm::ast::{Directive, Statement};
 
     if function.file.is_none() {
-        panic!("Could not find Rust code for {}!",
-               function.id
-        );
+        panic!("Could not find Rust code for {}!", function.id);
     }
 
     if function.loc.is_none() {
-        panic!("TODO {}!",
-               function.id
-        );
+        panic!("TODO {}!", function.id);
     }
 
-    let fh = ::std::fs::File::open(function.file.as_ref().map(|v| v.path.clone()).unwrap()).unwrap();
+    let fh = ::std::fs::File::open(
+        function.file.as_ref().map(|v| v.path.clone()).unwrap(),
+    ).unwrap();
     let file_buf = ::std::io::BufReader::new(&fh);
 
-    let first_loc = function.loc.as_ref().map(|v| v.offset).unwrap();
-    let last_loc = function.statements.iter().filter(|v| {
-        match v {
-            &&Statement::Directive(Directive::Loc(ref l)) => l.file_index == function.file.as_ref().map(|f| f.index).unwrap(),
+    let first_loc = function.loc.as_ref().map(|v| v.file_line).unwrap();
+    let last_loc = function
+        .statements
+        .iter()
+        .filter(|v| match v {
+            &&Statement::Directive(Directive::Loc(ref l)) => {
+                l.file_index
+                    == function.file.as_ref().map(|f| f.index).unwrap()
+            }
             _ => false,
-        }
-    }).map(|v| {
-        match v {
-            &Statement::Directive(Directive::Loc(ref l)) => l.offset,
+        })
+        .map(|v| match v {
+            &Statement::Directive(Directive::Loc(ref l)) => l.file_line,
             _ => 0,
-        }
-    }).max().unwrap();
+        })
+        .max()
+        .unwrap();
 
     let mut r = Vec::new();
     for (line_idx, line) in file_buf.lines().enumerate() {
