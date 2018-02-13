@@ -1,6 +1,7 @@
 # cargo-asm
 
-> **Work in Progress**: this works, sometimes.
+> **Work in Progress**: you can try this, you can fill issues,
+> but otherwise, this does not exist **yet**.
 
 `cargo-asm` is a [`cargo`] sub-command that shows you the generated assembly of
 a Rust function. For example, if you have a crate called `lib_crate`, you can
