@@ -34,3 +34,12 @@ pub fn add_and_mul(x: usize, y: usize) -> usize {
     let z = generic_mul2(x, y);
     w + z
 }
+
+pub fn double_n(mut x: usize, mut n: usize) -> usize {
+    while n > 0 {
+        x *= 2;
+        n -= 1;
+    }
+    x
+}
+

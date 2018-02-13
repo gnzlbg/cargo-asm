@@ -17,6 +17,10 @@ which outputs:
 
 # Quick start
 
+To install it:
+
+>$ cargo install cargo-asm
+
 Quick start: given a crate named `crate`, to search:
 
   * a function `foo`:

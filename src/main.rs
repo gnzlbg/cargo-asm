@@ -76,7 +76,7 @@ fn main() {
             });
 
             for f in table.iter().take(5) {
-                msg.push_str(&format!("  {}", f));
+                msg.push_str(&format!("  {}\n", f));
             }
 
             msg.push_str("If not maybe the assembly output was not properly built and you might need to do a `--clean` build.\n"
