@@ -23,7 +23,7 @@ mod rust;
 mod path;
 
 fn parse_files(
-    files: &[std::path::PathBuf], mut opts: &mut options::Options,
+    files: &[std::path::PathBuf], mut opts: &mut options::Options
 ) -> asm::parse::Result {
     use asm::parse::Result;
     let mut function_table = Vec::<String>::new();

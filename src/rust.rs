@@ -36,7 +36,9 @@ impl Files {
     pub fn line(&self, loc: asm::ast::Loc) -> Option<String> {
         self.line_at(loc.file_index, loc.file_line)
     }
-    pub fn file_path(&self, loc: asm::ast::Loc) -> Option<::std::path::PathBuf> {
+    pub fn file_path(
+        &self, loc: asm::ast::Loc
+    ) -> Option<::std::path::PathBuf> {
         if let Some(file) = self.files.get(&loc.file_index) {
             return Some(file.ast.path.clone());
         }
@@ -101,8 +103,10 @@ pub fn parse(
     // Read the required lines from each Rust file:
     for f in files.values_mut() {
         use std::io::BufRead;
-        let fh = ::std::fs::File::open(&f.ast.path)
-            .expect(&format!("[ERROR]: failed to open file: {}", f.ast.path.display()));
+        let fh = ::std::fs::File::open(&f.ast.path).expect(&format!(
+            "[ERROR]: failed to open file: {}",
+            f.ast.path.display()
+        ));
         let file_buf = ::std::io::BufReader::new(&fh);
 
         for (line_idx, line) in file_buf.lines().enumerate() {
@@ -119,7 +123,8 @@ pub fn parse(
             if line.is_none() && *l_idx != 0 {
                 panic!(
                     "[ERROR]: could not read line {} of file {} ",
-                    l_idx, f.ast.path.display()
+                    l_idx,
+                    f.ast.path.display()
                 );
             }
         }
@@ -128,7 +133,10 @@ pub fn parse(
     Files { files }
 }
 
-fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>, opts: &mut ::options::Options) {
+fn correct_rust_paths(
+    files: &mut ::std::collections::HashMap<usize, File>,
+    opts: &mut ::options::Options,
+) {
     let rust =
         ::std::env::var("RUSTC").unwrap_or_else(|_| "rustc".to_string());
 
@@ -150,14 +158,18 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>, opts
     }
     sysroot.parent();
     let rust_src_path = ::std::path::PathBuf::from("lib/rustlib/src/rust/src");
-   
+
     ::path::push(&mut sysroot, &rust_src_path);
     if opts.verbose {
-        eprintln!("merging {} with sysroot results in {}", rust_src_path.display(), sysroot.display());
+        eprintln!(
+            "merging {} with sysroot results in {}",
+            rust_src_path.display(),
+            sysroot.display()
+        );
     }
 
     let travis_rust_src_path = if cfg!(target_os = "macosx") {
-     ::std::path::PathBuf::from("travis/build/rust-lang/rust/")
+        ::std::path::PathBuf::from("travis/build/rust-lang/rust/")
     } else {
         ::std::path::PathBuf::from("checkout/src/")
     };
@@ -168,7 +180,11 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>, opts
                 let tail = ::path::after(&f.ast.path, &travis_rust_src_path);
                 let mut path = sysroot.clone();
                 if opts.verbose {
-                    eprintln!("merging {} with {}", path.display(), tail.display());
+                    eprintln!(
+                        "merging {} with {}",
+                        path.display(),
+                        tail.display()
+                    );
                 }
                 path.push(&tail);
                 if opts.verbose {
@@ -182,7 +198,7 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>, opts
                 if !missing_path_warning && !opts.verbose {
                     eprintln!("[WARNING]: path does not exist: {}. Maybe the rust-src component is not installed?", f.ast.path.display());
                     missing_path_warning = true;
-                    }
+                }
                 opts.rust = false;
             }
         }

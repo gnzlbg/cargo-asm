@@ -1,18 +1,22 @@
 //! Path utilities
 
 /// Does the path contain the sub path?
-pub fn contains(path: &::std::path::Path, sub_path: &::std::path::Path) -> bool {
+pub fn contains(
+    path: &::std::path::Path, sub_path: &::std::path::Path
+) -> bool {
     let mut sub_path_iter = sub_path.components();
     let mut next_sub_path = sub_path_iter.next();
 
     // If the sub-path is empty, we are done:
-    if next_sub_path.is_none() { return true; }
+    if next_sub_path.is_none() {
+        return true;
+    }
 
     let mut matching = false;
     for c in path.components() {
         if let Some(next_sp) = next_sub_path {
             if let ::std::path::Component::RootDir = next_sp {
-                    next_sub_path = sub_path_iter.next();
+                next_sub_path = sub_path_iter.next();
             }
         }
         let next_sub_path_val = next_sub_path.unwrap();
@@ -20,7 +24,9 @@ pub fn contains(path: &::std::path::Path, sub_path: &::std::path::Path) -> bool 
             matching = true;
             next_sub_path = sub_path_iter.next();
             // If we exhaust the sub-path, we are done:
-            if next_sub_path.is_none() { return true; }
+            if next_sub_path.is_none() {
+                return true;
+            }
         } else if matching == true {
             // We have found at least one match, but this component does
             // not match, so we restart the search:
@@ -33,7 +39,9 @@ pub fn contains(path: &::std::path::Path, sub_path: &::std::path::Path) -> bool 
 }
 
 /// Path after sub-path:
-pub fn after(path: &::std::path::Path, sub_path: &::std::path::Path) ->  ::std::path::PathBuf {
+pub fn after(
+    path: &::std::path::Path, sub_path: &::std::path::Path
+) -> ::std::path::PathBuf {
     assert!(contains(&path, &sub_path));
 
     let mut buf = ::std::path::PathBuf::new();
@@ -79,7 +87,6 @@ pub fn push(path: &mut ::std::path::PathBuf, tail: &::std::path::Path) {
     path.push(tail);
 }
 
-
 #[cfg(test)]
 mod tests {
     #[test]
@@ -91,6 +98,9 @@ mod tests {
 
         assert!(super::contains(&macosx_path, &sub_path));
         assert!(!super::contains(&macosx_path_typo, &sub_path));
-        assert_eq!(super::after(&macosx_path, &sub_path), ::std::path::PathBuf::from("liballoc"));
+        assert_eq!(
+            super::after(&macosx_path, &sub_path),
+            ::std::path::PathBuf::from("liballoc")
+        );
     }
 }

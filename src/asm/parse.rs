@@ -113,7 +113,9 @@ pub enum Result {
 
 /// Parses the assembly function at `path` from the file `file`.
 #[cfg_attr(feature = "cargo-clippy", allow(use_debug))]
-pub fn function(file: &::std::path::Path, opts: &mut ::options::Options) -> Result {
+pub fn function(
+    file: &::std::path::Path, opts: &mut ::options::Options
+) -> Result {
     let path = opts.path.clone();
     use std::io::BufRead;
 
@@ -131,8 +133,11 @@ pub fn function(file: &::std::path::Path, opts: &mut ::options::Options) -> Resu
 
     let mut function_table = Vec::<String>::new();
 
-
-    let symbol_pattern = if cfg!(target_os = "macosx") { "__" } else { "_" };
+    let symbol_pattern = if cfg!(target_os = "macosx") {
+        "__"
+    } else {
+        "_"
+    };
 
     while let Some(line) = line_iter.next() {
         let line = line.unwrap().trim().to_string();

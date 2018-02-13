@@ -1,6 +1,6 @@
 [package]
 name = "cargo-asm"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["gnzlbg <gonzalobg88@gmail.com>"]
 description = "A cargo subcommand to disassembly Rust functions."
 license = "MIT/Apache-2.0"
