@@ -79,7 +79,7 @@ fn main() {
                 msg.push_str(&format!("  {}\n", f));
             }
 
-            msg.push_str("If not maybe the assembly output was not properly built and you might need to do a `--clean` build.\n"
+            msg.push_str("If not maybe the assembly output was not properly built and you might need to do a `--clean` build. If you are trying to print the assembly output of a generic function or method make sure that it is monomorphized into the final binary (otherwise no assembly will be generated).\n"
             );
 
             display::write_error(&msg, &opts);
