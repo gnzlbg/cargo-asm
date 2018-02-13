@@ -11,7 +11,9 @@ whole path (need to qualify it with the crate name for now):
 
 which outputs:
 
-<blockquote class="imgur-embed-pub" lang="en" data-id="M1yGcsX"><a href="//imgur.com/M1yGcsX">View post on imgur.com</a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>
+
+![screenshot](https://raw.githubusercontent.com/gnzlbg/cargo-asm/images/screenshot.png)
+
 
 # Quick start
 
