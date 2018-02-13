@@ -50,7 +50,7 @@ pub enum Directive {
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct File {
-    pub path: String,
+    pub path: ::std::path::PathBuf,
     pub index: usize,
 }
 
@@ -62,7 +62,7 @@ impl File {
         let path = s.split('"').nth(1).unwrap();
         let index = s.split_whitespace().nth(1).unwrap();
         Some(Self {
-            path: path.to_string(),
+            path: ::std::path::PathBuf::from(path),
             index: index.parse().unwrap(),
         })
     }

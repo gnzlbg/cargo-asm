@@ -36,7 +36,7 @@ impl Files {
     pub fn line(&self, loc: asm::ast::Loc) -> Option<String> {
         self.line_at(loc.file_index, loc.file_line)
     }
-    pub fn file_path(&self, loc: asm::ast::Loc) -> Option<String> {
+    pub fn file_path(&self, loc: asm::ast::Loc) -> Option<::std::path::PathBuf> {
         if let Some(file) = self.files.get(&loc.file_index) {
             return Some(file.ast.path.clone());
         }
@@ -101,7 +101,7 @@ pub fn parse(
     for f in files.values_mut() {
         use std::io::BufRead;
         let fh = ::std::fs::File::open(&f.ast.path)
-            .expect(&format!("[ERROR]: failed to open file: {}", f.ast.path));
+            .expect(&format!("[ERROR]: failed to open file: {}", f.ast.path.display()));
         let file_buf = ::std::io::BufReader::new(&fh);
 
         for (line_idx, line) in file_buf.lines().enumerate() {
@@ -118,7 +118,7 @@ pub fn parse(
             if line.is_none() && *l_idx != 0 {
                 panic!(
                     "[ERROR]: could not read line {} of file {} ",
-                    l_idx, f.ast.path
+                    l_idx, f.ast.path.display()
                 );
             }
         }
@@ -141,25 +141,25 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
     );
 
     let mut sysroot = match r {
-        Ok((stdout, _stderr)) => stdout,
+        Ok((stdout, _stderr)) => ::std::path::PathBuf::from(stdout),
         Err(()) => panic!(),
     };
-    sysroot.pop();
-    sysroot.push_str("/lib/rustlib/src/rust/");
-
+    sysroot.parent();
+    let rust_src_path = ::std::path::PathBuf::from("/lib/rustlib/src/rust/");
+    sysroot.push(&rust_src_path);
+    let travis_rust_src_path = ::std::path::PathBuf::from("travis/build/rust-lang/rust/");
     for f in files.values_mut() {
-        if f.ast.path.contains("travis/build/rust-lang/rust/") {
+        if ::path::contains(&f.ast.path, &travis_rust_src_path) {
             let path = {
-                let tail = f.ast
-                    .path
-                    .split("travis/build/rust-lang/rust/")
-                    .nth(1)
-                    .unwrap();
+                let tail = ::path::after(&f.ast.path, &travis_rust_src_path);
                 let mut path = sysroot.clone();
-                path.push_str(tail);
+                path.push(&tail);
                 path
             };
             f.ast.path = path;
+            if !f.ast.path.exists() {
+                eprintln!("[ERROR]: path does not exist: {}", f.ast.path.display());
+            }
         }
     }
 }

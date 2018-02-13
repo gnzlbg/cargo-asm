@@ -6,12 +6,12 @@ use super::rust;
 #[derive(Clone)]
 struct Rust {
     line: String,
-    path: String,
+    path: ::std::path::PathBuf,
     loc: asm::ast::Loc,
 }
 
 impl Rust {
-    fn new(line: String, path: String, loc: asm::ast::Loc) -> Self {
+    fn new(line: String, path: ::std::path::PathBuf, loc: asm::ast::Loc) -> Self {
         Self { line, path, loc }
     }
 }
@@ -160,7 +160,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                         write!(
                             &mut buffer,
                             ".file {} \"{}\"",
-                            f.index, f.path
+                            f.index, f.path.display(),
                         ).unwrap();
                     }
                     asm::ast::Directive::Loc(l) => {
@@ -210,7 +210,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                 write!(
                     &mut buffer,
                     "{} ({}:{})",
-                    r.line, r.path, r.loc.file_line
+                    r.line, r.path.display(), r.loc.file_line
                 ).unwrap();
             }
         }
@@ -227,7 +227,7 @@ fn format_function_name(function: &asm::ast::Function) -> String {
             if let Some(ref loc) = &function.loc {
                 return format!(
                     "{} ({}:{})",
-                    function.id, file.path, loc.file_line
+                    function.id, file.path.display(), loc.file_line
                 );
             }
         }
@@ -281,14 +281,14 @@ fn is_rust_in_function(f: &asm::ast::Function, rust: &Rust) -> bool {
 /// This functions trims their path.
 fn make_std_lib_paths_relative(rust: &mut rust::Files) {
     // Trim std lib paths:
+    let rust_src_path = ::std::path::PathBuf::from("/lib/rustlib/src/rust/src/");
     for f in rust.files.values_mut() {
         let ast = f.ast.clone();
-        if !ast.path.contains("/lib/rustlib/src/rust/src/") {
+        if !::path::contains(&ast.path, &rust_src_path) {
             continue;
         }
-        let new_path =
-            ast.path.split("/lib/rustlib/src/rust/src/").nth(1).unwrap();
-        f.ast.path = new_path.to_string();
+        let new_path = ::path::after(&ast.path, &rust_src_path);
+        f.ast.path = new_path;
     }
 }
 

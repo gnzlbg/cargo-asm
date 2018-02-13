@@ -20,6 +20,7 @@ mod asm;
 mod demangle;
 mod display;
 mod rust;
+mod path;
 
 fn parse_files(
     files: &[std::path::PathBuf], path: &str
@@ -27,6 +28,7 @@ fn parse_files(
     use asm::parse::Result;
     let mut function_table = Vec::<String>::new();
     for f in files {
+        assert!(f.exists(), "path does not exist: {}", f.display());
         match asm::parse::function(f.as_path(), path) {
             Result::Found(function, files) => {
                 return Result::Found(function, files)
