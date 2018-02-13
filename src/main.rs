@@ -23,13 +23,13 @@ mod rust;
 mod path;
 
 fn parse_files(
-    files: &[std::path::PathBuf], path: &str
+    files: &[std::path::PathBuf], mut opts: &mut options::Options,
 ) -> asm::parse::Result {
     use asm::parse::Result;
     let mut function_table = Vec::<String>::new();
     for f in files {
         assert!(f.exists(), "path does not exist: {}", f.display());
-        match asm::parse::function(f.as_path(), path) {
+        match asm::parse::function(f.as_path(), &mut opts) {
             Result::Found(function, files) => {
                 return Result::Found(function, files)
             }
@@ -43,7 +43,7 @@ fn parse_files(
 
 #[cfg_attr(feature = "cargo-clippy", allow(print_stdout, use_debug))]
 fn main() {
-    let opts = options::get();
+    let mut opts = options::get();
     if opts.verbose {
         println!("Options: {:?}", opts);
         println!("Input path: {}", opts.path);
@@ -58,9 +58,9 @@ fn main() {
     if opts.verbose {
         println!("Assembly files found: {:?}", asm_files);
     }
-    match parse_files(&asm_files, &opts.path) {
+    match parse_files(&asm_files, &mut opts) {
         asm::parse::Result::Found(function, file_table) => {
-            let rust = rust::parse(&function, &file_table);
+            let rust = rust::parse(&function, &file_table, &mut opts);
             display::print(&function, rust.clone(), &opts);
         }
         asm::parse::Result::NotFound(mut table) => {

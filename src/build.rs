@@ -122,7 +122,11 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
         }
     }
 
-    // Sort the files, remove duplicates, and done:
+    // Canonicalize, sort the files, remove duplicates, and done:
+    for f in &mut output_files {
+        let c = f.canonicalize().unwrap();
+        *f = c;
+    }
     output_files.sort_unstable();
     output_files.dedup();
     output_files

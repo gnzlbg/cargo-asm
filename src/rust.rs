@@ -49,6 +49,7 @@ impl Files {
 pub fn parse(
     function: &asm::ast::Function,
     file_table: &::std::collections::HashMap<usize, asm::ast::File>,
+    mut opts: &mut ::options::Options,
 ) -> Files {
     use asm::ast::Statement;
     use asm::ast::Directive;
@@ -95,7 +96,7 @@ pub fn parse(
     }
 
     // Corrects paths to Rust std library components:
-    correct_rust_paths(&mut files);
+    correct_rust_paths(&mut files, &mut opts);
 
     // Read the required lines from each Rust file:
     for f in files.values_mut() {
@@ -127,7 +128,7 @@ pub fn parse(
     Files { files }
 }
 
-fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
+fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>, opts: &mut ::options::Options) {
     let rust =
         ::std::env::var("RUSTC").unwrap_or_else(|_| "rustc".to_string());
 
@@ -141,25 +142,50 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
     );
 
     let mut sysroot = match r {
-        Ok((stdout, _stderr)) => ::std::path::PathBuf::from(stdout),
+        Ok((stdout, _stderr)) => ::std::path::PathBuf::from(stdout.trim()),
         Err(()) => panic!(),
     };
+    if opts.verbose {
+        println!("sysroot: {}", sysroot.display());
+    }
     sysroot.parent();
-    let rust_src_path = ::std::path::PathBuf::from("/lib/rustlib/src/rust/");
-    sysroot.push(&rust_src_path);
-    let travis_rust_src_path = ::std::path::PathBuf::from("travis/build/rust-lang/rust/");
+    let rust_src_path = ::std::path::PathBuf::from("lib/rustlib/src/rust/src");
+   
+    ::path::push(&mut sysroot, &rust_src_path);
+    if opts.verbose {
+        eprintln!("merging {} with sysroot results in {}", rust_src_path.display(), sysroot.display());
+    }
+
+    let travis_rust_src_path = if cfg!(target_os = "macosx") {
+     ::std::path::PathBuf::from("travis/build/rust-lang/rust/")
+    } else {
+        ::std::path::PathBuf::from("checkout/src/")
+    };
+    let mut missing_path_warning = false;
     for f in files.values_mut() {
         if ::path::contains(&f.ast.path, &travis_rust_src_path) {
             let path = {
                 let tail = ::path::after(&f.ast.path, &travis_rust_src_path);
                 let mut path = sysroot.clone();
+                if opts.verbose {
+                    eprintln!("merging {} with {}", path.display(), tail.display());
+                }
                 path.push(&tail);
+                if opts.verbose {
+                    eprintln!("  merge result: {}", path.display());
+                }
+
                 path
             };
             f.ast.path = path;
             if !f.ast.path.exists() {
-                eprintln!("[ERROR]: path does not exist: {}", f.ast.path.display());
+                if !missing_path_warning && !opts.verbose {
+                    eprintln!("[WARNING]: path does not exist: {}. Maybe the rust-src component is not installed?", f.ast.path.display());
+                    missing_path_warning = true;
+                    }
+                opts.rust = false;
             }
         }
     }
+    files.retain(|_k: &usize, f: &mut File| f.ast.path.exists());
 }

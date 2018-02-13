@@ -281,7 +281,7 @@ fn is_rust_in_function(f: &asm::ast::Function, rust: &Rust) -> bool {
 /// This functions trims their path.
 fn make_std_lib_paths_relative(rust: &mut rust::Files) {
     // Trim std lib paths:
-    let rust_src_path = ::std::path::PathBuf::from("/lib/rustlib/src/rust/src/");
+    let rust_src_path = ::std::path::PathBuf::from("lib/rustlib/src/rust/src/");
     for f in rust.files.values_mut() {
         let ast = f.ast.clone();
         if !::path::contains(&ast.path, &rust_src_path) {

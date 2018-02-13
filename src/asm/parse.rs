@@ -113,7 +113,8 @@ pub enum Result {
 
 /// Parses the assembly function at `path` from the file `file`.
 #[cfg_attr(feature = "cargo-clippy", allow(use_debug))]
-pub fn function(file: &::std::path::Path, path: &str) -> Result {
+pub fn function(file: &::std::path::Path, opts: &mut ::options::Options) -> Result {
+    let path = opts.path.clone();
     use std::io::BufRead;
 
     let fh = ::std::fs::File::open(file).unwrap();
@@ -130,10 +131,12 @@ pub fn function(file: &::std::path::Path, path: &str) -> Result {
 
     let mut function_table = Vec::<String>::new();
 
+
+    let symbol_pattern = if cfg!(target_os = "macosx") { "__" } else { "_" };
+
     while let Some(line) = line_iter.next() {
         let line = line.unwrap().trim().to_string();
-
-        if function.is_none() && line.starts_with("__") {
+        if function.is_none() && line.starts_with(symbol_pattern) {
             // We haven't found the function yet:
             //
             // Assembly functions are label that start with `__`
@@ -155,7 +158,7 @@ pub fn function(file: &::std::path::Path, path: &str) -> Result {
                     }
                     lines.push(l);
                 }
-                function = Some(function_body(lines, path));
+                function = Some(function_body(lines, &path));
                 // If the function contained a .file directive, we are
                 // done:
                 if let Some(ref function) = &function {

@@ -60,10 +60,11 @@ impl File {
             return None;
         }
         let path = s.split('"').nth(1).unwrap();
-        let index = s.split_whitespace().nth(1).unwrap();
+        let index = s.split_whitespace().nth(1).unwrap().parse().unwrap_or(0);
+
         Some(Self {
             path: ::std::path::PathBuf::from(path),
-            index: index.parse().unwrap(),
+            index,
         })
     }
     pub fn rust_loc(&self) -> Option<Loc> {

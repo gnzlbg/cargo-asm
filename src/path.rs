@@ -73,12 +73,18 @@ pub fn after(path: &::std::path::Path, sub_path: &::std::path::Path) ->  ::std::
     buf
 }
 
+/// Appends the `tail` to the path:
+pub fn push(path: &mut ::std::path::PathBuf, tail: &::std::path::Path) {
+    assert!(!tail.is_absolute());
+    path.push(tail);
+}
+
 
 #[cfg(test)]
 mod tests {
     #[test]
     fn contains() {
-        let sub_path = ::std::path::PathBuf::from("/lib/rustlib/src/rust/src/");
+        let sub_path = ::std::path::PathBuf::from("lib/rustlib/src/rust/src/");
 
         let macosx_path = ::std::path::PathBuf::from("/Users/foo/.rustup/toolchains/nightly-x86_64-apple-darwin/lib/rustlib/src/rust/src/liballoc");
         let macosx_path_typo = ::std::path::PathBuf::from("/Users/foo/.rustup/toolchains/nightly-x86_64-apple-darwin/lib/rustlib2/src/rust/src/liballoc");
