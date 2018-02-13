@@ -2,6 +2,11 @@
 
 use std::process::Command;
 
+/// Executes the command printing `error_msg` and forwarding `stdout` and
+/// `stderr` on failure to `stderr`.
+///
+/// If `verbose` is `true` `stdout` and `stderr` are forwarded to `stderr` on
+/// success as well.
 pub fn exec(
     cmd: &mut Command, error_msg: &str, verbose: bool
 ) -> Result<(String, String), ()> {

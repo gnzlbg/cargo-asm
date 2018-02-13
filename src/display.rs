@@ -2,10 +2,229 @@ use super::asm;
 use super::options;
 use super::rust;
 
+/// Formatting of Rust source code:
+#[derive(Clone)]
+struct Rust {
+    line: String,
+    path: String,
+    loc: asm::ast::Loc,
+}
+
+impl Rust {
+    fn new(line: String, path: String, loc: asm::ast::Loc) -> Self {
+        Self { line, path, loc }
+    }
+}
+
+/// Type of node to display
+enum Kind {
+    Asm(asm::ast::Statement),
+    Rust(Rust),
+}
+
+/// Display options:
+#[derive(Copy, Clone)]
+pub struct Options {
+    pub use_color: bool,
+    pub print_comments: bool,
+    pub print_directives: bool,
+    pub verbose: bool,
+    pub rust: bool,
+}
+
+impl Options {
+    pub fn new(program: &options::Options) -> Self {
+        Self {
+            use_color: program.color,
+            print_comments: program.comments,
+            print_directives: program.directives,
+            verbose: program.verbose,
+            rust: program.rust,
+        }
+    }
+}
+
+/// Prints `kind` using `opts`.
+#[cfg_attr(feature = "cargo-clippy", allow(items_after_statements))]
+fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
+    // Filter out what to print:
+    match kind {
+        Kind::Asm(ref a) => {
+            use asm::ast::Statement::*;
+            match a {
+                Comment(_) if !opts.print_comments => return,
+                Directive(_) if !opts.print_directives => return,
+                Label(ref l)
+                    if l.id.starts_with("Lcfi") || l.id.starts_with("Ltmp")
+                        || l.id.starts_with("Lfunc_end") =>
+                {
+                    return
+                }
+                _ => {}
+            }
+        }
+        Kind::Rust(_) => {
+            if !opts.rust {
+                return;
+            }
+        }
+    }
+
+    // Is the current code part of the main function?
+    let part_of_main_function = match kind {
+        Kind::Asm(ref a) => is_stmt_in_function(function, a),
+        Kind::Rust(ref r) => is_rust_in_function(function, r),
+    };
+
+    let indent = match kind {
+        Kind::Asm(ref a) => {
+            use asm::ast::Statement::*;
+            match *a {
+                Comment(_) | Directive(_) | Instruction(_) => {
+                    if !opts.rust || part_of_main_function {
+                        1
+                    } else {
+                        5
+                    }
+                }
+                Label(_) => 0,
+            }
+        }
+        Kind::Rust(_) => {
+            if part_of_main_function {
+                1
+            } else {
+                5
+            }
+        }
+    };
+    let indent = (0..indent).map(|_| " ").collect::<String>();
+
+    use termcolor::{Buffer, BufferWriter, Color, ColorChoice, ColorSpec,
+                    WriteColor};
+    use std::io::Write;
+
+    let bufwtr = if opts.use_color {
+        BufferWriter::stdout(ColorChoice::Auto)
+    } else {
+        BufferWriter::stdout(ColorChoice::Never)
+    };
+    let mut buffer = bufwtr.buffer();
+    buffer.set_color(&ColorSpec::new()).unwrap();
+
+    // Write the indentation:
+    write!(&mut buffer, "{}", indent).unwrap();
+
+    let mut instr_color = ColorSpec::new();
+    instr_color
+        .set_intense(true)
+        .set_fg(Some(Color::Blue))
+        .set_bold(true);
+    let mut label_color = ColorSpec::new();
+    label_color
+        .set_intense(true)
+        .set_fg(Some(Color::Green))
+        .set_bold(true);
+    let comment_color = ColorSpec::new();
+    let instr_arg_color = ColorSpec::new();
+    let mut rust_color = ColorSpec::new();
+    rust_color
+        .set_intense(true)
+        .set_fg(Some(Color::Red))
+        .set_bold(true);
+    let instr_call_arg_color = rust_color.clone();
+
+    fn verbose_format(mut buffer: &mut Buffer, loc: Option<asm::ast::Loc>) {
+        if let Some(loc) = loc {
+            write!(&mut buffer, "   [{}:{}]", loc.file_index, loc.file_line)
+                .unwrap();
+        } else {
+            write!(&mut buffer, "   [{0}:{0}]", "-").unwrap();
+        }
+    }
+
+    match kind {
+        Kind::Asm(a) => {
+            use asm::ast::Statement::*;
+            match a {
+                Label(l) => {
+                    buffer.set_color(&label_color).unwrap();
+                    write!(&mut buffer, "{}", l.id).unwrap();
+                    write!(&mut buffer, ":").unwrap();
+                    if opts.verbose {
+                        verbose_format(&mut buffer, l.rust_loc());
+                    }
+                }
+                Directive(d) => match d {
+                    asm::ast::Directive::File(f) => {
+                        write!(
+                            &mut buffer,
+                            ".file {} \"{}\"",
+                            f.index, f.path
+                        ).unwrap();
+                    }
+                    asm::ast::Directive::Loc(l) => {
+                        write!(
+                            &mut buffer,
+                            ".loc {} {} {}",
+                            l.file_index, l.file_line, l.file_column
+                        ).unwrap();
+                    }
+                    asm::ast::Directive::Generic(g) => {
+                        write!(&mut buffer, "{}", g.string).unwrap();
+                    }
+                },
+                Comment(c) => {
+                    buffer.set_color(&comment_color).unwrap();
+                    write!(&mut buffer, "{}", c.string).unwrap();
+                    if opts.verbose {
+                        verbose_format(&mut buffer, c.rust_loc());
+                    }
+                }
+                Instruction(i) => {
+                    buffer.set_color(&instr_color).unwrap();
+                    write!(&mut buffer, "{: <7}", i.instr).unwrap();
+                    if i.instr.starts_with('j') && i.args.len() == 1 {
+                        // jump instructions
+                        buffer.set_color(&label_color).unwrap();
+                    } else if i.instr.starts_with("call") {
+                        buffer.set_color(&instr_call_arg_color).unwrap();
+                    } else {
+                        buffer.set_color(&instr_arg_color).unwrap();
+                    }
+                    write!(&mut buffer, " {}", i.args.join(" ")).unwrap();
+                    if opts.verbose {
+                        verbose_format(&mut buffer, i.rust_loc());
+                    }
+                }
+            }
+        }
+        Kind::Rust(r) => {
+            buffer.set_color(&rust_color).unwrap();
+            if part_of_main_function {
+                write!(&mut buffer, "{}", r.line).unwrap();
+                if opts.verbose {
+                    verbose_format(&mut buffer, Some(r.loc));
+                }
+            } else {
+                write!(
+                    &mut buffer,
+                    "{} ({}:{})",
+                    r.line, r.path, r.loc.file_line
+                ).unwrap();
+            }
+        }
+    }
+
+    //println!("{}{}", indent, output);
+    write!(&mut buffer, "\n").unwrap();
+    bufwtr.print(&buffer).unwrap();
+}
+
 fn format_function_name(function: &asm::ast::Function) -> String {
     if function.file.is_some() && function.loc.is_some() {
-        if let &Some(ref file) = &function.file {
-            if let &Some(ref loc) = &function.loc {
+        if let Some(ref file) = &function.file {
+            if let Some(ref loc) = &function.loc {
                 return format!(
                     "{} ({}:{})",
                     function.id, file.path, loc.file_line
@@ -20,140 +239,159 @@ fn format_function_name(function: &asm::ast::Function) -> String {
     }
 }
 
-pub fn print_asm(function: asm::ast::Function, opts: &options::Options) {
-    for stmt in function.statements {
-        if stmt.should_print(&opts) {
-            println!("{}", stmt.format(&opts));
+/// Returns true if the statement is in the function. It returns true if the
+/// question cannot be answered.
+fn is_stmt_in_function(
+    f: &asm::ast::Function, stmt: &asm::ast::Statement
+) -> bool {
+    let function_file_index = if let Some(loc) = f.loc {
+        Some(loc.file_index)
+    } else {
+        None
+    };
+
+    if let Some(function_file_index) = function_file_index {
+        if let Some(loc) = stmt.rust_loc() {
+            return loc.file_index == function_file_index;
         }
+    }
+
+    true
+}
+
+/// Returns true if the rust code belongs to the function `f`. It returns true
+/// if the question cannot be answered.
+fn is_rust_in_function(f: &asm::ast::Function, rust: &Rust) -> bool {
+    let function_file_index = if let Some(loc) = f.loc {
+        Some(loc.file_index)
+    } else {
+        None
+    };
+
+    if let Some(function_file_index) = function_file_index {
+        return rust.loc.file_index == function_file_index;
+    }
+    true
+}
+
+/// Standard library paths are formatted relatively to the component name:
+///
+/// For example: libcore/... instead of /path/to/libcore/...
+///
+/// This functions trims their path.
+fn make_std_lib_paths_relative(rust: &mut rust::Files) {
+    // Trim std lib paths:
+    for f in rust.files.values_mut() {
+        let ast = f.ast.clone();
+        if !ast.path.contains("/lib/rustlib/src/rust/src/") {
+            continue;
+        }
+        let new_path =
+            ast.path.split("/lib/rustlib/src/rust/src/").nth(1).unwrap();
+        f.ast.path = new_path.to_string();
     }
 }
 
-pub fn print_rust(
-    function: asm::ast::Function, mut rust: rust::Files, opts: &options::Options
+pub fn print(
+    function: &asm::ast::Function, mut rust: rust::Files,
+    opts: &options::Options,
 ) {
-    println!("{}:", format_function_name(&function));
+    let opts = Options::new(opts);
 
-    let mut last_locs =
-        ::std::collections::HashMap::<usize, asm::ast::Loc>::new();
+    if !opts.rust {
+        // When emitting assembly without Rust code, print the requested
+        // function path (the first function line will not be emitted):
+        use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec,
+                        WriteColor};
+        use std::io::Write;
 
-    // Find the last location of the function.
-    let mut last_loc: Option<asm::ast::Loc> = None;
-    for stmt in function.statements.iter() {
-        if let Some(new_loc) = stmt.rust_loc() {
-            if let Some(old_loc) = last_loc {
-                if old_loc.file_index == new_loc.file_index
-                    && old_loc.file_line < new_loc.file_line
-                {
-                    last_loc = Some(new_loc);
-                }
-            } else {
-                last_loc = Some(new_loc);
-            }
-        }
+        let mut rust_color = ColorSpec::new();
+        rust_color
+            .set_intense(true)
+            .set_fg(Some(Color::Red))
+            .set_bold(true);
+
+        let bufwtr = if opts.use_color {
+            BufferWriter::stdout(ColorChoice::Auto)
+        } else {
+            BufferWriter::stdout(ColorChoice::Never)
+        };
+        let mut buffer = bufwtr.buffer();
+        buffer.set_color(&rust_color).unwrap();
+        writeln!(&mut buffer, "{}:", format_function_name(function)).unwrap();
+        bufwtr.print(&buffer).unwrap();
     }
 
-    // Trim std lib paths:
-    for (_k, f) in &mut rust.files {
-        let ast = f.ast.clone();
-        if !ast.path.contains("/lib/rustlib/src/rust/src/") { continue; }
-        let new_path = ast.path.split("/lib/rustlib/src/rust/src/").nth(1).unwrap();
-        f.ast.path = new_path.to_string();
+    make_std_lib_paths_relative(&mut rust);
+
+    let output = merge_rust_and_asm(function, &rust);
+
+    for o in &output {
+        write_output(o, function, &opts);
+    }
+    return;
+}
+
+fn merge_rust_and_asm(
+    function: &asm::ast::Function, rust_files: &rust::Files
+) -> Vec<Kind> {
+    let mut output = Vec::<Kind>::new();
+    for stmt in &function.statements {
+        if let Some(rust_loc) = stmt.rust_loc() {
+            let line = rust_files.line(rust_loc);
+            if line.is_none() {
+                continue;
+            }
+            let line = line.unwrap();
+            let path = rust_files.file_path(rust_loc).unwrap();
+
+            let rust = Kind::Rust(Rust::new(line, path, rust_loc));
+            output.push(rust);
+        }
+        let asm = Kind::Asm(stmt.clone());
+        output.push(asm);
     }
 
-    for (stmt_idx, stmt) in function.statements.iter().enumerate() {
-        if let Some(new_loc) = stmt.rust_loc() {
-            if let Some(old_loc) = last_locs.get(&new_loc.file_index) {
-                for line_idx in old_loc.file_line + 1..new_loc.file_line + 1 {
-                    if let Some(l) = rust.line_at(new_loc.file_index, line_idx)
-                    {
-                        if last_loc.is_none()
-                            || !(last_loc.unwrap().file_index
-                                == new_loc.file_index
-                                && last_loc.unwrap().file_line == line_idx)
-                        {
-                            if new_loc.file_index != function.loc.unwrap().file_index {
-                                println!("{} ({}:{})", l, rust.file_path(new_loc).unwrap(), new_loc.file_line);
-                            } else {
-                                println!("{}", l);
-                            }
-                        }
-                    }
-                }
-            } else {
-                if let Some(l) = rust.line(new_loc) {
-                    if last_loc.is_none()
-                        || !(last_loc.unwrap().file_index == new_loc.file_index
-                            && last_loc.unwrap().file_line
-                                == new_loc.file_line)
-                    {
-                        if new_loc.file_index != function.loc.unwrap().file_index {
-                            println!("{} ({}:{})", l, rust.file_path(new_loc).unwrap(), new_loc.file_line);
-                        } else {
-                            println!("{}", l);
-                        }
-                    }
+    // Remove duplicates:
+    {
+        let mut last_rust: Option<Rust> = None;
+        output.retain(|v| {
+            let r = match v {
+                Kind::Rust(r) => r,
+                _ => return true,
+            };
+
+            if let Some(ref last_rust) = &last_rust {
+                if last_rust.loc == r.loc {
+                    return false;
                 }
             }
-            if new_loc.file_line > 0 {
-                last_locs.insert(new_loc.file_index, new_loc);
-            }
-
-            if let Some(func_loc) = function.loc {
-                if func_loc.file_index == new_loc.file_index {
-                    let stmt_tail =
-                        function.statements.split_at(stmt_idx+1).1;
-                    for s in stmt_tail {
-                        if let Some(s) = s.rust_loc() {
-                            if s.file_index != new_loc.file_index {
-                                continue;
-                            }
-                            if s.file_line == new_loc.file_line + 1 {
-                                break;
-                            }
-                            if let Some(old_loc) = last_locs.get(&new_loc.file_index) {
-                                if old_loc.file_line > new_loc.file_line {
-                                    break;
-                                }
-                            }
-
-                            for l in new_loc.file_line + 1..s.file_line + 1 {
-                                if let Some(line) =
-                                    rust.line_at(s.file_index, l)
-                                {
-                                    if last_loc.is_none()
-                                        || !(last_loc.unwrap().file_index
-                                            == new_loc.file_index
-                                            && last_loc.unwrap().file_line
-                                                == l)
-                                    {
-                                        println!("{}", line);
-                                    }
-                                    last_locs.insert(
-                                        new_loc.file_index,
-                                        asm::ast::Loc {
-                                            file_index: new_loc.file_index,
-                                            file_line: l,
-                                            file_column: 0,
-                                        },
-                                    );
-                                }
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        if stmt.should_print(&opts) {
-            println!("{}", stmt.format(&opts));
-        }
+            last_rust = Some(r.clone());
+            true
+        });
     }
 
-    // At the end prin the Rust code of the last location.
-    if let Some(last_loc) = last_loc {
-        if let Some(l) = rust.line(last_loc) {
-            println!("{}", l);
-        }
-    }
+    output
+}
+
+pub fn write_error(msg: &str, opts: &options::Options) {
+    use std::io::Write;
+    use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, WriteColor};
+    let mut error_color = ColorSpec::new();
+    error_color
+        .set_intense(true)
+        .set_fg(Some(Color::Red))
+        .set_bold(true);
+
+    let bufwtr = if opts.color {
+        BufferWriter::stderr(ColorChoice::Auto)
+    } else {
+        BufferWriter::stderr(ColorChoice::Never)
+    };
+    let mut buffer = bufwtr.buffer();
+    buffer.set_color(&error_color).unwrap();
+    write!(&mut buffer, "[ERROR]: ").unwrap();
+    buffer.set_color(&ColorSpec::new()).unwrap();
+    write!(&mut buffer, "{}", msg).unwrap();
+    bufwtr.print(&buffer).unwrap();
 }

@@ -1,24 +1,34 @@
 # cargo-asm
 
-> **Work in Progress**: this works, for some definition of "works".
+> **Work in Progress**: this works, sometimes.
 
 `cargo-asm` is a [`cargo`] sub-command that shows you the generated assembly of
 a Rust function. For example, if you have a crate called `lib_crate`, you can
 view the assembly of the function at `bar::generic_add` by just providing its
 whole path (need to qualify it with the crate name for now):
 
-> $ cargo asm lib_crate::bar::generic::add
+> $ cargo asm lib_crate::bar::generic::add --rust
 
-which prints:
+which outputs:
 
-```asm
-lib_crate::bar::generic_add:
-    push rbp
-    mov rbp, rsp
-    lea rax, [rdi + rsi]
-    pop rbp
-    ret
-```
+<blockquote class="imgur-embed-pub" lang="en" data-id="M1yGcsX"><a href="//imgur.com/M1yGcsX">View post on imgur.com</a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>
+
+# Quick start
+
+Quick start: given a crate named `crate`, to search:
+
+  * a function `foo`:
+  
+  >$ cargo asm crate::path::to::foo
+  
+  * an inherent method `foo` of a type `Foo` (that is, `Foo::foo`):
+
+  >$ cargo asm crate::path::to::Foo::foo
+  
+  * an implementation of the trait method `bar` of the trait `Bar` for the type `Foo`:
+      
+  >$ cargo asm "<crate::path::to::Foo as crate::path::to::Bar>::bar"
+
 
 Happy hacking. 
 

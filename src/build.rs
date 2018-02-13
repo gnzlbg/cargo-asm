@@ -3,9 +3,12 @@
 use options::Options;
 use process;
 
+/// Type of the build.
 #[derive(Copy, Clone, Debug)]
 pub enum Type {
+    /// Debug build.
     Debug,
+    /// Release build.
     Release,
 }
 
@@ -31,7 +34,9 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
         .expect("RUSTFLAGS are not valid UTF-8");
 
     // Runs `cargo clean` before generating assembly code.
-    // TODO: figure out if this is really necessary
+    // TODO: figure out if this is really necessary.
+    // UPDATE: seems to be necessary in some cases with incremental
+    // compilation.
     if opt.clean {
         let mut cargo_clean = Command::new("cargo");
         cargo_clean.arg("clean");
@@ -81,7 +86,7 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
         // Vec:
         l.trim()
             .split_whitespace()
-            .skip_while(|s| s != &"--out-dir")
+            .skip_while(|&s| s != "--out-dir")
             .skip(1)
             .take(1)
             .for_each(|v| output_directories.push(v.to_string()));
@@ -98,8 +103,11 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
     // generated after the build start.
     let mut output_files = Vec::new();
     for dir in output_directories {
-        for entry in ::walkdir::WalkDir::new(dir) {
-            let e = entry.unwrap();
+        for entry in ::walkdir::WalkDir::new(dir.clone()) {
+            let e = entry.expect(&format!(
+                "failed to iterate over the directory: {}",
+                &dir
+            ));
             let p = e.path();
             //let modified_after_build_start =
             //    ::std::fs::metadata(p).unwrap().modified().unwrap()

@@ -5,7 +5,7 @@ use rustc_demangle;
 fn has_hash(name: &str) -> bool {
     let mut bytes = name.bytes().rev();
     for _ in 0..16 {
-        if !bytes.next().map(is_ascii_hexdigit).unwrap_or(false) {
+        if !bytes.next().map_or(false, is_ascii_hexdigit) {
             return false;
         }
     }
@@ -18,7 +18,7 @@ fn is_ascii_hexdigit(byte: u8) -> bool {
 }
 
 pub fn demangle(n: &str) -> String {
-    let mut name = rustc_demangle::demangle(&n).to_string();
+    let mut name = rustc_demangle::demangle(n).to_string();
     if has_hash(&name) {
         let len = name.len() - 19;
         name.truncate(len);

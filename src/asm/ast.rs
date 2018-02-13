@@ -1,5 +1,4 @@
 //! Abstract Syntax Tree
-use options;
 
 /// AST of an asm function
 #[derive(Debug, Clone)]
@@ -28,7 +27,7 @@ pub struct Label {
 
 impl Label {
     pub fn new(s: &str, rust_loc: Option<Loc>) -> Option<Self> {
-        if s.ends_with(":") {
+        if s.ends_with(':') {
             return Some(Self {
                 id: s.split_at(s.len() - 1).0.to_string(),
                 rust_loc,
@@ -38,13 +37,6 @@ impl Label {
     }
     pub fn rust_loc(&self) -> Option<Loc> {
         self.rust_loc
-    }
-    pub fn should_print(&self, _opts: &options::Options) -> bool {
-        !self.id.starts_with("Lcfi") && !self.id.starts_with("Ltmp")
-            && !self.id.starts_with("Lfunc_end")
-    }
-    pub fn format(&self, _opts: &options::Options) -> String {
-        format!("  {}:", self.id)
     }
 }
 
@@ -77,9 +69,6 @@ impl File {
     pub fn rust_loc(&self) -> Option<Loc> {
         None
     }
-    pub fn format(&self, _opts: &options::Options) -> String {
-        format!(".file {} \"{}\"", self.index, self.path)
-    }
 }
 
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -104,25 +93,19 @@ impl Loc {
             file_column: file_column.parse().unwrap(),
         })
     }
-    pub fn rust_loc(&self) -> Option<Loc> {
+    pub fn rust_loc(&self) -> Option<Self> {
         None
-    }
-    pub fn format(&self, _opts: &options::Options) -> String {
-        format!(
-            ".loc {} {} {}",
-            self.file_index, self.file_line, self.file_column
-        )
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct GenericDirective {
-    string: String,
+    pub string: String,
 }
 
 impl GenericDirective {
     pub fn new(s: &str) -> Option<Self> {
-        if s.starts_with(".") {
+        if s.starts_with('.') {
             return Some(Self {
                 string: s.to_string(),
             });
@@ -132,14 +115,11 @@ impl GenericDirective {
     pub fn rust_loc(&self) -> Option<Loc> {
         None
     }
-    pub fn format(&self, _opts: &options::Options) -> String {
-        format!("{}", self.string)
-    }
 }
 
 impl Directive {
     pub fn new(s: &str) -> Option<Self> {
-        if s.starts_with(".") {
+        if s.starts_with('.') {
             if let Some(file) = File::new(s) {
                 return Some(Directive::File(file));
             }
@@ -170,27 +150,17 @@ impl Directive {
             _ => None,
         }
     }
-    pub fn should_print(&self, opts: &options::Options) -> bool {
-        opts.directives
-    }
-    pub fn format(&self, opts: &options::Options) -> String {
-        match *self {
-            Directive::File(ref f) => f.format(opts),
-            Directive::Loc(ref f) => f.format(opts),
-            Directive::Generic(ref f) => f.format(opts),
-        }
-    }
 }
 
 /// Asm comments, e.g, ;; this is a comment.
 #[derive(Debug, Clone)]
 pub struct Comment {
-    string: String,
+    pub string: String,
 }
 
 impl Comment {
     pub fn new(s: &str) -> Option<Self> {
-        if s.starts_with(";") {
+        if s.starts_with(';') {
             return Some(Self {
                 string: s.to_string(),
             });
@@ -200,19 +170,13 @@ impl Comment {
     pub fn rust_loc(&self) -> Option<Loc> {
         None
     }
-    pub fn should_print(&self, opts: &options::Options) -> bool {
-        opts.comments
-    }
-    pub fn format(&self, _opts: &options::Options) -> String {
-        format!("  {}", self.string)
-    }
 }
 
 /// Asm instructions: everything else (not a Comment, Directive, or Label).
 #[derive(Debug, Clone)]
 pub struct Instruction {
-    instr: String,
-    args: Vec<String>,
+    pub instr: String,
+    pub args: Vec<String>,
     rust_loc: Option<Loc>,
 }
 
@@ -224,61 +188,28 @@ impl Instruction {
         for arg in iter {
             args.push(arg.to_string());
         }
-        if &instr == "call" {
+        if instr == "call" {
             let demangled_function = ::demangle::demangle(&args[0]);
             args[0] = demangled_function;
         }
-        return Some(Self {
+        Some(Self {
             instr,
             args,
             rust_loc,
-        });
+        })
     }
     pub fn rust_loc(&self) -> Option<Loc> {
         self.rust_loc
     }
-    pub fn should_print(&self, _opts: &options::Options) -> bool {
-        true
-    }
-    pub fn format(&self, opts: &options::Options) -> String {
-        if opts.verbose {
-            format!(
-                "    {} {} | rloc: {:?}",
-                self.instr,
-                self.args.join(" "),
-                self.rust_loc()
-                    .as_ref()
-                    .map(|v| (v.file_index, v.file_line))
-            )
-        } else {
-            format!("    {} {}", self.instr, self.args.join(" "))
-        }
-    }
 }
 
 impl Statement {
-    pub fn should_print(&self, opts: &options::Options) -> bool {
-        match self {
-            &Statement::Label(ref l) => l.should_print(opts),
-            &Statement::Directive(ref l) => l.should_print(opts),
-            &Statement::Instruction(ref l) => l.should_print(opts),
-            &Statement::Comment(ref l) => l.should_print(opts),
-        }
-    }
-    pub fn format(&self, opts: &options::Options) -> String {
-        match self {
-            &Statement::Label(ref l) => l.format(opts),
-            &Statement::Directive(ref l) => l.format(opts),
-            &Statement::Instruction(ref l) => l.format(opts),
-            &Statement::Comment(ref l) => l.format(opts),
-        }
-    }
     pub fn rust_loc(&self) -> Option<Loc> {
         match self {
-            &Statement::Label(ref l) => l.rust_loc(),
-            &Statement::Directive(ref l) => l.rust_loc(),
-            &Statement::Instruction(ref l) => l.rust_loc(),
-            &Statement::Comment(ref l) => l.rust_loc(),
+            Statement::Label(ref l) => l.rust_loc(),
+            Statement::Directive(ref l) => l.rust_loc(),
+            Statement::Instruction(ref l) => l.rust_loc(),
+            Statement::Comment(ref l) => l.rust_loc(),
         }
     }
 }

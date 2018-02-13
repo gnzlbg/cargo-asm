@@ -1,4 +1,5 @@
 pub mod bar;
+pub mod baz;
 
 pub fn moooo(x: i32) -> i32 { x * 2 }
 

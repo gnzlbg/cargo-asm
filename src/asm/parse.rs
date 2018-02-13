@@ -16,7 +16,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
     //
     // The first line corresponds to the function path, we skip it since we
     // already know it.
-    for (_line_off, line) in function_lines
+    for (line_off, line) in function_lines
         .into_iter()
         .skip(1)
         .map(|l| l.trim().to_string())
@@ -25,7 +25,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
     {
         // If the line contains a comment, split the line at the comment.
         let (node_str, comment_str) =
-            if let Some(comment_start) = line.find(";") {
+            if let Some(comment_start) = line.find(';') {
                 let (node_str, comment_str) = line.split_at(comment_start);
                 (node_str, comment_str)
             } else {
@@ -50,7 +50,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
                     // beginnin (only a location) but they contain .file
                     // directives in the body when code from other files gets
                     // inlined:
-                    if let &Some(ref loc) = &function.loc {
+                    if let Some(ref loc) = &function.loc {
                         if loc.file_index == file.index {
                             function.file = Some(file);
                         }
@@ -74,7 +74,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
                 if function.loc.is_none() {
                     // If there is a function file already set, we check
                     // that the new location matches the file idx.
-                    if let &Some(ref file) = &function.file {
+                    if let Some(ref file) = &function.file {
                         assert_eq!(new_loc.file_index, file.index);
                     }
                     function.loc = Some(new_loc);
@@ -98,16 +98,22 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
 
         panic!(
             "cannot parse function: {}\n  line off: {}\n{}",
-            path, _line_off, line
+            path, line_off, line
         );
     }
     function
 }
 
+/// Result of parsing a function, either a match, or a table of functions in
+/// the file.
+pub enum Result {
+    Found(ast::Function, ::std::collections::HashMap<usize, ast::File>),
+    NotFound(Vec<String>),
+}
+
 /// Parses the assembly function at `path` from the file `file`.
-pub fn function(
-    file: &::std::path::Path, path: &str
-) -> Option<(ast::Function, ::std::collections::HashMap<usize, ast::File>)> {
+#[cfg_attr(feature = "cargo-clippy", allow(use_debug))]
+pub fn function(file: &::std::path::Path, path: &str) -> Result {
     use std::io::BufRead;
 
     let fh = ::std::fs::File::open(file).unwrap();
@@ -122,59 +128,60 @@ pub fn function(
 
     let mut line_iter = file_buf.lines();
 
+    let mut function_table = Vec::<String>::new();
+
     while let Some(line) = line_iter.next() {
         let line = line.unwrap().trim().to_string();
 
-        if function.is_none() {
+        if function.is_none() && line.starts_with("__") {
             // We haven't found the function yet:
             //
             // Assembly functions are label that start with `__`
             // and have mangled names:
-            if line.starts_with("_") {
-                if let Some(label) = ast::Label::new(&line, None) {
-                    let demangled_function_name =
-                        ::demangle::demangle(&label.id);
-                    if demangled_function_name != path {
-                        continue;
-                    }
-                    // We have found the function, collect its lines and build
-                    // an AST:
-                    let mut lines = Vec::<String>::new();
-                    while let Some(l) = line_iter.next() {
-                        let l = l.unwrap().trim().to_string();
-                        if l.starts_with(".cfi_endproc") {
-                            break;
-                        }
-                        lines.push(l);
-                    }
-                    function = Some(function_body(lines, path));
-                    // If the function contained a .file directive, we are
-                    // done:
-                    if let &Some(ref function) = &function {
-                        if function.file.is_some() {
-                            break;
-                        }
-                    }
 
-                    // If the function did not contain a .loc directive
-                    // either, we can't finde its
-                    // corresponding Rust code so we are done:
-                    if let &Some(ref function) = &function {
-                        if function.loc.is_none() {
-                            break;
-                        }
-                    }
-
-                    // Otherwise we continue parsing the assembly file to try
-                    // to find a .file directive for the
-                    // function
+            if let Some(label) = ast::Label::new(&line, None) {
+                let demangled_function_name = ::demangle::demangle(&label.id);
+                function_table.push(demangled_function_name.clone());
+                if demangled_function_name != path {
                     continue;
                 }
-                panic!(
-                    "line starts with _ but we failed to parse the label: {}",
-                    line
-                );
+                // We have found the function, collect its lines and build
+                // an AST:
+                let mut lines = Vec::<String>::new();
+                while let Some(l) = line_iter.next() {
+                    let l = l.unwrap().trim().to_string();
+                    if l.starts_with(".cfi_endproc") {
+                        break;
+                    }
+                    lines.push(l);
+                }
+                function = Some(function_body(lines, path));
+                // If the function contained a .file directive, we are
+                // done:
+                if let Some(ref function) = &function {
+                    if function.file.is_some() {
+                        break;
+                    }
+                }
+
+                // If the function did not contain a .loc directive
+                // either, we can't finde its
+                // corresponding Rust code so we are done:
+                if let Some(ref function) = &function {
+                    if function.loc.is_none() {
+                        break;
+                    }
+                }
+
+                // Otherwise we continue parsing the assembly file to try
+                // to find a .file directive for the
+                // function
+                continue;
             }
+            panic!(
+                "line starts with _ but we failed to parse the label: {}",
+                line
+            );
         }
 
         // If the line does not begin an assembly function try to parse the
@@ -208,46 +215,43 @@ pub fn function(
         }
     }
 
-    if let None = function {
-        return None;
+    if function.is_none() {
+        // If the function is not found we have visited the whole file so the
+        // function table is complete.
+        return Result::NotFound(function_table);
     }
 
     let function = function.unwrap();
 
     // Add all local .file directives in the body of the function to the table:
-    if let &Some(ref f) = &function.file {
-        if !file_directive_table.contains_key(&f.index) {
-            file_directive_table.insert(f.index, f.clone());
-        }
+    if let Some(ref f) = &function.file {
+        file_directive_table
+            .entry(f.index)
+            .or_insert_with(|| f.clone());
     }
-    for s in function.statements.iter() {
-        match s {
-            &Statement::Directive(Directive::File(ref f)) => {
-                if !file_directive_table.contains_key(&f.index) {
-                    file_directive_table.insert(f.index, f.clone());
-                }
-            }
-            _ => {}
+    for s in &function.statements {
+        if let Statement::Directive(Directive::File(ref f)) = s {
+            file_directive_table
+                .entry(f.index)
+                .or_insert_with(|| f.clone());
         }
     }
 
     // Check that we have found all .file directives for all .loc statements
     // within the function:
     let mut done = true;
-    for s in function.statements.iter() {
-        match s {
-            &Statement::Directive(Directive::Loc(ref l)) => {
-                if !file_directive_table.contains_key(&l.file_index) {
-                    done = false;
-                    eprintln!("[ERROR]: File directive for location not found! Location: {:?}", l);
-                }
+    for s in &function.statements {
+        if let Statement::Directive(Directive::Loc(ref l)) = s {
+            if !file_directive_table.contains_key(&l.file_index) {
+                done = false;
+
+                eprintln!("[ERROR]: File directive for location not found! Location: {:?}", l);
             }
-            _ => {}
         }
     }
 
     if done {
-        return Some((function, file_directive_table));
+        return Result::Found(function, file_directive_table);
     }
 
     unimplemented!(

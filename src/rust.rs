@@ -2,7 +2,7 @@
 
 use asm;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct File {
     pub ast: asm::ast::File,
     pub lines: ::std::collections::BTreeMap<usize, Option<String>>,
@@ -10,8 +10,8 @@ pub struct File {
 
 impl File {
     pub fn line(&self, line_idx: usize) -> Option<String> {
-        if let Some(ref l) = self.lines.get(&line_idx) {
-            if let &&Some(ref l) = l {
+        if let Some(l) = self.lines.get(&line_idx) {
+            if let Some(ref l) = l {
                 return Some(l.clone());
             }
         }
@@ -19,7 +19,7 @@ impl File {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Files {
     pub files: ::std::collections::HashMap<usize, File>,
 }
@@ -42,53 +42,47 @@ impl Files {
         }
         None
     }
-
 }
 
 /// Returns the files used by the function.
+#[cfg_attr(feature = "cargo-clippy", allow(use_debug))]
 pub fn parse(
     function: &asm::ast::Function,
-    file_table: ::std::collections::HashMap<usize, asm::ast::File>,
+    file_table: &::std::collections::HashMap<usize, asm::ast::File>,
 ) -> Files {
     use asm::ast::Statement;
     use asm::ast::Directive;
-    let mut files = ::std::collections::HashMap::new();
+    let mut files = ::std::collections::HashMap::<usize, File>::new();
 
     // Go through all locations in the function and build a map of file indices
     // to files. The files contain a map of line indices to lines, the map is
     // initialized here to contain the lines pointed to by the locations.
-    for s in function.statements.iter() {
-        match s {
-            &Statement::Directive(Directive::Loc(ref l)) => {
-                if !files.contains_key(&l.file_index) {
-                    let ast = file_table.get(&l.file_index).expect(
-                            &format!("[ERROR]: incomplete file table. Location {:?} 's file is not in the file table:\n{:?}",
-                                    l, file_table));
-                    files.insert(
-                        l.file_index,
-                        File {
-                            ast: ast.clone(),
-                            lines: ::std::collections::BTreeMap::new(),
-                        },
-                    );
+    for s in &function.statements {
+        if let Statement::Directive(Directive::Loc(ref l)) = s {
+            files.entry(l.file_index).or_insert_with(|| {
+                let ast = file_table.get(&l.file_index).expect(
+                    &format!("[ERROR]: incomplete file table. Location {:?} 's file is not in the file table:\n{:?}",
+                             l, file_table));
+                File {
+                    ast: ast.clone(),
+                    lines: ::std::collections::BTreeMap::new(),
                 }
-                files
-                    .get_mut(&l.file_index)
-                    .unwrap()
-                    .lines
-                    .insert(l.file_line, None);
-            }
-            _ => {}
+            });
+            files
+                .get_mut(&l.file_index)
+                .unwrap()
+                .lines
+                .insert(l.file_line, None);
         }
     }
 
     // Go through the line map of each file and fill in holes smaller than N
     // lines:
     let N = 5;
-    for (_k, f) in &mut files {
+    for f in files.values_mut() {
         let mut prev = 0;
         let mut to_add = Vec::new();
-        for (&k, _l) in &f.lines {
+        for &k in f.lines.keys() {
             if k > prev + 1 && k < prev + N {
                 for i in prev + 1..k {
                     to_add.push(i);
@@ -104,7 +98,7 @@ pub fn parse(
     correct_rust_paths(&mut files);
 
     // Read the required lines from each Rust file:
-    for (_k, f) in &mut files {
+    for f in files.values_mut() {
         use std::io::BufRead;
         let fh = ::std::fs::File::open(&f.ast.path)
             .expect(&format!("[ERROR]: failed to open file: {}", f.ast.path));
@@ -119,7 +113,7 @@ pub fn parse(
         }
     }
 
-    for (_k, f) in &mut files {
+    for f in files.values_mut() {
         for (l_idx, line) in &f.lines {
             if line.is_none() && *l_idx != 0 {
                 panic!(
@@ -134,7 +128,8 @@ pub fn parse(
 }
 
 fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
-    let rust = ::std::env::var("RUSTC").unwrap_or("rustc".to_string());
+    let rust =
+        ::std::env::var("RUSTC").unwrap_or_else(|_| "rustc".to_string());
 
     let mut sysroot = ::std::process::Command::new(&rust);
     sysroot.arg("--print").arg("sysroot");
@@ -152,7 +147,7 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
     sysroot.pop();
     sysroot.push_str("/lib/rustlib/src/rust/");
 
-    for (_k, f) in files {
+    for f in files.values_mut() {
         if f.ast.path.contains("travis/build/rust-lang/rust/") {
             let path = {
                 let tail = f.ast

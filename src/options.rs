@@ -1,9 +1,12 @@
 //! Argument parsing utilities.
 
+#![cfg_attr(feature = "cargo-clippy", allow(missing_docs_in_private_items))]
+
 use structopt::StructOpt;
 use asm::Style;
 use build::Type;
 
+/// CLI options of cargo-asm.
 #[derive(StructOpt, Debug)]
 pub struct Options {
     /// Name of the symbol to disassembly.
@@ -33,7 +36,17 @@ pub struct Options {
 #[structopt(bin_name = "cargo")]
 enum Options_ {
     #[structopt(name = "asm",
-                about = "Shows the assembly generated for a Rust function.")]
+                about = "\
+Shows the assembly generated for a Rust function.
+
+Quick start: given a crate named \"crate\", to search:
+  * a function \"foo\":
+      cargo asm crate::path::to::foo,
+  * an inherent method \"foo\" of a type \"Foo\":
+      cargo asm crate::path::to::Foo::foo,
+  * an implementation of the trait method \"bar\" of the trait \"Bar\" for the type \"Foo\":
+      cargo asm \"<crate::path::to::Foo as crate::path::to::Bar>::bar\"
+")]
     Asm(Options),
 }
 
