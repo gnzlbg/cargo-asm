@@ -54,6 +54,9 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
         cargo_build.arg("--color=always");
         cargo_build.env("LS_COLORS", "rs=0:di=38;5;27:mh=44;38;5;15");
     }
+    if let Ok(v) = ::std::env::var("RUSTC") {
+        cargo_build.env("RUSTC", v);
+    }
     match opt.build_type {
         Type::Release => cargo_build.arg("--release"),
         Type::Debug => cargo_build.arg("--debug"),
