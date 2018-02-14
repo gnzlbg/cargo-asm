@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -ex
+
+: ${TARGET?"The TARGET environment variable must be set."}
+
+cargo install cargo-asm
+cd cargo-asm-test/lib_crate
+
+cargo asm lib_crate::bar::double_n --target=$TARGET
+cargo asm lib_crate::bar::double_n --rust --target=$TARGET
+cargo asm lib_crate::bar::double_n --json --target=$TARGET
+
+cargo asm lib_crate::bar::generic_add --target=$TARGET
+cargo asm lib_crate::bar::generic_add --rust --target=$TARGET
+cargo asm lib_crate::bar::generic_add --json --target=$TARGET
+
+cargo asm lib_crate::sum_array --target=$TARGET
+cargo asm lib_crate::sum_array --rust --target=$TARGET
+cargo asm lib_crate::sum_array --json --target=$TARGET

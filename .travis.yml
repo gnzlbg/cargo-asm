@@ -1,0 +1,27 @@
+language: rust
+rust: nightly
+services: docker
+matrix:
+  fast_finish: true
+  allow_failures:
+  - env: RUSTFMT
+  - env: CLIPPY
+  include:
+  - env: RUSTFMT
+    before_script:
+    - cargo install rustfmt-nightly --force
+    script:
+    - cargo fmt -- --write-mode=diff
+  - env: CLIPPY
+    before_script:
+    - cargo install clippy --force
+    script:
+    - cargo clippy -- -D clippy-pedantic
+  - env: TARGET=x86_64-unknown-linux-gnu
+
+script:
+  - ci/run.sh
+
+notifications:
+  email:
+    on_success: never
