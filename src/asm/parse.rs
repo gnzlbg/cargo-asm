@@ -135,7 +135,7 @@ pub fn function(
 
     let symbol_pattern = if cfg!(target_os = "macosx") {
         "__"
-    } else {
+    } else { // windows and linux
         "_"
     };
 
