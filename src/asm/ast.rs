@@ -10,7 +10,7 @@ pub struct Function {
 }
 
 /// Statemets
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum Statement {
     Label(Label),
     Directive(Directive),
@@ -19,7 +19,7 @@ pub enum Statement {
 }
 
 /// Asm labels, e.g., LBB0:
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Label {
     pub id: String,
     rust_loc: Option<Loc>,
@@ -41,14 +41,14 @@ impl Label {
 }
 
 /// Asm directives, e.g, .static ...
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum Directive {
     File(File),
     Loc(Loc),
     Generic(GenericDirective),
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize)]
 pub struct File {
     pub path: ::std::path::PathBuf,
     pub index: usize,
@@ -72,7 +72,7 @@ impl File {
     }
 }
 
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(PartialEq, Debug, Copy, Clone, Serialize)]
 pub struct Loc {
     pub file_index: usize,
     pub file_line: usize,
@@ -99,7 +99,7 @@ impl Loc {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct GenericDirective {
     pub string: String,
 }
@@ -154,7 +154,7 @@ impl Directive {
 }
 
 /// Asm comments, e.g, ;; this is a comment.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Comment {
     pub string: String,
 }
@@ -174,7 +174,7 @@ impl Comment {
 }
 
 /// Asm instructions: everything else (not a Comment, Directive, or Label).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Instruction {
     pub instr: String,
     pub args: Vec<String>,

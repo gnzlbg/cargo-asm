@@ -12,6 +12,10 @@ extern crate rustc_demangle;
 extern crate structopt;
 extern crate termcolor;
 extern crate walkdir;
+extern crate serde;
+extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
 
 mod options;
 mod process;
@@ -61,7 +65,13 @@ fn main() {
     match parse_files(&asm_files, &mut opts) {
         asm::parse::Result::Found(function, file_table) => {
             let rust = rust::parse(&function, &file_table, &mut opts);
-            display::print(&function, rust.clone(), &opts);
+            if !opts.json {
+                display::print(&function, rust.clone(), &opts);
+            } else {
+                if let Some(s) = display::to_json(&function, &rust) {
+                    println!("{}", s);
+                }
+            }
         }
         asm::parse::Result::NotFound(mut table) => {
             let mut msg = format!("could not find function at path \"{}\" in the generated assembly.\nMaybe you meant one of the following functions?\n", &opts.path);

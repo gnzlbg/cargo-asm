@@ -3,7 +3,7 @@ use super::options;
 use super::rust;
 
 /// Formatting of Rust source code:
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 struct Rust {
     line: String,
     path: ::std::path::PathBuf,
@@ -19,6 +19,7 @@ impl Rust {
 }
 
 /// Type of node to display
+#[derive(Serialize)]
 enum Kind {
     Asm(asm::ast::Statement),
     Rust(Rust),
@@ -402,4 +403,17 @@ pub fn write_error(msg: &str, opts: &options::Options) {
     buffer.set_color(&ColorSpec::new()).unwrap();
     write!(&mut buffer, "{}", msg).unwrap();
     bufwtr.print(&buffer).unwrap();
+}
+
+pub fn to_json(
+    function: &asm::ast::Function, rust_files: &rust::Files
+) -> Option<String> {
+    let r = merge_rust_and_asm(&function, rust_files);
+    match ::serde_json::to_string(&r) {
+        Ok(s) => Some(s),
+        Err(e) => {
+            eprintln!("[ERROR]: {}", e);
+            None
+        }
+    }
 }

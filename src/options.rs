@@ -30,6 +30,8 @@ pub struct Options {
     pub comments: bool,
     #[structopt(long = "directives", help = "Print assembly directives.")]
     pub directives: bool,
+    #[structopt(long = "json", help = "Serialize asm AST to json (ignores most other options).")]
+    pub json: bool,
 }
 
 #[derive(StructOpt, Debug)]
