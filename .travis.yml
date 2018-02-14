@@ -24,6 +24,7 @@ matrix:
 
 script:
   - ci/run.sh
+  - cat target/release/deps/*.s
 
 notifications:
   email:
