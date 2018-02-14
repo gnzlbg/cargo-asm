@@ -50,7 +50,7 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
     // TODO: unclear if `cargo build` + `RUSTFLAGS` should be used,
     // or instead one should use `cargo rustc -- --emit asm`
     cargo_build.arg("build");
-    if opt.color {
+    if !opt.no_color {
         cargo_build.arg("--color=always");
         cargo_build.env("LS_COLORS", "rs=0:di=38;5;27:mh=44;38;5;15");
     }

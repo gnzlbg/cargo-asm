@@ -38,7 +38,7 @@ pub struct Options {
 impl Options {
     pub fn new(program: &options::Options) -> Self {
         Self {
-            use_color: program.color,
+            use_color: !program.no_color,
             print_comments: program.comments,
             print_directives: program.directives,
             verbose: program.verbose,
@@ -392,7 +392,7 @@ pub fn write_error(msg: &str, opts: &options::Options) {
         .set_fg(Some(Color::Red))
         .set_bold(true);
 
-    let bufwtr = if opts.color {
+    let bufwtr = if !opts.no_color {
         BufferWriter::stderr(ColorChoice::Auto)
     } else {
         BufferWriter::stderr(ColorChoice::Never)
