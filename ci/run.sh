@@ -4,7 +4,7 @@ set -ex
 
 : ${TARGET?"The TARGET environment variable must be set."}
 
-cargo install cargo-asm
+cargo install --force
 cd cargo-asm-test/lib_crate
 
 cargo asm lib_crate::bar::double_n --target=$TARGET
