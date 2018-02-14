@@ -20,4 +20,5 @@ build: false
 
 test_script:
   - C:\msys64\usr\bin\sh ci\run.sh
-  - type target\release\deps\*.s
+  - cd C:\projects\cargo-asm\target\release\deps\
+  - type *.s
