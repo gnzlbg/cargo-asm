@@ -56,12 +56,25 @@ pub struct File {
 
 impl File {
     pub fn new(s: &str) -> Option<Self> {
-        if !s.starts_with(".file") {
+        let file_label = if cfg!(target_os = "windows") {
+            ".cv_file"
+        } else {
+            // linux and macosx
+            ".file"
+        };
+        if !s.starts_with(file_label) {
             return None;
         }
-        let path = s.split('"').nth(1).unwrap();
-        let index = s.split_whitespace().nth(1).unwrap().parse().unwrap_or(0);
 
+        let file_path_index_index = 1;
+        let ws_tokens = s.split_whitespace().collect::<Vec<_>>();
+
+        let file_path_index = 1;
+        let colon_tokens = s.split('"').collect::<Vec<_>>();
+
+        let path = colon_tokens.get(file_path_index).unwrap();
+        // On Linux some files miss the file index:
+        let index = ws_tokens.get(file_path_index_index).unwrap().parse().unwrap_or(0);
         Some(Self {
             path: ::std::path::PathBuf::from(path),
             index,
@@ -81,13 +94,43 @@ pub struct Loc {
 
 impl Loc {
     pub fn new(s: &str) -> Option<Self> {
-        if !s.starts_with(".loc") {
+        let loc_label = if cfg!(target_os = "windows") {
+            ".cv_loc"
+        } else {
+            // linux and macosx
+            ".loc"
+        };
+        if !s.starts_with(loc_label) {
             return None;
         }
-        let mut it = s.split_whitespace();
-        let file_index = it.nth(1).unwrap();
-        let file_line = it.next().unwrap();
-        let file_column = it.next().unwrap_or("0");
+
+        let file_index_index = if cfg!(target_os = "windows") {
+            // on windows index 1 is the cv_func_id
+            2
+        } else {
+            // linux and macosx
+            1
+        };
+
+        let file_line_index = if cfg!(target_os = "windows") {
+            3
+        } else {
+            // linux and macosx
+            2
+        };
+
+        let file_column_index = if cfg!(target_os = "windows") {
+            4
+        } else {
+            // linux and macosx
+            3
+        };
+
+        let tokens = s.split_whitespace().collect::<Vec<_>>();
+        let file_index = tokens.get(file_index_index).unwrap();
+        let file_line = tokens.get(file_line_index).unwrap();
+        // On Linux the file-column is not emitted so we just set it to zero here.
+        let file_column = tokens.get(file_column_index).unwrap_or(&"0");
         Some(Self {
             file_index: file_index.parse().unwrap(),
             file_line: file_line.parse().unwrap(),
@@ -107,6 +150,10 @@ pub struct GenericDirective {
 impl GenericDirective {
     pub fn new(s: &str) -> Option<Self> {
         if s.starts_with('.') {
+            if cfg!(target_os = "windows") && s.ends_with(":") {
+                // On Windows .{pattern}: is a label
+                return None;
+            }
             return Some(Self {
                 string: s.to_string(),
             });
@@ -121,13 +168,16 @@ impl GenericDirective {
 impl Directive {
     pub fn new(s: &str) -> Option<Self> {
         if s.starts_with('.') {
+            if cfg!(target_os = "windows") && s.ends_with(":") {
+                // On Windows .{pattern}: is a label
+                return None;
+            }
             if let Some(file) = File::new(s) {
                 return Some(Directive::File(file));
             }
             if let Some(loc) = Loc::new(s) {
                 return Some(Directive::Loc(loc));
             }
-
             return Some(Directive::Generic(GenericDirective::new(s).unwrap()));
         }
         None

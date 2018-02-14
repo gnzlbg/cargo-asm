@@ -57,11 +57,20 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
             match a {
                 Comment(_) if !opts.print_comments => return,
                 Directive(_) if !opts.print_directives => return,
-                Label(ref l)
-                    if l.id.starts_with("Lcfi") || l.id.starts_with("Ltmp")
-                        || l.id.starts_with("Lfunc_end") =>
-                {
-                    return
+                Label(ref l) => {
+                    if cfg!(target_os = "windows") {
+                        if l.id.starts_with(".Lcfi") || l.id.starts_with(".Ltmp")
+                            || l.id.starts_with(".Lfunc_end")
+                        {
+                            return
+                        }
+                    } else {
+                        if l.id.starts_with("Lcfi") || l.id.starts_with("Ltmp")
+                            || l.id.starts_with("Lfunc_end")
+                        {
+                            return
+                        }
+                    }
                 }
                 _ => {}
             }
@@ -409,7 +418,7 @@ pub fn to_json(
     function: &asm::ast::Function, rust_files: &rust::Files
 ) -> Option<String> {
     let r = merge_rust_and_asm(&function, rust_files);
-    match ::serde_json::to_string(&r) {
+    match ::serde_json::to_string_pretty(&r) {
         Ok(s) => Some(s),
         Err(e) => {
             eprintln!("[ERROR]: {}", e);
