@@ -74,6 +74,9 @@ fn main() {
             }
         }
         asm::parse::Result::NotFound(mut table) => {
+            if opts.raw {
+                ::std::process::exit(0);
+            }
             let mut msg = format!("could not find function at path \"{}\" in the generated assembly.\nMaybe you meant one of the following functions?\n", &opts.path);
 
             let last_path = opts.path.split(':').next_back().unwrap();

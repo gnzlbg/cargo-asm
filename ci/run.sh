@@ -21,3 +21,5 @@ cargo asm lib_crate::sum_array --target=$TARGET
 cargo asm lib_crate::sum_array --rust --target=$TARGET
 cargo asm lib_crate::sum_array --directives --comments --rust --verbose --target=$TARGET
 cargo asm lib_crate::sum_array --json --target=$TARGET
+
+cargo asm lib_crate::bar::double_n --target=$TARGET --raw

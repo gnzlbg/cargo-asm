@@ -32,6 +32,8 @@ pub struct Options {
     pub directives: bool,
     #[structopt(long = "json", help = "Serialize asm AST to json (ignores most other options).")]
     pub json: bool,
+    #[structopt(long = "raw", help = "Dump all relevant raw assembly (ignores most other options).")]
+    pub raw: bool,
 }
 
 #[derive(StructOpt, Debug)]
