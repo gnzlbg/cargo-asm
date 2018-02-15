@@ -41,7 +41,7 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
         let mut cargo_clean = Command::new("cargo");
         cargo_clean.arg("clean");
         let error_msg = "cargo clean failed";
-        process::exec(&mut cargo_clean, error_msg, opt.verbose)
+        process::exec(&mut cargo_clean, error_msg, opt.debug_mode)
             .expect(error_msg);
     }
 
@@ -76,7 +76,7 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
     // let build_start = ::std::time::SystemTime::now();
     let error_msg = "cargo build failed";
     let (_stdout, stderr) =
-        process::exec(&mut cargo_build, error_msg, opt.verbose)
+        process::exec(&mut cargo_build, error_msg, opt.debug_mode)
             .expect(error_msg);
 
     // Find output directories:

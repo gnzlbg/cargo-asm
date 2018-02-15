@@ -16,8 +16,6 @@ pub struct Options {
     pub TRIPLE: Option<String>,
     #[structopt(long = "clean", help = "Runs cargo clean before emitting assembly.")]
     pub clean: bool,
-    #[structopt(long = "verbose", help = "Verbose mode.")]
-    pub verbose: bool,
     #[structopt(long = "no-color", help = "Disable colored output.")]
     pub no_color: bool,
     #[structopt(long = "asm-style", help = "Assembly style: intel, at&t.", default_value = "intel")]
@@ -32,8 +30,9 @@ pub struct Options {
     pub directives: bool,
     #[structopt(long = "json", help = "Serialize asm AST to json (ignores most other options).")]
     pub json: bool,
-    #[structopt(long = "raw", help = "Dump all relevant raw assembly (ignores most other options).")]
-    pub raw: bool,
+    #[structopt(long = "debug-mode", help = "Prints output useful for debugging.")]
+    pub debug_mode: bool,
+
 }
 
 #[derive(StructOpt, Debug)]

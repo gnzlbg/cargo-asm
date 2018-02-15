@@ -30,7 +30,19 @@ fn parse_files(
     files: &[std::path::PathBuf], mut opts: &mut options::Options
 ) -> asm::parse::Result {
     use asm::parse::Result;
-    if !opts.raw {
+    if opts.debug_mode {
+        // In debug mode dump all the raw assembly that we could find.
+        for f in files {
+            println!("raw file dump {}:", f.display());
+            use std::io::BufRead;
+
+            let fh = ::std::fs::File::open(f).unwrap();
+            let file_buf = ::std::io::BufReader::new(&fh);
+            for l in file_buf.lines() {
+                println!("{}", l.unwrap());
+            }
+        }
+    }
     let mut function_table = Vec::<String>::new();
     for f in files {
         assert!(f.exists(), "path does not exist: {}", f.display());
@@ -44,25 +56,13 @@ fn parse_files(
         }
     }
         Result::NotFound(function_table)
-    } else {
-        for f in files {
-            println!("raw file {}:", f.display());
-            use std::io::BufRead;
-
-            let fh = ::std::fs::File::open(f).unwrap();
-            let file_buf = ::std::io::BufReader::new(&fh);
-            for l in file_buf.lines() {
-                println!("{}", l.unwrap());
-            }
-        }
-        ::std::process::exit(0);
-    }
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(print_stdout, use_debug))]
 fn main() {
     let mut opts = options::get();
-    if opts.verbose {
+    if opts.debug_mode {
+        opts.rust = true;
         println!("Options: {:?}", opts);
         println!("Input path: {}", opts.path);
     }
@@ -73,7 +73,7 @@ fn main() {
         display::write_error("cargo build did not emit any assembly or cargo asm could not find it!", &opts);
         ::std::process::exit(1);
     }
-    if opts.verbose {
+    if opts.debug_mode {
         println!("Assembly files found: {:?}", asm_files);
     }
     match parse_files(&asm_files, &mut opts) {

@@ -153,14 +153,14 @@ fn correct_rust_paths(
         Ok((stdout, _stderr)) => ::std::path::PathBuf::from(stdout.trim()),
         Err(()) => panic!(),
     };
-    if opts.verbose {
+    if opts.debug_mode {
         println!("sysroot: {}", sysroot.display());
     }
     sysroot.parent();
     let rust_src_path = ::std::path::PathBuf::from("lib/rustlib/src/rust/src");
 
     ::path::push(&mut sysroot, &rust_src_path);
-    if opts.verbose {
+    if opts.debug_mode {
         eprintln!(
             "merging {} with sysroot results in {}",
             rust_src_path.display(),
@@ -179,7 +179,7 @@ fn correct_rust_paths(
             let path = {
                 let tail = ::path::after(&f.ast.path, &travis_rust_src_path);
                 let mut path = sysroot.clone();
-                if opts.verbose {
+                if opts.debug_mode {
                     eprintln!(
                         "merging {} with {}",
                         path.display(),
@@ -187,7 +187,7 @@ fn correct_rust_paths(
                     );
                 }
                 path.push(&tail);
-                if opts.verbose {
+                if opts.debug_mode {
                     eprintln!("  merge result: {}", path.display());
                 }
 
@@ -195,7 +195,7 @@ fn correct_rust_paths(
             };
             f.ast.path = path;
             if !f.ast.path.exists() {
-                if !missing_path_warning && !opts.verbose {
+                if !missing_path_warning && !opts.debug_mode {
                     eprintln!("[WARNING]: path does not exist: {}. Maybe the rust-src component is not installed?", f.ast.path.display());
                     missing_path_warning = true;
                 }

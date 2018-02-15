@@ -31,17 +31,21 @@ pub struct Options {
     pub use_color: bool,
     pub print_comments: bool,
     pub print_directives: bool,
-    pub verbose: bool,
+    pub debug_mode: bool,
     pub rust: bool,
 }
 
 impl Options {
     pub fn new(program: &options::Options) -> Self {
+        // In debug mode print the comments and directives
+        let print_comments = if program.debug_mode { true } else { program.comments };
+
+        let print_directives = if program.debug_mode { true } else { program.directives };
         Self {
             use_color: !program.no_color,
-            print_comments: program.comments,
-            print_directives: program.directives,
-            verbose: program.verbose,
+            print_comments,
+            print_directives,
+            debug_mode: program.debug_mode,
             rust: program.rust,
         }
     }
@@ -146,7 +150,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
         .set_bold(true);
     let instr_call_arg_color = rust_color.clone();
 
-    fn verbose_format(mut buffer: &mut Buffer, loc: Option<asm::ast::Loc>) {
+    fn debug_mode_format(mut buffer: &mut Buffer, loc: Option<asm::ast::Loc>) {
         if let Some(loc) = loc {
             write!(&mut buffer, "   [{}:{}]", loc.file_index, loc.file_line)
                 .unwrap();
@@ -163,8 +167,8 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                     buffer.set_color(&label_color).unwrap();
                     write!(&mut buffer, "{}", l.id).unwrap();
                     write!(&mut buffer, ":").unwrap();
-                    if opts.verbose {
-                        verbose_format(&mut buffer, l.rust_loc());
+                    if opts.debug_mode {
+                        debug_mode_format(&mut buffer, l.rust_loc());
                     }
                 }
                 Directive(d) => match d {
@@ -190,8 +194,8 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                 Comment(c) => {
                     buffer.set_color(&comment_color).unwrap();
                     write!(&mut buffer, "{}", c.string).unwrap();
-                    if opts.verbose {
-                        verbose_format(&mut buffer, c.rust_loc());
+                    if opts.debug_mode {
+                        debug_mode_format(&mut buffer, c.rust_loc());
                     }
                 }
                 Instruction(i) => {
@@ -206,8 +210,8 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                         buffer.set_color(&instr_arg_color).unwrap();
                     }
                     write!(&mut buffer, " {}", i.args.join(" ")).unwrap();
-                    if opts.verbose {
-                        verbose_format(&mut buffer, i.rust_loc());
+                    if opts.debug_mode {
+                        debug_mode_format(&mut buffer, i.rust_loc());
                     }
                 }
             }
@@ -216,8 +220,8 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
             buffer.set_color(&rust_color).unwrap();
             if part_of_main_function {
                 write!(&mut buffer, "{}", r.line).unwrap();
-                if opts.verbose {
-                    verbose_format(&mut buffer, Some(r.loc));
+                if opts.debug_mode {
+                    debug_mode_format(&mut buffer, Some(r.loc));
                 }
             } else {
                 write!(

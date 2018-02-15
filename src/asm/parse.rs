@@ -174,7 +174,7 @@ pub fn function(
                     }
                     lines.push(l);
                 }
-                if opts.verbose {
+                if opts.debug_mode {
                     println!("function lines for function: {}", path);
                     for l in &lines {
                         println!("## {}", l)
