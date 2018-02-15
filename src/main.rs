@@ -35,7 +35,9 @@ fn parse_files(
         assert!(f.exists(), "path does not exist: {}", f.display());
         match asm::parse::function(f.as_path(), &mut opts) {
             Result::Found(function, files) => {
-                return Result::Found(function, files)
+                if !opts.raw {
+                    return Result::Found(function, files)
+                }
             }
             Result::NotFound(table) => for f in table {
                 function_table.push(f);
