@@ -174,6 +174,13 @@ pub fn function(
                     }
                     lines.push(l);
                 }
+                if opts.verbose {
+                    println!("function lines for function: {}", path);
+                    for l in &lines {
+                        println!("## {}", l)
+                    }
+                }
+
                 function = Some(function_body(lines, &path));
                 // If the function contained a .file directive, we are
                 // done:
