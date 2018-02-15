@@ -151,9 +151,7 @@ pub fn function(
 
     while let Some(line) = line_iter.next() {
         let line = line.unwrap().trim().to_string();
-        if opts.raw {
-            println!("{}", line);
-        }
+
         if function.is_none() && line.starts_with(function_label_pattern) {
             // We haven't found the function yet:
             //

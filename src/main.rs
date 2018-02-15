@@ -30,21 +30,33 @@ fn parse_files(
     files: &[std::path::PathBuf], mut opts: &mut options::Options
 ) -> asm::parse::Result {
     use asm::parse::Result;
+    if !opts.raw {
     let mut function_table = Vec::<String>::new();
     for f in files {
         assert!(f.exists(), "path does not exist: {}", f.display());
         match asm::parse::function(f.as_path(), &mut opts) {
             Result::Found(function, files) => {
-                if !opts.raw {
-                    return Result::Found(function, files)
-                }
+                return Result::Found(function, files)
             }
             Result::NotFound(table) => for f in table {
                 function_table.push(f);
             },
         }
     }
-    Result::NotFound(function_table)
+        Result::NotFound(function_table)
+    } else {
+        for f in files {
+            println!("raw file {}:", f.display());
+            use std::io::BufRead;
+
+            let fh = ::std::fs::File::open(f).unwrap();
+            let file_buf = ::std::io::BufReader::new(&fh);
+            for l in file_buf.lines() {
+                println!("{}", l.unwrap());
+            }
+        }
+        ::std::process::exit(0);
+    }
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(print_stdout, use_debug))]
@@ -76,9 +88,6 @@ fn main() {
             }
         }
         asm::parse::Result::NotFound(mut table) => {
-            if opts.raw {
-                ::std::process::exit(0);
-            }
             let mut msg = format!("could not find function at path \"{}\" in the generated assembly.\nMaybe you meant one of the following functions?\n", &opts.path);
 
             let last_path = opts.path.split(':').next_back().unwrap();
