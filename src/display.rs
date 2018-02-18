@@ -370,14 +370,13 @@ fn merge_rust_and_asm(
     for stmt in &function.statements {
         if let Some(rust_loc) = stmt.rust_loc() {
             let line = rust_files.line(rust_loc);
-            if line.is_none() {
-                continue;
-            }
-            let line = line.unwrap();
-            let path = rust_files.file_path(rust_loc).unwrap();
+            if !line.is_none() {
+                let line = line.unwrap();
+                let path = rust_files.file_path(rust_loc).unwrap();
 
-            let rust = Kind::Rust(Rust::new(line, path, rust_loc));
-            output.push(rust);
+                let rust = Kind::Rust(Rust::new(line, path, rust_loc));
+                output.push(rust);
+            }
         }
         let asm = Kind::Asm(stmt.clone());
         output.push(asm);
