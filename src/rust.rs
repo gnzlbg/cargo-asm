@@ -62,6 +62,7 @@ pub fn parse(
     // initialized here to contain the lines pointed to by the locations.
     for s in &function.statements {
         if let Statement::Directive(Directive::Loc(ref l)) = s {
+            println!("inserting locs: {:?}", l);
             files.entry(l.file_index).or_insert_with(|| {
                 let ast = file_table.get(&l.file_index).expect(
                     &format!("[ERROR]: incomplete file table. Location {:?} 's file is not in the file table:\n{:?}",
@@ -76,8 +77,11 @@ pub fn parse(
                 .unwrap()
                 .lines
                 .insert(l.file_line, None);
+            println!("files: {:?}", files);;
         }
     }
+
+    println!("Done inserting files: {:?}", files);;
 
     // Go through the line map of each file and fill in holes smaller than N
     // lines:
@@ -97,8 +101,12 @@ pub fn parse(
         }
     }
 
+    println!("Done filing holes in files: {:?}", files);;
+
     // Corrects paths to Rust std library components:
     correct_rust_paths(&mut files, &mut opts);
+
+    println!("Done correcting paths in files: {:?}", files);;
 
     // Read the required lines from each Rust file:
     for f in files.values_mut() {
@@ -117,6 +125,8 @@ pub fn parse(
             }
         }
     }
+
+    println!("Done reading lines in files: {:?}", files);;
 
     for f in files.values_mut() {
         for (l_idx, line) in &f.lines {
@@ -168,8 +178,8 @@ fn correct_rust_paths(
         );
     }
 
-    let travis_rust_src_path = if cfg!(target_os = "macosx") {
-        ::std::path::PathBuf::from("travis/build/rust-lang/rust/")
+    let travis_rust_src_path = if cfg!(target_os = "macos") {
+        ::std::path::PathBuf::from("travis/build/rust-lang/rust/src")
     } else {
         ::std::path::PathBuf::from("checkout/src/")
     };
@@ -195,13 +205,22 @@ fn correct_rust_paths(
             };
             f.ast.path = path;
             if !f.ast.path.exists() {
-                if !missing_path_warning && !opts.debug_mode {
-                    eprintln!("[WARNING]: path does not exist: {}. Maybe the rust-src component is not installed?", f.ast.path.display());
+                if !missing_path_warning {
+                    eprintln!("[WARNING]: path does not exist: {}. Maybe the rust-src component is not installed? Use `rustup component add rust-src to install it!`", f.ast.path.display());
                     missing_path_warning = true;
                 }
                 opts.rust = false;
             }
+        } else {
+            println!("path {} doe snot contain {}", &f.ast.path.display(), &travis_rust_src_path.display());
         }
     }
-    files.retain(|_k: &usize, f: &mut File| f.ast.path.exists());
+    files.retain(|_k: &usize, f: &mut File|
+                 if f.ast.path.exists() {
+                     true
+                 } else {
+                     println!("file {} does not exist!", f.ast.path.display());
+                     false
+                 }
+    );
 }

@@ -376,6 +376,9 @@ fn merge_rust_and_asm(
 
                 let rust = Kind::Rust(Rust::new(line, path, rust_loc));
                 output.push(rust);
+            } else {
+                println!("cannot find loc {:?} for line {:?}", rust_loc, line);
+                println!("{:?}", rust_files);
             }
         }
         let asm = Kind::Asm(stmt.clone());
