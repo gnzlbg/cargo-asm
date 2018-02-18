@@ -23,5 +23,5 @@ cargo asm lib_crate::bar::double_n --debug-mode --target=$TARGET
 cargo asm lib_crate::bar::generic_add --debug-mode --target=$TARGET
 cargo asm lib_crate::sum_array --debug-mode --target=$TARGET
 
-rust component add rust-src
+rustup component add rust-src
 cargo asm lib_crate::sum_array --rust --target=$TARGET
