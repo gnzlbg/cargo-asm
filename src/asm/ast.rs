@@ -29,7 +29,7 @@ impl Label {
     pub fn new(s: &str, rust_loc: Option<Loc>) -> Option<Self> {
         if s.ends_with(':') {
             return Some(Self {
-                id: s.split_at(s.len() - 1).0.to_string(),
+                id: s.split_at(s.len() - 1).0.trim().to_string(),
                 rust_loc,
             });
         }
@@ -74,9 +74,13 @@ impl File {
 
         let path = colon_tokens.get(file_path_index).unwrap();
         // On Linux some files miss the file index:
-        let index = ws_tokens.get(file_path_index_index).unwrap().parse().unwrap_or(0);
+        let index = ws_tokens
+            .get(file_path_index_index)
+            .unwrap()
+            .parse()
+            .unwrap_or(0);
         Some(Self {
-            path: ::std::path::PathBuf::from(path),
+            path: ::std::path::PathBuf::from(path.trim()),
             index,
         })
     }
@@ -129,7 +133,8 @@ impl Loc {
         let tokens = s.split_whitespace().collect::<Vec<_>>();
         let file_index = tokens.get(file_index_index).unwrap();
         let file_line = tokens.get(file_line_index).unwrap();
-        // On Linux the file-column is not emitted so we just set it to zero here.
+        // On Linux the file-column is not emitted so we just set it to zero
+        // here.
         let file_column = tokens.get(file_column_index).unwrap_or(&"0");
         Some(Self {
             file_index: file_index.parse().unwrap(),
@@ -155,7 +160,7 @@ impl GenericDirective {
                 return None;
             }
             return Some(Self {
-                string: s.to_string(),
+                string: s.trim().to_string(),
             });
         }
         None
@@ -213,7 +218,7 @@ impl Comment {
     pub fn new(s: &str) -> Option<Self> {
         if s.starts_with(';') {
             return Some(Self {
-                string: s.to_string(),
+                string: s.trim().to_string(),
             });
         }
         None
@@ -233,11 +238,16 @@ pub struct Instruction {
 
 impl Instruction {
     pub fn new(s: &str, rust_loc: Option<Loc>) -> Option<Self> {
-        let mut iter = s.split_whitespace();
-        let instr = iter.next().unwrap().to_string();
+        let mut iter = s.split(|c: char| {
+            c.is_whitespace() || c == ','
+        });
+        let instr = iter.next().unwrap().trim().to_string();
         let mut args = Vec::new();
         for arg in iter {
-            args.push(arg.to_string());
+            let arg_s = arg.trim().to_string();
+            if !arg_s.is_empty() {
+                args.push(arg_s);
+            }
         }
         if instr == "call" {
             let demangled_function = ::demangle::demangle(&args[0]);

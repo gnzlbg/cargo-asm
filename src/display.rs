@@ -38,9 +38,17 @@ pub struct Options {
 impl Options {
     pub fn new(program: &options::Options) -> Self {
         // In debug mode print the comments and directives
-        let print_comments = if program.debug_mode { true } else { program.comments };
+        let print_comments = if program.debug_mode {
+            true
+        } else {
+            program.comments
+        };
 
-        let print_directives = if program.debug_mode { true } else { program.directives };
+        let print_directives = if program.debug_mode {
+            true
+        } else {
+            program.directives
+        };
         Self {
             use_color: !program.no_color,
             print_comments,
@@ -63,16 +71,17 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                 Directive(_) if !opts.print_directives => return,
                 Label(ref l) => {
                     if cfg!(target_os = "windows") {
-                        if l.id.starts_with(".Lcfi") || l.id.starts_with(".Ltmp")
+                        if l.id.starts_with(".Lcfi")
+                            || l.id.starts_with(".Ltmp")
                             || l.id.starts_with(".Lfunc_end")
                         {
-                            return
+                            return;
                         }
                     } else {
                         if l.id.starts_with("Lcfi") || l.id.starts_with("Ltmp")
                             || l.id.starts_with("Lfunc_end")
                         {
-                            return
+                            return;
                         }
                     }
                 }
@@ -209,7 +218,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                     } else {
                         buffer.set_color(&instr_arg_color).unwrap();
                     }
-                    write!(&mut buffer, " {}", i.args.join(" ")).unwrap();
+                    write!(&mut buffer, " {}", i.args.join(", ")).unwrap();
                     if opts.debug_mode {
                         debug_mode_format(&mut buffer, i.rust_loc());
                     }

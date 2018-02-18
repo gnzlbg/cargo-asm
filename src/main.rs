@@ -8,14 +8,14 @@
 
 extern crate edit_distance;
 extern crate rustc_demangle;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
 #[macro_use]
 extern crate structopt;
 extern crate termcolor;
 extern crate walkdir;
-extern crate serde;
-extern crate serde_json;
-#[macro_use]
-extern crate serde_derive;
 
 mod options;
 mod process;
@@ -55,7 +55,7 @@ fn parse_files(
             },
         }
     }
-        Result::NotFound(function_table)
+    Result::NotFound(function_table)
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(print_stdout, use_debug))]
@@ -80,6 +80,11 @@ fn main() {
         asm::parse::Result::Found(function, file_table) => {
             let rust = rust::parse(&function, &file_table, &mut opts);
             if !opts.json {
+                if opts.debug_mode {
+                    if let Some(s) = display::to_json(&function, &rust) {
+                        println!("{}", s);
+                    }
+                }
                 display::print(&function, rust.clone(), &opts);
             } else {
                 if let Some(s) = display::to_json(&function, &rust) {

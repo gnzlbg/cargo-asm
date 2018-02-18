@@ -2,7 +2,7 @@ use super::ast;
 use self::ast::*;
 
 /// Parses the body of a function `path` from the `function_line`
-fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
+fn function_body(function_lines: Vec<String>, path: &str, opts: &::options::Options) -> ast::Function {
     let mut function = Function {
         id: path.to_string(),
         file: None,
@@ -23,9 +23,18 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
         .filter(|l| !l.is_empty())
         .enumerate()
     {
+
+        if opts.debug_mode {
+            println!("parsing {}", line);
+        }
+
         // If the line contains a comment, split the line at the comment.
         let (node_str, comment_str) =
             if let Some(comment_start) = line.find(';') {
+                if opts.debug_mode {
+                    println!(" * contains a comment at: {}", comment_start);
+                }
+
                 let (node_str, comment_str) = line.split_at(comment_start);
                 (node_str, comment_str)
             } else {
@@ -34,16 +43,27 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
 
         // If the line contains a comment, we parse that first:
         if let Some(comment) = Comment::new(comment_str) {
+            if opts.debug_mode {
+                println!(" * parsing comment");
+            }
             function.statements.push(Statement::Comment(comment));
         }
 
         // Then we parse the AST statements.
 
         if let Some(directive) = Directive::new(node_str) {
+            if opts.debug_mode {
+                println!(" * parsed directive: {:?}", directive);
+            }
+
             // We set the first .file directive we parse as the functions file
             // path:
             if function.file.is_none() {
                 if let Some(file) = directive.file() {
+                    if opts.debug_mode {
+                        println!(" * file directive: {:?}", file);
+                    }
+
                     // If there is a function location already set, we set the
                     // file only if the file index matches the location. Many
                     // functions don't have a .file directive set at the
@@ -67,6 +87,10 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
             // If we find a .loc directive we parse the loc offset and set its
             // value as the current one:
             if let Some(new_loc) = directive.loc() {
+                if opts.debug_mode {
+                    println!(" * loc directive: {:?}", new_loc);
+                }
+
                 current_loc = Some(new_loc);
 
                 // The function location is the first location that we find
@@ -80,16 +104,29 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
                     function.loc = Some(new_loc);
                 }
             }
-            function.statements.push(Statement::Directive(directive));
+            let dir = Statement::Directive(directive);
+            if opts.debug_mode {
+                println!(" * appending directive: {:?}", dir);
+            }
+
+            function.statements.push(dir);
             continue;
         }
 
         if let Some(label) = Label::new(node_str, current_loc) {
+            if opts.debug_mode {
+                println!(" * parsed label: {:?}", label);
+            }
+
             function.statements.push(Statement::Label(label));
             continue;
         }
 
         if let Some(instruction) = Instruction::new(node_str, current_loc) {
+            if opts.debug_mode {
+                println!(" * parsed instruction: {:?}", instruction);
+            }
+
             function
                 .statements
                 .push(Statement::Instruction(instruction));
@@ -137,12 +174,13 @@ pub fn function(
     // that identifies the label as a function:
     let function_label_pattern = if cfg!(target_os = "macosx") {
         "__"
-    } else { // windows and linux
+    } else {
+        // windows and linux
         "_"
     };
 
-    // This is the pattern that we match to know that we have finished searching
-    // the function
+    // This is the pattern that we match to know that we have finished
+    // searching the function
     let function_end_pattern = if cfg!(target_os = "windows") {
         ".seh_endproc" // TODO: does this work with panic=abort ?
     } else {
@@ -181,7 +219,7 @@ pub fn function(
                     }
                 }
 
-                function = Some(function_body(lines, &path));
+                function = Some(function_body(lines, &path, &opts));
                 // If the function contained a .file directive, we are
                 // done:
                 if let Some(ref function) = &function {
