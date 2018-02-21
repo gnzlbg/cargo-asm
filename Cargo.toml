@@ -8,6 +8,13 @@ repository = "https://github.com/gnzlbg/cargo-asm"
 homepage = "https://github.com/gnzlbg/cargo-asm"
 readme = "readme.md"
 
+[badges]
+appveyor = { repository = "gnzlbg/cargo-asm" }
+travis-ci = { repository = "gnzlbg/cargo-asm" }
+is-it-maintained-issue-resolution = { repository = "gnzlbg/cargo-asm" }
+is-it-maintained-open-issues = { repository = "gnzlbg/cargo-asm" }
+maintenance = { status = "experimental" }
+
 [[bin]]
 name = "cargo-asm"
 path = "src/main.rs"
