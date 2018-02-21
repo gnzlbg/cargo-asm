@@ -2,7 +2,9 @@ use super::ast;
 use self::ast::*;
 
 /// Parses the body of a function `path` from the `function_line`
-fn function_body(function_lines: Vec<String>, path: &str, opts: &::options::Options) -> ast::Function {
+fn function_body(
+    function_lines: Vec<String>, path: &str, opts: &::options::Options
+) -> ast::Function {
     let mut function = Function {
         id: path.to_string(),
         file: None,
@@ -23,7 +25,6 @@ fn function_body(function_lines: Vec<String>, path: &str, opts: &::options::Opti
         .filter(|l| !l.is_empty())
         .enumerate()
     {
-
         if opts.debug_mode {
             println!("parsing {}", line);
         }

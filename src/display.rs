@@ -70,7 +70,8 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                 Comment(_) if !opts.print_comments => return,
                 Directive(_) if !opts.print_directives => return,
                 Label(ref l) => {
-                    if cfg!(target_os = "windows") || cfg!(target_os = "linux") {
+                    if cfg!(target_os = "windows") || cfg!(target_os = "linux")
+                    {
                         if l.id.starts_with(".Lcfi")
                             || l.id.starts_with(".Ltmp")
                             || l.id.starts_with(".Lfunc_end")
@@ -384,8 +385,8 @@ fn merge_rust_and_asm(
                 output.push(rust);
             } else {
                 // TODO: debug mode
-                // println!("cannot find loc {:?} for line {:?}", rust_loc, line);
-                // println!("{:?}", rust_files);
+                // println!("cannot find loc {:?} for line {:?}", rust_loc,
+                // line); println!("{:?}", rust_files);
             }
         }
         let asm = Kind::Asm(stmt.clone());

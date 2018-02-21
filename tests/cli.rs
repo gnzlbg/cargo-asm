@@ -2,15 +2,19 @@ extern crate assert_cli;
 
 fn lib_test(args: &[&str]) -> assert_cli::Assert {
     assert_cli::Assert::main_binary()
-        .with_args(&["asm", "--project-path", "cargo-asm-test/lib_crate", "--no-color"])
+        .with_args(&[
+            "asm",
+            "--project-path",
+            "cargo-asm-test/lib_crate",
+            "--no-color",
+        ])
         .with_args(args)
 }
 
 #[test]
 fn sum_array() {
-    let expected =
-        if cfg!(target_os = "macos") {
-r#"lib_crate::sum_array (src/lib.rs:6):
+    let expected = if cfg!(target_os = "macos") {
+        r#"lib_crate::sum_array (src/lib.rs:6):
  push    rbp
  mov     rbp, rsp
  test    rsi, rsi
@@ -102,8 +106,8 @@ LBB13_15:
  pop     rbp
  ret
 "#
-        } else if cfg!(target_os = "linux") {
-                    r#"lib_crate::sum_array (src/lib.rs:6):
+    } else if cfg!(target_os = "linux") {
+        r#"lib_crate::sum_array (src/lib.rs:6):
  push    rbp
  mov     rbp, rsp
  test    rsi, rsi
@@ -196,11 +200,13 @@ LBB13_15:
 .LBB13_15:
  pop     rbp
  ret"#
-        } else {
-            ""
-        };
+    } else {
+        ""
+    };
     lib_test(&["lib_crate::sum_array"])
-        .stdout().is(expected).unwrap();
+        .stdout()
+        .is(expected)
+        .unwrap();
 }
 
 #[test]
@@ -263,13 +269,15 @@ LBB0_1:
         ""
     };
     lib_test(&["lib_crate::bar::max_array"])
-        .stdout().is(expected).unwrap();
+        .stdout()
+        .is(expected)
+        .unwrap();
 }
 
 #[test]
 fn sum_array_rust() {
     let expected = if cfg!(target_os = "macos") {
-r#" pub fn sum_array(x: &[i32]) -> i32 {
+        r#" pub fn sum_array(x: &[i32]) -> i32 {
  push    rbp
  mov     rbp, rsp
      if self.ptr == self.end { (libcore/slice/mod.rs:1178)
@@ -370,7 +378,7 @@ LBB13_15:
  }
  pop     rbp
  ret"#
-        } else if cfg!(target_os = "linux") {
+    } else if cfg!(target_os = "linux") {
         r#" pub fn sum_array(x: &[i32]) -> i32 {
  push    rbp
  mov     rbp, rsp
@@ -474,16 +482,19 @@ LBB13_15:
  }
  pop     rbp
  ret"#
-        } else { "" };
+    } else {
+        ""
+    };
     lib_test(&["lib_crate::sum_array", "--rust"])
-        .stdout().is(expected)
+        .stdout()
+        .is(expected)
         .unwrap();
 }
 
 #[test]
 fn max_array_rust() {
     let expected = if cfg!(target_os = "macos") {
-            r#"pub fn max_array(x: &mut[f64; 65536], y: &[f64; 65536]) {
+        r#"pub fn max_array(x: &mut[f64; 65536], y: &[f64; 65536]) {
  push    rbp
  mov     rbp, rsp
  mov     rax, -524288
@@ -511,7 +522,7 @@ LBB0_1:
  pop     rbp
  ret"#
     } else if cfg!(target_os = "linux") {
-            r#"pub fn max_array(x: &mut[f64; 65536], y: &[f64; 65536]) {
+        r#"pub fn max_array(x: &mut[f64; 65536], y: &[f64; 65536]) {
  push    rbp
  mov     rbp, rsp
  mov     rax, -524288
@@ -537,19 +548,23 @@ LBB0_1:
  jne     .LBB0_1
  }
  pop     rbp
- ret"#        
+ ret"#
     } else {
         ""
     };
     lib_test(&["lib_crate::bar::max_array", "--rust"])
-        .stdout().is(expected)
+        .stdout()
+        .is(expected)
         .unwrap();
 }
 
 #[test]
 fn trait_method() {
-    lib_test(&["<lib_crate::baz::Foo as lib_crate::baz::Addd>::addd", "--rust"])
-        .stdout().is(r#"fn addd(&self) -> usize {
+    lib_test(&[
+        "<lib_crate::baz::Foo as lib_crate::baz::Addd>::addd",
+        "--rust",
+    ]).stdout()
+        .is(r#"fn addd(&self) -> usize {
  push    rbp
  mov     rbp, rsp
  self.x + self.y
@@ -558,7 +573,8 @@ fn trait_method() {
  }
  pop     rbp
  ret
-"#).unwrap();
+"#)
+        .unwrap();
 }
 
 #[test]
@@ -578,7 +594,8 @@ fn generic_function() {
 #[test]
 fn inherent_method() {
     lib_test(&["lib_crate::baz::Foo::foo_add", "--rust"])
-        .stdout().is(r#"pub fn foo_add(&self) -> usize {
+        .stdout()
+        .is(r#"pub fn foo_add(&self) -> usize {
  push    rbp
  mov     rbp, rsp
  self.x + self.y
@@ -587,9 +604,9 @@ fn inherent_method() {
  }
  pop     rbp
  ret
-"#).unwrap();
+"#)
+        .unwrap();
 }
-
 
 #[test]
 fn completions() {

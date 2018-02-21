@@ -155,7 +155,9 @@ pub struct GenericDirective {
 impl GenericDirective {
     pub fn new(s: &str) -> Option<Self> {
         if s.starts_with('.') {
-            if (cfg!(target_os = "windows") || cfg!(target_os = "linux")) && s.ends_with(":") {
+            if (cfg!(target_os = "windows") || cfg!(target_os = "linux"))
+                && s.ends_with(":")
+            {
                 // On Windows and Linux .{pattern}: is a label
                 return None;
             }
@@ -173,7 +175,9 @@ impl GenericDirective {
 impl Directive {
     pub fn new(s: &str) -> Option<Self> {
         if s.starts_with('.') {
-            if (cfg!(target_os = "windows") || cfg!(target_os = "linux")) && s.ends_with(":") {
+            if (cfg!(target_os = "windows") || cfg!(target_os = "linux"))
+                && s.ends_with(":")
+            {
                 // On Windows and Linux .{pattern}: is a label
                 return None;
             }
@@ -238,9 +242,7 @@ pub struct Instruction {
 
 impl Instruction {
     pub fn new(s: &str, rust_loc: Option<Loc>) -> Option<Self> {
-        let mut iter = s.split(|c: char| {
-            c.is_whitespace() || c == ','
-        });
+        let mut iter = s.split(|c: char| c.is_whitespace() || c == ',');
         let instr = iter.next().unwrap().trim().to_string();
         let mut args = Vec::new();
         for arg in iter {

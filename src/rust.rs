@@ -225,16 +225,20 @@ fn correct_rust_paths(
             }
         } else {
             if opts.debug_mode {
-                println!("path {} does not contain {}", &f.ast.path.display(), &travis_rust_src_path.display());
+                println!(
+                    "path {} does not contain {}",
+                    &f.ast.path.display(),
+                    &travis_rust_src_path.display()
+                );
             }
         }
     }
-    files.retain(|_k: &usize, f: &mut File|
-                 if f.ast.path.exists() {
-                     true
-                 } else {
-                     println!("file {} does not exist!", f.ast.path.display());
-                     false
-                 }
-    );
+    files.retain(|_k: &usize, f: &mut File| {
+        if f.ast.path.exists() {
+            true
+        } else {
+            println!("file {} does not exist!", f.ast.path.display());
+            false
+        }
+    });
 }

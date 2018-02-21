@@ -71,7 +71,11 @@ fn main() {
 
     if let Some(ref new_path) = opts.project_path {
         let new_path = ::std::path::PathBuf::from(new_path.trim());
-        assert!(::std::env::set_current_dir(&new_path).is_ok(), "failed to change the working path to {}", new_path.display());
+        assert!(
+            ::std::env::set_current_dir(&new_path).is_ok(),
+            "failed to change the working path to {}",
+            new_path.display()
+        );
     }
 
     let asm_files = build::project(&opts);
