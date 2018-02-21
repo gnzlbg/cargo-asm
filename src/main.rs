@@ -16,6 +16,8 @@ extern crate serde_json;
 extern crate structopt;
 extern crate termcolor;
 extern crate walkdir;
+#[macro_use]
+extern crate log;
 
 mod options;
 mod process;
@@ -25,6 +27,7 @@ mod demangle;
 mod display;
 mod rust;
 mod path;
+mod logger;
 
 fn parse_files(
     files: &[std::path::PathBuf], mut opts: &mut options::Options
@@ -63,10 +66,18 @@ fn parse_files(
 #[cfg_attr(feature = "cargo-clippy", allow(print_stdout, use_debug))]
 fn main() {
     let mut opts = options::get();
+    if let Err(err) = logger::Logger::init() {
+        eprintln!("failed to initialize logger: {}", err);
+        ::std::process::exit(1);
+    }
+
     if opts.debug_mode {
         opts.rust = true;
         println!("Options: {:?}", opts);
         println!("Input path: {}", opts.path);
+        log::set_max_level(log::LevelFilter::Debug);
+    } else {
+        log::set_max_level(log::LevelFilter::Error);
     }
 
     if let Some(ref new_path) = opts.project_path {
@@ -84,9 +95,7 @@ fn main() {
         display::write_error("cargo build did not emit any assembly or cargo asm could not find it!", &opts);
         ::std::process::exit(1);
     }
-    if opts.debug_mode {
-        println!("Assembly files found: {:?}", asm_files);
-    }
+    debug!("Assembly files found: {:?}", asm_files);
     match parse_files(&asm_files, &mut opts) {
         asm::parse::Result::Found(function, file_table) => {
             let rust = rust::parse(&function, &file_table, &mut opts);
