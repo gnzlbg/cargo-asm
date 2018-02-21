@@ -209,7 +209,11 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                 }
                 Instruction(i) => {
                     buffer.set_color(&instr_color).unwrap();
-                    write!(&mut buffer, "{: <7}", i.instr).unwrap();
+                    if i.args.is_empty() {
+                        write!(&mut buffer, "{}", i.instr).unwrap();
+                    } else {
+                        write!(&mut buffer, "{: <7}", i.instr).unwrap();
+                    }
                     if i.instr.starts_with('j') && i.args.len() == 1 {
                         // jump instructions
                         buffer.set_color(&label_color).unwrap();
@@ -218,7 +222,9 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                     } else {
                         buffer.set_color(&instr_arg_color).unwrap();
                     }
-                    write!(&mut buffer, " {}", i.args.join(", ")).unwrap();
+                    if !i.args.is_empty() {
+                        write!(&mut buffer, " {}", i.args.join(", ")).unwrap();
+                    }
                     if opts.debug_mode {
                         debug_mode_format(&mut buffer, i.rust_loc());
                     }
@@ -377,8 +383,9 @@ fn merge_rust_and_asm(
                 let rust = Kind::Rust(Rust::new(line, path, rust_loc));
                 output.push(rust);
             } else {
-                println!("cannot find loc {:?} for line {:?}", rust_loc, line);
-                println!("{:?}", rust_files);
+                // TODO: debug mode
+                // println!("cannot find loc {:?} for line {:?}", rust_loc, line);
+                // println!("{:?}", rust_files);
             }
         }
         let asm = Kind::Asm(stmt.clone());

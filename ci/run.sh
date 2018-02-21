@@ -4,24 +4,5 @@ set -ex
 
 : ${TARGET?"The TARGET environment variable must be set."}
 
-cargo install --force
-cd cargo-asm-test/lib_crate
-
-cargo asm lib_crate::bar::double_n --target=$TARGET
-cargo asm lib_crate::bar::double_n --rust --target=$TARGET
-cargo asm lib_crate::bar::double_n --json --target=$TARGET
-
-cargo asm lib_crate::bar::generic_add --target=$TARGET
-cargo asm lib_crate::bar::generic_add --rust --target=$TARGET
-cargo asm lib_crate::bar::generic_add --json --target=$TARGET
-
-cargo asm lib_crate::sum_array --target=$TARGET
-cargo asm lib_crate::sum_array --rust --target=$TARGET
-cargo asm lib_crate::sum_array --json --target=$TARGET
-
-cargo asm lib_crate::bar::double_n --debug-mode --target=$TARGET
-cargo asm lib_crate::bar::generic_add --debug-mode --target=$TARGET
-cargo asm lib_crate::sum_array --debug-mode --target=$TARGET
-
-rustup component add rust-src
-cargo asm lib_crate::sum_array --rust --target=$TARGET
+cargo build --release
+cargo test --release --target=$TARGET

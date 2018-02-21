@@ -32,7 +32,8 @@ pub struct Options {
     pub json: bool,
     #[structopt(long = "debug-mode", help = "Prints output useful for debugging.")]
     pub debug_mode: bool,
-
+    #[structopt(long = "project-path", help = "Runs cargo-asm in a different path.")]
+    pub project_path: Option<String>,
 }
 
 #[derive(StructOpt, Debug)]

@@ -62,7 +62,9 @@ pub fn parse(
     // initialized here to contain the lines pointed to by the locations.
     for s in &function.statements {
         if let Statement::Directive(Directive::Loc(ref l)) = s {
-            println!("inserting locs: {:?}", l);
+            if opts.debug_mode {
+                println!("inserting locs: {:?}", l);
+            }
             files.entry(l.file_index).or_insert_with(|| {
                 let ast = file_table.get(&l.file_index).expect(
                     &format!("[ERROR]: incomplete file table. Location {:?} 's file is not in the file table:\n{:?}",
@@ -77,11 +79,15 @@ pub fn parse(
                 .unwrap()
                 .lines
                 .insert(l.file_line, None);
-            println!("files: {:?}", files);;
+            if opts.debug_mode {
+                println!("files: {:?}", files);;
+            }
         }
     }
 
-    println!("Done inserting files: {:?}", files);;
+    if opts.debug_mode {
+        println!("Done inserting files: {:?}", files);;
+    }
 
     // Go through the line map of each file and fill in holes smaller than N
     // lines:
@@ -101,12 +107,16 @@ pub fn parse(
         }
     }
 
-    println!("Done filing holes in files: {:?}", files);;
+    if opts.debug_mode {
+        println!("Done filing holes in files: {:?}", files);;
+    }
 
     // Corrects paths to Rust std library components:
     correct_rust_paths(&mut files, &mut opts);
 
-    println!("Done correcting paths in files: {:?}", files);;
+    if opts.debug_mode {
+        println!("Done correcting paths in files: {:?}", files);;
+    }
 
     // Read the required lines from each Rust file:
     for f in files.values_mut() {
@@ -126,7 +136,9 @@ pub fn parse(
         }
     }
 
-    println!("Done reading lines in files: {:?}", files);;
+    if opts.debug_mode {
+        println!("Done reading lines in files: {:?}", files);;
+    }
 
     for f in files.values_mut() {
         for (l_idx, line) in &f.lines {
@@ -212,7 +224,9 @@ fn correct_rust_paths(
                 opts.rust = false;
             }
         } else {
-            println!("path {} doe snot contain {}", &f.ast.path.display(), &travis_rust_src_path.display());
+            if opts.debug_mode {
+                println!("path {} does not contain {}", &f.ast.path.display(), &travis_rust_src_path.display());
+            }
         }
     }
     files.retain(|_k: &usize, f: &mut File|
