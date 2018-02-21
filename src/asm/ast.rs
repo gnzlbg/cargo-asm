@@ -155,9 +155,8 @@ pub struct GenericDirective {
 impl GenericDirective {
     pub fn new(s: &str) -> Option<Self> {
         if s.starts_with('.') {
-            if (cfg!(target_os = "windows") ||
-                cfg!(target_os = "linux")) && s.ends_with(":") {
-                // On Windows .{pattern}: is a label
+            if (cfg!(target_os = "windows") || cfg!(target_os = "linux")) && s.ends_with(":") {
+                // On Windows and Linux .{pattern}: is a label
                 return None;
             }
             return Some(Self {
@@ -174,8 +173,8 @@ impl GenericDirective {
 impl Directive {
     pub fn new(s: &str) -> Option<Self> {
         if s.starts_with('.') {
-            if cfg!(target_os = "windows") && s.ends_with(":") {
-                // On Windows .{pattern}: is a label
+            if (cfg!(target_os = "windows") || cfg!(target_os = "linux")) && s.ends_with(":") {
+                // On Windows and Linux .{pattern}: is a label
                 return None;
             }
             if let Some(file) = File::new(s) {
