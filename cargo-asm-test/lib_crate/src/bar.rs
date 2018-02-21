@@ -35,10 +35,11 @@ pub fn add_and_mul(x: usize, y: usize) -> usize {
     w + z
 }
 
-pub fn double_and_sort(x: &mut [usize]) {
-    for x in x.iter_mut() {
-        *x *= 2;
+pub fn double_n(mut x: usize, mut n: usize) -> usize {
+    while n > 0 {
+        ::baz::double(&mut x);
+        n -= 1;
     }
-    x.sort_unstable();
+    x
 }
 

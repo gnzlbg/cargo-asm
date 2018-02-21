@@ -32,3 +32,7 @@ pub fn barr(x: usize,
             z: usize) -> usize {
     x + y + z
 }
+
+pub fn double(x: &mut usize) {
+    *x *= 2;
+}
