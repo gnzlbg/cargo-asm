@@ -155,7 +155,8 @@ pub struct GenericDirective {
 impl GenericDirective {
     pub fn new(s: &str) -> Option<Self> {
         if s.starts_with('.') {
-            if cfg!(target_os = "windows") && s.ends_with(":") {
+            if (cfg!(target_os = "windows") ||
+                cfg!(target_os = "linux")) && s.ends_with(":") {
                 // On Windows .{pattern}: is a label
                 return None;
             }
