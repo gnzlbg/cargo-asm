@@ -79,8 +79,12 @@ impl File {
             .unwrap()
             .parse()
             .unwrap_or(0);
+        let path = ::std::path::PathBuf::from(path.trim());
+        if cfg!(target_os = "windows") {
+            println!("DEBUG: parsed path: {}", path.display());
+        }
         Some(Self {
-            path: ::std::path::PathBuf::from(path.trim()),
+            path,
             index,
         })
     }
