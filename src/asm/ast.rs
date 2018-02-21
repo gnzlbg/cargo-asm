@@ -143,7 +143,7 @@ impl Loc {
         })
     }
     pub fn rust_loc(&self) -> Option<Self> {
-        None
+        Some(self.clone())
     }
 }
 
