@@ -7,11 +7,15 @@
 > but otherwise, this does not exist **yet**.
 
 `cargo-asm` is a [`cargo`] sub-command that shows you the generated assembly of
-a Rust function. For example, if you have a crate called `lib_crate`, you can
-view the assembly of the function at `bar::generic_add` by just providing its
-whole path (need to qualify it with the crate name for now):
+a Rust function. 
 
-> $ cargo asm lib_crate::bar::generic::add --rust
+# Example 
+
+To view the assembly of the function `double_n` in the module `bar` of the crate
+[`lib_crate`] annotated with its corresponding Rust code, go to the crate's root
+directory and type:
+
+> $ cargo asm lib_crate::bar::double_n --rust
 
 which outputs:
 
