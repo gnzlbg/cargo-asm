@@ -62,9 +62,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     };
     cargo_build.arg("--verbose");
     let asm_syntax = match opts.asm_style() {
-        ::asm::Style::Intel => {
-            "-C llvm-args=-x86-asm-syntax=intel"
-        }
+        ::asm::Style::Intel => "-C llvm-args=-x86-asm-syntax=intel",
         ::asm::Style::ATT => "",
     };
     if let Some(triple) = opts.TRIPLE() {

@@ -3,7 +3,7 @@
 [![crates.io version][crate-shield]][crate] [![Travis build status][travis-shield]][travis] [![Appveyor build status][appveyor-shield]][appveyor] [![License][license-shield]][license]
 
 
-> A [`cargo`] subcommand that displays the generated assembly of Rust source code.
+> A [`cargo`] subcommand that displays the generated assembly generated from Rust source code.
 
 # Install
 
@@ -28,7 +28,7 @@ which outputs:
 * Platform support:
 
   * OS: Linux, Windows, and MacOSX. 
-  * Rust: nightly (due to: https://github.com/rust-lang/rust/issues/35741).
+  * Rust: nightly and stable.
   * Architectures: x86, x86_64, arm, aarch64, powerpc, mips, sparc.
 
 * Displaying:

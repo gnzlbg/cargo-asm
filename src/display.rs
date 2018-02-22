@@ -356,7 +356,10 @@ fn merge_rust_and_asm(
                 let path = rust_files.file_path(rust_loc).unwrap();
                 Rust::new(line, path, rust_loc)
             }) {
-                output.push(Kind::Rust(rust_line))
+                let rl = rust_line.line.trim().to_string();
+                if !rl.starts_with("//") {
+                    output.push(Kind::Rust(rust_line))
+                }
             } else {
                 // TODO: debug mode
                 // println!("cannot find loc {:?} for line {:?}", rust_loc,
