@@ -1,7 +1,5 @@
 //! cargo-asm driver
-
 #![allow(non_snake_case, non_upper_case_globals)]
-#![feature(match_default_bindings)]
 #![cfg_attr(feature = "cargo-clippy",
             allow(missing_docs_in_private_items, option_unwrap_used,
                   result_unwrap_used))]

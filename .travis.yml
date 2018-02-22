@@ -1,5 +1,4 @@
 language: rust
-rust: nightly
 services: docker
 matrix:
   fast_finish: true
@@ -8,17 +7,27 @@ matrix:
   - env: CLIPPY
   include:
   - env: RUSTFMT
+    rust: nightly
     before_script:
     - cargo install rustfmt-nightly --force
     script:
     - cargo fmt -- --write-mode=diff
   - env: CLIPPY
+    rust: nightly
     before_script:
     - cargo install clippy --force
     script:
     - cargo clippy -- -D clippy-pedantic
   - env: TARGET=x86_64-unknown-linux-gnu
+    rust: nightly
   - env: TARGET=x86_64-apple-darwin
+    rust: nightly
+    os: osx
+    osx_image: xcode9.2
+  - env: TARGET=x86_64-unknown-linux-gnu
+    rust: 1.23.0
+  - env: TARGET=x86_64-apple-darwin
+    rust: 1.23.0
     os: osx
     osx_image: xcode9.2
 

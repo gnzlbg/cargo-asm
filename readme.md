@@ -5,6 +5,10 @@
 
 > A [`cargo`] subcommand that displays the generated assembly of Rust source code.
 
+# Install
+
+>$ cargo install cargo-asm
+
 # Example 
 
 To view the assembly of the function `double_n` in the module `bar` of the crate
@@ -19,28 +23,33 @@ which outputs:
 ![screenshot](https://raw.githubusercontent.com/gnzlbg/cargo-asm/images/screenshot.png)
 
 
-# Quick start
+#  Features
 
-To install it:
+* Works on Linux, Windows, and MacOSX. 
 
->$ cargo install cargo-asm
+* Intel and AT&T assembly syntax.
 
-Quick start: given a crate named `crate`, to search:
+* Stable and nightly Rust.
 
-  * a function `foo`:
-  
+* Printing corresponding Rust code next to the assembly code.
+
+* Output to JSON.
+
+* Querying:
+
+  * functions, for example: `foo`:
+
   >$ cargo asm crate::path::to::foo
   
-  * an inherent method `foo` of a type `Foo` (that is, `Foo::foo`):
+  * inherent method, for example: `foo` of a type `Foo` (that is, `Foo::foo`):
 
   >$ cargo asm crate::path::to::Foo::foo
   
-  * an implementation of the trait method `bar` of the trait `Bar` for the type `Foo`:
+  * trait method implementations, for example: `bar` of the trait `Bar` for the type `Foo`:
       
   >$ cargo asm "<crate::path::to::Foo as crate::path::to::Bar>::bar"
 
-
-Happy hacking. 
+  * generic functions, methods, ...
 
 # License
 This project is licensed under either of

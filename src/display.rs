@@ -320,7 +320,7 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
 fn make_paths_relative(
     function: &mut asm::ast::Function, rust: &mut rust::Files
 ) {
-    if let Some(ref mut file) = &mut function.file {
+    if let &mut Some(ref mut file) = &mut function.file {
         make_path_relative(&mut file.path)
     }
     for f in rust.files.values_mut() {
@@ -390,11 +390,11 @@ fn merge_rust_and_asm(
         let mut last_rust: Option<Rust> = None;
         output.retain(|v| {
             let r = match v {
-                Kind::Rust(r) => r,
+                &Kind::Rust(ref r) => r,
                 _ => return true,
             };
 
-            if let Some(ref last_rust) = &last_rust {
+            if let &Some(ref last_rust) = &last_rust {
                 if last_rust.loc == r.loc {
                     return false;
                 }
