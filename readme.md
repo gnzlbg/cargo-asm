@@ -7,7 +7,7 @@
 
 # Install
 
->$ cargo install cargo-asm
+>cargo install cargo-asm
 
 # Example 
 
@@ -15,7 +15,7 @@ To view the assembly of the function `double_n` in the module `bar` of the crate
 [`lib_crate`] annotated with its corresponding Rust code, go to the crate's root
 directory and type:
 
-> $ cargo asm lib_crate::bar::double_n --rust
+> cargo asm lib_crate::bar::double_n --rust
 
 which outputs:
 
@@ -41,15 +41,15 @@ which outputs:
 
   * functions, for example: `foo`:
 
-  >$ cargo asm crate::path::to::foo
+  >cargo asm crate::path::to::foo
   
   * inherent method, for example: `foo` of a type `Foo` (that is, `Foo::foo`):
 
-  >$ cargo asm crate::path::to::Foo::foo
+  >cargo asm crate::path::to::Foo::foo
   
   * trait method implementations, for example: `bar` of the trait `Bar` for the type `Foo`:
       
-  >$ cargo asm "<crate::path::to::Foo as crate::path::to::Bar>::bar"
+  >cargo asm "<crate::path::to::Foo as crate::path::to::Bar>::bar"
 
   * generic functions, methods, ...
 
