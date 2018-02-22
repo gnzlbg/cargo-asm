@@ -17,7 +17,9 @@ pub fn contains(
         println!("c: {:?} | nsp: {:?}", c, next_sub_path);
         if let Some(next_sp) = next_sub_path {
             if let ::std::path::Component::RootDir = next_sp {
-                next_sub_path = sub_path_iter.next();
+                if !cfg!(target_os = "windows") {
+                    next_sub_path = sub_path_iter.next();
+                }
             }
         }
         let next_sub_path_val = next_sub_path.unwrap();
