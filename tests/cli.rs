@@ -485,10 +485,8 @@ LBB14_11:
      je      LBB14_15
      lea     rcx, [rdi, +, 4*r8]
 LBB14_13:
-     intrinsics::offset(self, count) (libcore/ptr.rs:622)
      lea     rdx, [rdi, +, 4*rsi]
 LBB14_14:
- x.iter().fold(0, |sum, next| sum + *next)
  add     eax, dword, ptr, [rcx]
      intrinsics::offset(self, count) (libcore/ptr.rs:622)
      add     rcx, 4
