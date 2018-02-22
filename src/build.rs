@@ -81,7 +81,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     // Find output directories:
     // TODO: is this really necessary? Assembly output "should" be in
     // ${working_dir}/targets/{release,debug}/build/*.s
-    let mut output_directories = Vec::<String>::new();
+    let mut output_directories = Vec::<::std::path::PathBuf>::new();
     for l in stderr.lines() {
         // This goes through the Running "rustc ... " invokations printed to
         // stderr looking for --out-dir and collects the directories into a
@@ -91,15 +91,28 @@ pub fn project() -> Vec<::std::path::PathBuf> {
             .skip_while(|&s| s != "--out-dir")
             .skip(1)
             .take(1)
-            .for_each(|v| output_directories.push(v.to_string()));
+            .for_each(|v| {
+                let path = ::std::path::PathBuf::from(v.to_string());
+                debug!("parsed --out-dir: {}", path.display());
+                output_directories.push(path)
+            });
     }
 
     // Append the typical output directory:
-    let build_dir = match opts.build_type() {
-        Type::Release => "release",
-        Type::Debug => "debug",
-    };
-    output_directories.push(format!("target/{}/deps", build_dir));
+    {
+        let build_dir = match opts.build_type() {
+            Type::Release => "release",
+            Type::Debug => "debug",
+        };
+
+        let mut typical_path = ::std::env::current_dir().expect("cannot read the current working directory");
+        typical_path.push("target");
+        typical_path.push(build_dir);
+        typical_path.push("deps");
+        debug!("typical path: {}", typical_path.display());
+
+        output_directories.push(typical_path);
+    }
 
     // Scan the output directories for assembly files ".s" that have been
     // generated after the build start.
@@ -108,7 +121,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         for entry in ::walkdir::WalkDir::new(dir.clone()) {
             let e = entry.expect(&format!(
                 "failed to iterate over the directory: {}",
-                &dir
+                dir.display()
             ));
             let p = e.path();
             //let modified_after_build_start =

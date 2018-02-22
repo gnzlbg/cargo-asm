@@ -80,9 +80,7 @@ impl File {
             .parse()
             .unwrap_or(0);
         let path = ::std::path::PathBuf::from(path.trim());
-        if cfg!(target_os = "windows") {
-            println!("DEBUG: parsed path: {}", path.display());
-        }
+        debug!("parsed file path: {}", path.display());
         Some(Self { path, index })
     }
     pub fn rust_loc(&self) -> Option<Loc> {
