@@ -65,6 +65,7 @@ impl File {
         if !s.starts_with(file_label) {
             return None;
         }
+        debug!("parsing file directive: {}", s);
 
         let file_path_index_index = 1;
         let ws_tokens = s.split_whitespace().collect::<Vec<_>>();
@@ -72,11 +73,13 @@ impl File {
         let file_path_index = 1;
         let colon_tokens = s.split('"').collect::<Vec<_>>();
 
-        let path = colon_tokens.get(file_path_index).unwrap();
+        let path = colon_tokens
+            .get(file_path_index)
+            .expect(&format!("could not get file path of {} | file_path_index: {} | tokens: {:?}", s, file_path_index, &colon_tokens));
         // On Linux some files miss the file index:
         let index = ws_tokens
             .get(file_path_index_index)
-            .unwrap()
+            .expect(&format!("could not get file index of {} | file_path_index_index: {} | tokens: {:?}", s, file_path_index_index, &ws_tokens))
             .parse()
             .unwrap_or(0);
         let mut path_str = path.trim().to_string();
