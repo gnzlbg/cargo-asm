@@ -28,7 +28,7 @@ which outputs:
 * Platform support:
 
   * OS: Linux, Windows, and MacOSX. 
-  * Rust: stable and nightly.
+  * Rust: nightly (due to: https://github.com/rust-lang/rust/issues/35741).
   * Architectures: x86, x86_64, arm, aarch64, powerpc, mips, sparc.
 
 * Displaying:

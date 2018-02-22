@@ -55,7 +55,7 @@ pub fn after(
     let mut matching = false;
     for c in path.components() {
         if appending {
-            buf.push(c);
+            buf.push(c.as_ref());
         } else {
             if let Some(next_sp) = next_sub_path {
                 if let ::std::path::Component::RootDir = next_sp {
