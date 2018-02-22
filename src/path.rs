@@ -115,6 +115,11 @@ mod tests {
                 r#"C:\projects\cargo-asm\cargo-asm-test\lib_crate\src\lib.rs"#,
             );
             assert!(super::contains(&windows_path, &sub_path));
+
+            assert_eq!(
+                super::after(&windows_path, &sub_path),
+                ::std::path::PathBuf::from(r#"src\lib.rs"#)
+            );
         }
     }
 }

@@ -298,11 +298,11 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
 
     if ::path::contains(&path, &rust_src_path) {
         let new_path = ::path::after(&path, &rust_src_path);
-        debug!("  * rel path: {}", new_path.display());
+        debug!("  * rel path std: {}", new_path.display());
         *path = new_path;
     } else if ::path::contains(&path, &current_dir_path) {
         let new_path = ::path::after(&path, &current_dir_path);
-        debug!("  * rel path: {}", new_path.display());
+        debug!("  * rel path loc: {}", new_path.display());
         *path = new_path;
         return;
     } else {
