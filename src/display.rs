@@ -292,7 +292,9 @@ fn make_paths_relative(rust: &mut rust::Files) {
         };
     let current_dir_path =
         ::std::env::current_dir().expect("cannot read the current dir");
-    debug!("making std lib paths relative");
+    debug!("making lib paths relative");
+    debug!(" * std lib paths contain: {}",rust_src_path.display());
+    debug!(" * local paths contain: {}", current_dir_path.display());
     for f in rust.files.values_mut() {
         if !f.ast.path.is_absolute() {
             continue;
@@ -308,6 +310,8 @@ fn make_paths_relative(rust: &mut rust::Files) {
             debug!("  * rel path: {}", new_path.display());
             f.ast.path = new_path;
             continue;
+        } else {
+            debug!("  * path is neither local nor to std lib");
         }
     }
 }
