@@ -81,6 +81,7 @@ impl File {
             .unwrap_or(0);
         let path = ::std::path::PathBuf::from(path.trim());
         debug!("parsed file path: {}", path.display());
+
         Some(Self { path, index })
     }
     pub fn rust_loc(&self) -> Option<Loc> {

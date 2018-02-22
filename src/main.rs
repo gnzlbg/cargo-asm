@@ -100,7 +100,10 @@ fn main() {
         ::std::process::exit(1);
     }
 
-    debug!("Assembly files: {:?}", asm_files);
+    debug!("Found following assembly files:");
+    for f in &asm_files {
+        debug!("  {}", f.display());
+    }
 
     // Parse the files
     match parse_files(&asm_files) {

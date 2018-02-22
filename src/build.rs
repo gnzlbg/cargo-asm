@@ -118,21 +118,19 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     // generated after the build start.
     let mut output_files = Vec::new();
     for dir in output_directories {
+        debug!("scanning directory for assembly files: {}", dir.display());
         for entry in ::walkdir::WalkDir::new(dir.clone()) {
             let e = entry.expect(&format!(
                 "failed to iterate over the directory: {}",
                 dir.display()
             ));
             let p = e.path();
-            //let modified_after_build_start =
-            //    ::std::fs::metadata(p).unwrap().modified().unwrap()
-            //        >= build_start;
             let is_assembly_file =
                 p.extension().map_or("", |v| v.to_str().unwrap_or("")) == "s";
-            if
-            //modified_after_build_start &&
-            is_assembly_file {
-                output_files.push(p.to_path_buf());
+            if is_assembly_file {
+                let p = p.to_path_buf();
+                debug!("found assembly file: {}", p.display());
+                output_files.push(p);
             }
         }
     }
@@ -140,6 +138,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     // Canonicalize, sort the files, remove duplicates, and done:
     for f in &mut output_files {
         let c = f.canonicalize().unwrap();
+        debug!("canonicalize path {} into {}", f.display(), c.display());
         *f = c;
     }
     output_files.sort_unstable();
