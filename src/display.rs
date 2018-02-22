@@ -280,17 +280,35 @@ fn is_rust_in_function(f: &asm::ast::Function, rust: &Rust) -> bool {
 /// For example: libcore/... instead of /path/to/libcore/...
 ///
 /// This functions trims their path.
-fn make_std_lib_paths_relative(rust: &mut rust::Files) {
+fn make_paths_relative(rust: &mut rust::Files) {
     // Trim std lib paths:
     let rust_src_path =
-        ::std::path::PathBuf::from("lib/rustlib/src/rust/src/");
+        if cfg!(target_os = "macos") || cfg!(target_os = "linux") {
+            ::std::path::PathBuf::from("lib/rustlib/src/rust/src/")
+        } else if cfg!(target_os = "windows") {
+            ::std::path::PathBuf::from(r#"lib\rustlib\src\rust\src\"#)
+        } else {
+            unimplemented!()
+        };
+    let current_dir_path =
+        ::std::env::current_dir().expect("cannot read the current dir");
+    debug!("making std lib paths relative");
     for f in rust.files.values_mut() {
-        let ast = f.ast.clone();
-        if !::path::contains(&ast.path, &rust_src_path) {
+        if !f.ast.path.is_absolute() {
             continue;
         }
-        let new_path = ::path::after(&ast.path, &rust_src_path);
-        f.ast.path = new_path;
+        debug!("  * path: {}", f.ast.path.display());
+        let ast = f.ast.clone();
+        if ::path::contains(&ast.path, &rust_src_path) {
+            let new_path = ::path::after(&ast.path, &rust_src_path);
+            debug!("  * rel path: {}", new_path.display());
+            f.ast.path = new_path;
+        } else if ::path::contains(&ast.path, &current_dir_path) {
+            let new_path = ::path::after(&ast.path, &current_dir_path);
+            debug!("  * rel path: {}", new_path.display());
+            f.ast.path = new_path;
+            continue;
+        }
     }
 }
 
@@ -319,7 +337,7 @@ pub fn print(function: &asm::ast::Function, mut rust: rust::Files) {
         bufwtr.print(&buffer).unwrap();
     }
 
-    make_std_lib_paths_relative(&mut rust);
+    make_paths_relative(&mut rust);
 
     let output = merge_rust_and_asm(function, &rust);
 

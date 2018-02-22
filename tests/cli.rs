@@ -296,7 +296,7 @@ LBB14_15:
  ret
 "#
     } else {
-        ""
+        unimplemented!()
     };
     lib_test(&["lib_crate::sum_array"])
         .stdout()
@@ -387,7 +387,7 @@ LBB0_1:
  pop     rbp
  ret"#
     } else {
-        ""
+        unimplemented!()
     };
     lib_test(&["lib_crate::bar::max_array"])
         .stdout()
@@ -707,7 +707,7 @@ LBB14_15:
  ret
 "#
     } else {
-        ""
+        unimplemented!()
     };
     lib_test(&["lib_crate::sum_array", "--rust"])
         .stdout()
@@ -802,7 +802,7 @@ LBB0_1:
  pop     rbp
  ret"#
     } else {
-        ""
+        unimplemented!()
     };
     lib_test(&["lib_crate::bar::max_array", "--rust"])
         .stdout()
@@ -835,7 +835,7 @@ fn trait_method() {
  ret
 "#
     } else {
-        ""
+        unimplemented!()
     };
     lib_test(&[
         "<lib_crate::baz::Foo as lib_crate::baz::Addd>::addd",
@@ -847,8 +847,8 @@ fn trait_method() {
 
 #[test]
 fn generic_function() {
-    lib_test(&["lib_crate::bar::generic_add", "--rust"])
-        .stdout().is(r#"pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
+    let expected = if cfg!(target_os = "macos") || cfg!(target_os = "linux") {
+        r#"pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
  push    rbp
  mov     rbp, rsp
      fn add(self, other: $t) -> $t { self + other } (libcore/ops/arith.rs:108)
@@ -856,7 +856,25 @@ fn generic_function() {
  pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
  pop     rbp
  ret
-"#).unwrap();
+"#
+    } else if cfg!(target_os = "windows") {
+        r#"pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
+ push    rbp
+ mov     rbp, rsp
+     fn add(self, other: $t) -> $t { self + other } (libcore\ops\arith.rs:108)
+     lea     rax, [rcx, +, rdx]
+ pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
+ pop     rbp
+ ret
+"#
+    } else {
+        unimplemented!()
+    };
+
+    lib_test(&["lib_crate::bar::generic_add", "--rust"])
+        .stdout()
+        .is(expected)
+        .unwrap();
 }
 
 #[test]
@@ -884,7 +902,7 @@ fn inherent_method() {
  ret
 "#
     } else {
-        ""
+        unimplemented!()
     };
     lib_test(&["lib_crate::baz::Foo::foo_add", "--rust"])
         .stdout()
