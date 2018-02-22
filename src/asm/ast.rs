@@ -79,10 +79,10 @@ impl File {
             .unwrap()
             .parse()
             .unwrap_or(0);
-        let path_str = path.trim();
+        let mut path_str = path.trim().to_string();
         if cfg!(target_os = "windows") {
             // Replace \\ with \ on windows
-            path_str.replace("\\\\", "\\");
+            replace_slashes(&mut path_str);
             // FIXME: on windows these paths do not follow the UNC, but we can't
             // canonicalize them here because they might not exist (e.g. they
             // might point into the std library path of where the std library
@@ -285,5 +285,21 @@ impl Statement {
             Statement::Instruction(ref l) => l.rust_loc(),
             Statement::Comment(ref l) => l.rust_loc(),
         }
+    }
+}
+
+fn replace_slashes(s: &mut String) {
+    let n = s.replace(r#"\\"#, r#"\"#);
+    *s = n;
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn replace_slashes() {
+        let mut windows_path = r#"C:\\projects\\cargo-asm\\cargo-asm-test\\lib_crate\\src\\bar.rs"#.to_string();
+        let windows_path_norm = r#"C:\projects\cargo-asm\cargo-asm-test\lib_crate\src\bar.rs"#.to_string();
+        super::replace_slashes(&mut windows_path);
+        assert_eq!(windows_path_norm, windows_path);
     }
 }
