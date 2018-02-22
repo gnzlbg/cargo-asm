@@ -28,12 +28,12 @@ enum Kind {
 fn write_output(kind: &Kind, function: &asm::ast::Function) {
     // Filter out what to print:
     match kind {
-        Kind::Asm(ref a) => {
+        &Kind::Asm(ref a) => {
             use asm::ast::Statement::*;
             match a {
-                Comment(_) if !opts.print_comments() => return,
-                Directive(_) if !opts.print_directives() => return,
-                Label(ref l) => {
+                &Comment(_) if !opts.print_comments() => return,
+                &Directive(_) if !opts.print_directives() => return,
+                &Label(ref l) => {
                     if cfg!(target_os = "windows") || cfg!(target_os = "linux")
                     {
                         if l.id.starts_with(".Lcfi")
@@ -53,7 +53,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                 _ => {}
             }
         }
-        Kind::Rust(_) => {
+        &Kind::Rust(_) => {
             if !opts.rust() {
                 return;
             }
@@ -62,12 +62,12 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
 
     // Is the current code part of the main function?
     let part_of_main_function = match kind {
-        Kind::Asm(ref a) => is_stmt_in_function(function, a),
-        Kind::Rust(ref r) => is_rust_in_function(function, r),
+        &Kind::Asm(ref a) => is_stmt_in_function(function, a),
+        &Kind::Rust(ref r) => is_rust_in_function(function, r),
     };
 
     let indent = match kind {
-        Kind::Asm(ref a) => {
+        &Kind::Asm(ref a) => {
             use asm::ast::Statement::*;
             match *a {
                 Comment(_) | Directive(_) | Instruction(_) => {
@@ -80,7 +80,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                 Label(_) => 0,
             }
         }
-        Kind::Rust(_) => {
+        &Kind::Rust(_) => {
             if part_of_main_function {
                 1
             } else {
@@ -134,10 +134,10 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
     }
 
     match kind {
-        Kind::Asm(a) => {
+        &Kind::Asm(ref a) => {
             use asm::ast::Statement::*;
             match a {
-                Label(l) => {
+                &Label(ref l) => {
                     buffer.set_color(&label_color).unwrap();
                     write!(&mut buffer, "{}", l.id).unwrap();
                     write!(&mut buffer, ":").unwrap();
@@ -145,8 +145,8 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                         debug_mode_format(&mut buffer, l.rust_loc());
                     }
                 }
-                Directive(d) => match d {
-                    asm::ast::Directive::File(f) => {
+                &Directive(ref d) => match d {
+                    &asm::ast::Directive::File(ref f) => {
                         write!(
                             &mut buffer,
                             ".file {} \"{}\"",
@@ -154,25 +154,25 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                             f.path.display(),
                         ).unwrap();
                     }
-                    asm::ast::Directive::Loc(l) => {
+                    &asm::ast::Directive::Loc(ref l) => {
                         write!(
                             &mut buffer,
                             ".loc {} {} {}",
                             l.file_index, l.file_line, l.file_column
                         ).unwrap();
                     }
-                    asm::ast::Directive::Generic(g) => {
+                    &asm::ast::Directive::Generic(ref g) => {
                         write!(&mut buffer, "{}", g.string).unwrap();
                     }
                 },
-                Comment(c) => {
+                &Comment(ref c) => {
                     buffer.set_color(&comment_color).unwrap();
                     write!(&mut buffer, "{}", c.string).unwrap();
                     if opts.debug_mode() {
                         debug_mode_format(&mut buffer, c.rust_loc());
                     }
                 }
-                Instruction(i) => {
+                &Instruction(ref i) => {
                     buffer.set_color(&instr_color).unwrap();
                     if i.args.is_empty() {
                         write!(&mut buffer, "{}", i.instr).unwrap();
@@ -196,7 +196,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                 }
             }
         }
-        Kind::Rust(r) => {
+        &Kind::Rust(ref r) => {
             buffer.set_color(&rust_color).unwrap();
             if part_of_main_function {
                 write!(&mut buffer, "{}", r.line).unwrap();
@@ -222,8 +222,8 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
 
 fn format_function_name(function: &asm::ast::Function) -> String {
     if function.file.is_some() && function.loc.is_some() {
-        if let Some(ref file) = &function.file {
-            if let Some(ref loc) = &function.loc {
+        if let &Some(ref file) = &function.file {
+            if let &Some(ref loc) = &function.loc {
                 return format!(
                     "{} ({}:{})",
                     function.id,

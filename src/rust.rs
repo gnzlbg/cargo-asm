@@ -12,7 +12,7 @@ pub struct File {
 impl File {
     pub fn line(&self, line_idx: usize) -> Option<String> {
         if let Some(l) = self.lines.get(&line_idx) {
-            if let Some(ref l) = l {
+            if let &Some(ref l) = l {
                 return Some(l.clone());
             }
         }
@@ -61,7 +61,7 @@ pub fn parse(
     // to files. The files contain a map of line indices to lines, the map is
     // initialized here to contain the lines pointed to by the locations.
     for s in &function.statements {
-        if let Statement::Directive(Directive::Loc(ref l)) = s {
+        if let &Statement::Directive(Directive::Loc(ref l)) = s {
             debug!("inserting locs: {:?}", l);
             files.entry(l.file_index).or_insert_with(|| {
                 let ast = file_table.get(&l.file_index).expect(

@@ -289,10 +289,10 @@ impl Instruction {
 impl Statement {
     pub fn rust_loc(&self) -> Option<Loc> {
         match self {
-            Statement::Label(ref l) => l.rust_loc(),
-            Statement::Directive(ref l) => l.rust_loc(),
-            Statement::Instruction(ref l) => l.rust_loc(),
-            Statement::Comment(ref l) => l.rust_loc(),
+            &Statement::Label(ref l) => l.rust_loc(),
+            &Statement::Directive(ref l) => l.rust_loc(),
+            &Statement::Instruction(ref l) => l.rust_loc(),
+            &Statement::Comment(ref l) => l.rust_loc(),
         }
     }
 }

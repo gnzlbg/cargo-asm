@@ -59,7 +59,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
                     // beginnin (only a location) but they contain .file
                     // directives in the body when code from other files gets
                     // inlined:
-                    if let Some(ref loc) = &function.loc {
+                    if let &Some(ref loc) = &function.loc {
                         if loc.file_index == file.index {
                             function.file = Some(file);
                         }
@@ -85,7 +85,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
                 if function.loc.is_none() {
                     // If there is a function file already set, we check
                     // that the new location matches the file idx.
-                    if let Some(ref file) = &function.file {
+                    if let &Some(ref file) = &function.file {
                         assert_eq!(new_loc.file_index, file.index);
                     }
                     function.loc = Some(new_loc);
@@ -201,7 +201,7 @@ pub fn function(file: &::std::path::Path) -> Result {
                 function = Some(function_body(lines, &path));
                 // If the function contained a .file directive, we are
                 // done:
-                if let Some(ref function) = &function {
+                if let &Some(ref function) = &function {
                     if function.file.is_some() {
                         break;
                     }
@@ -210,7 +210,7 @@ pub fn function(file: &::std::path::Path) -> Result {
                 // If the function did not contain a .loc directive
                 // either, we can't finde its
                 // corresponding Rust code so we are done:
-                if let Some(ref function) = &function {
+                if let &Some(ref function) = &function {
                     if function.loc.is_none() {
                         break;
                     }
@@ -268,13 +268,13 @@ pub fn function(file: &::std::path::Path) -> Result {
     let function = function.unwrap();
 
     // Add all local .file directives in the body of the function to the table:
-    if let Some(ref f) = &function.file {
+    if let &Some(ref f) = &function.file {
         file_directive_table
             .entry(f.index)
             .or_insert_with(|| f.clone());
     }
     for s in &function.statements {
-        if let Statement::Directive(Directive::File(ref f)) = s {
+        if let &Statement::Directive(Directive::File(ref f)) = s {
             file_directive_table
                 .entry(f.index)
                 .or_insert_with(|| f.clone());
@@ -285,7 +285,7 @@ pub fn function(file: &::std::path::Path) -> Result {
     // within the function:
     let mut done = true;
     for s in &function.statements {
-        if let Statement::Directive(Directive::Loc(ref l)) = s {
+        if let &Statement::Directive(Directive::Loc(ref l)) = s {
             if !file_directive_table.contains_key(&l.file_index) {
                 done = false;
                 error!(
