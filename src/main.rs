@@ -121,13 +121,12 @@ fn main() {
             }
         }
         asm::parse::Result::NotFound(mut table) => {
+            use edit_distance::edit_distance;
             let mut msg = format!("could not find function at path \"{}\" in the generated assembly.\nMaybe you meant one of the following functions?\n", &opts.path());
 
             let last_path = opts.path();
             let last_path = last_path.split(':').next_back().unwrap();
             table.sort_by(|a, b| {
-                use edit_distance::edit_distance;
-
                 edit_distance(a.split(':').next_back().unwrap(), last_path)
                     .cmp(&edit_distance(
                         b.split(':').next_back().unwrap(),
@@ -135,7 +134,10 @@ fn main() {
                     ))
             });
 
-            for f in table.iter().take(5) {
+            for f in table.iter() {
+                if edit_distance(f.split(':').next_back().unwrap(), last_path) > 4 {
+                    break;
+                }
                 msg.push_str(&format!("  {}\n", f));
             }
 

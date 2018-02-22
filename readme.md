@@ -3,11 +3,7 @@
 [![crates.io version][crate-shield]][crate] [![Travis build status][travis-shield]][travis] [![Appveyor build status][appveyor-shield]][appveyor] [![License][license-shield]][license]
 
 
-> **Work in Progress**: you can try this, you can fill issues,
-> but otherwise, this does not exist **yet**.
-
-`cargo-asm` is a [`cargo`] sub-command that shows you the generated assembly of
-a Rust function. 
+> A [`cargo`] subcommand that displays the generated assembly of Rust source code.
 
 # Example 
 
