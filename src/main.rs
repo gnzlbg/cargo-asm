@@ -1,12 +1,16 @@
 //! cargo-asm driver
 
-#![allow(non_snake_case)]
+#![allow(non_snake_case, non_upper_case_globals)]
 #![feature(match_default_bindings)]
 #![cfg_attr(feature = "cargo-clippy",
             allow(missing_docs_in_private_items, option_unwrap_used,
                   result_unwrap_used))]
 
 extern crate edit_distance;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate log;
 extern crate rustc_demangle;
 extern crate serde;
 #[macro_use]
@@ -16,8 +20,6 @@ extern crate serde_json;
 extern crate structopt;
 extern crate termcolor;
 extern crate walkdir;
-#[macro_use]
-extern crate log;
 
 mod options;
 mod process;
@@ -29,27 +31,27 @@ mod rust;
 mod path;
 mod logger;
 
-fn parse_files(
-    files: &[std::path::PathBuf], mut opts: &mut options::Options
-) -> asm::parse::Result {
+use options::*;
+
+fn parse_files(files: &[std::path::PathBuf]) -> asm::parse::Result {
     use asm::parse::Result;
-    if opts.debug_mode {
+    if opts.debug_mode() {
         // In debug mode dump all the raw assembly that we could find.
         for f in files {
-            println!("raw file dump {}:", f.display());
+            debug!("raw file dump {}:", f.display());
             use std::io::BufRead;
 
             let fh = ::std::fs::File::open(f).unwrap();
             let file_buf = ::std::io::BufReader::new(&fh);
             for l in file_buf.lines() {
-                println!("{}", l.unwrap());
+                debug!("{}", l.unwrap());
             }
         }
     }
     let mut function_table = Vec::<String>::new();
     for f in files {
         assert!(f.exists(), "path does not exist: {}", f.display());
-        match asm::parse::function(f.as_path(), &mut opts) {
+        match asm::parse::function(f.as_path()) {
             Result::Found(function, files) => {
                 return Result::Found(function, files)
             }
@@ -65,22 +67,23 @@ fn parse_files(
 
 #[cfg_attr(feature = "cargo-clippy", allow(print_stdout, use_debug))]
 fn main() {
-    let mut opts = options::get();
+    // Initialize logger and options:
     if let Err(err) = logger::Logger::init() {
         eprintln!("failed to initialize logger: {}", err);
         ::std::process::exit(1);
     }
 
-    if opts.debug_mode {
-        opts.rust = true;
-        println!("Options: {:?}", opts);
-        println!("Input path: {}", opts.path);
+    if opts.debug_mode() {
         log::set_max_level(log::LevelFilter::Debug);
     } else {
         log::set_max_level(log::LevelFilter::Error);
     }
 
-    if let Some(ref new_path) = opts.project_path {
+    debug!("Options: {:?}", *opts);
+
+    // Executing cargo asm into a different path via --project-path=... is done
+    // by changing the current working directory.
+    if let Some(ref new_path) = opts.project_path() {
         let new_path = ::std::path::PathBuf::from(new_path.trim());
         assert!(
             ::std::env::set_current_dir(&new_path).is_ok(),
@@ -89,33 +92,39 @@ fn main() {
         );
     }
 
-    let asm_files = build::project(&opts);
+    // Builds the project and returns a list of all relevant assembly files:
+    let asm_files = build::project();
 
     if asm_files.is_empty() {
-        display::write_error("cargo build did not emit any assembly or cargo asm could not find it!", &opts);
+        display::write_error("cargo build did not emit any assembly or cargo asm could not find it!");
         ::std::process::exit(1);
     }
-    debug!("Assembly files found: {:?}", asm_files);
-    match parse_files(&asm_files, &mut opts) {
+
+    debug!("Assembly files: {:?}", asm_files);
+
+    // Parse the files
+    match parse_files(&asm_files) {
         asm::parse::Result::Found(function, file_table) => {
-            let rust = rust::parse(&function, &file_table, &mut opts);
-            if !opts.json {
-                if opts.debug_mode {
-                    if let Some(s) = display::to_json(&function, &rust) {
-                        println!("{}", s);
-                    }
-                }
-                display::print(&function, rust.clone(), &opts);
-            } else {
+            // If we found the assembly for the path, we parse the assembly:
+            let rust = rust::parse(&function, &file_table);
+
+            if opts.json() || opts.debug_mode() {
                 if let Some(s) = display::to_json(&function, &rust) {
                     println!("{}", s);
+                } else {
+                    error!("failed to emit json output");
                 }
+            }
+
+            if !opts.json() {
+                display::print(&function, rust.clone());
             }
         }
         asm::parse::Result::NotFound(mut table) => {
-            let mut msg = format!("could not find function at path \"{}\" in the generated assembly.\nMaybe you meant one of the following functions?\n", &opts.path);
+            let mut msg = format!("could not find function at path \"{}\" in the generated assembly.\nMaybe you meant one of the following functions?\n", &opts.path());
 
-            let last_path = opts.path.split(':').next_back().unwrap();
+            let last_path = opts.path();
+            let last_path = last_path.split(':').next_back().unwrap();
             table.sort_by(|a, b| {
                 use edit_distance::edit_distance;
 
@@ -130,10 +139,10 @@ fn main() {
                 msg.push_str(&format!("  {}\n", f));
             }
 
-            msg.push_str("If not maybe the assembly output was not properly built and you might need to do a `--clean` build. If you are trying to print the assembly output of a generic function or method make sure that it is monomorphized into the final binary (otherwise no assembly will be generated).\n"
+            msg.push_str("Otherwise make sure that the function is present in the final binary (e.g. if it's a generic that it is actually monomorphized) or try to do a --clean build (sometimes changes are not picked up).\n"
             );
 
-            display::write_error(&msg, &opts);
+            display::write_error(&msg);
             ::std::process::exit(1);
         }
     }

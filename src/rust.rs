@@ -1,6 +1,7 @@
 //! Parses Rust code
 
 use asm;
+use options::*;
 
 #[derive(Debug, Clone)]
 pub struct File {
@@ -51,7 +52,6 @@ impl Files {
 pub fn parse(
     function: &asm::ast::Function,
     file_table: &::std::collections::HashMap<usize, asm::ast::File>,
-    mut opts: &mut ::options::Options,
 ) -> Files {
     use asm::ast::Statement;
     use asm::ast::Directive;
@@ -62,9 +62,7 @@ pub fn parse(
     // initialized here to contain the lines pointed to by the locations.
     for s in &function.statements {
         if let Statement::Directive(Directive::Loc(ref l)) = s {
-            if opts.debug_mode {
-                println!("inserting locs: {:?}", l);
-            }
+            debug!("inserting locs: {:?}", l);
             files.entry(l.file_index).or_insert_with(|| {
                 let ast = file_table.get(&l.file_index).expect(
                     &format!("[ERROR]: incomplete file table. Location {:?} 's file is not in the file table:\n{:?}",
@@ -79,15 +77,11 @@ pub fn parse(
                 .unwrap()
                 .lines
                 .insert(l.file_line, None);
-            if opts.debug_mode {
-                println!("files: {:?}", files);;
-            }
+            debug!("files: {:?}", files);;
         }
     }
 
-    if opts.debug_mode {
-        println!("Done inserting files: {:?}", files);;
-    }
+    debug!("Done inserting files: {:?}", files);;
 
     // Go through the line map of each file and fill in holes smaller than N
     // lines:
@@ -107,16 +101,12 @@ pub fn parse(
         }
     }
 
-    if opts.debug_mode {
-        println!("Done filing holes in files: {:?}", files);;
-    }
+    debug!("Done filing holes in files: {:?}", files);;
 
     // Corrects paths to Rust std library components:
-    correct_rust_paths(&mut files, &mut opts);
+    correct_rust_paths(&mut files);
 
-    if opts.debug_mode {
-        println!("Done correcting paths in files: {:?}", files);;
-    }
+    debug!("Done correcting paths in files: {:?}", files);;
 
     // Read the required lines from each Rust file:
     for f in files.values_mut() {
@@ -136,9 +126,7 @@ pub fn parse(
         }
     }
 
-    if opts.debug_mode {
-        println!("Done reading lines in files: {:?}", files);;
-    }
+    debug!("Done reading lines in files: {:?}", files);;
 
     for f in files.values_mut() {
         for (l_idx, line) in &f.lines {
@@ -155,10 +143,7 @@ pub fn parse(
     Files { files }
 }
 
-fn correct_rust_paths(
-    files: &mut ::std::collections::HashMap<usize, File>,
-    opts: &mut ::options::Options,
-) {
+fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
     let rust =
         ::std::env::var("RUSTC").unwrap_or_else(|_| "rustc".to_string());
 
@@ -175,20 +160,17 @@ fn correct_rust_paths(
         Ok((stdout, _stderr)) => ::std::path::PathBuf::from(stdout.trim()),
         Err(()) => panic!(),
     };
-    if opts.debug_mode {
-        println!("sysroot: {}", sysroot.display());
-    }
+
+    debug!("sysroot: {}", sysroot.display());
     sysroot.parent();
     let rust_src_path = ::std::path::PathBuf::from("lib/rustlib/src/rust/src");
 
     ::path::push(&mut sysroot, &rust_src_path);
-    if opts.debug_mode {
-        eprintln!(
-            "merging {} with sysroot results in {}",
-            rust_src_path.display(),
-            sysroot.display()
-        );
-    }
+    debug!(
+        "merging {} with sysroot results in {}",
+        rust_src_path.display(),
+        sysroot.display()
+    );
 
     let travis_rust_src_path = if cfg!(target_os = "macos") {
         ::std::path::PathBuf::from("travis/build/rust-lang/rust/src")
@@ -201,36 +183,26 @@ fn correct_rust_paths(
             let path = {
                 let tail = ::path::after(&f.ast.path, &travis_rust_src_path);
                 let mut path = sysroot.clone();
-                if opts.debug_mode {
-                    eprintln!(
-                        "merging {} with {}",
-                        path.display(),
-                        tail.display()
-                    );
-                }
+                debug!("merging {} with {}", path.display(), tail.display());
                 path.push(&tail);
-                if opts.debug_mode {
-                    eprintln!("  merge result: {}", path.display());
-                }
+                debug!("  merge result: {}", path.display());
 
                 path
             };
             f.ast.path = path;
             if !f.ast.path.exists() {
                 if !missing_path_warning {
-                    eprintln!("[WARNING]: path does not exist: {}. Maybe the rust-src component is not installed? Use `rustup component add rust-src to install it!`", f.ast.path.display());
+                    info!("path does not exist: {}. Maybe the rust-src component is not installed? Use `rustup component add rust-src to install it!`", f.ast.path.display());
                     missing_path_warning = true;
                 }
-                opts.rust = false;
+                opts.set_rust(false);
             }
         } else {
-            if opts.debug_mode {
-                println!(
-                    "path {} does not contain {}",
-                    &f.ast.path.display(),
-                    &travis_rust_src_path.display()
-                );
-            }
+            debug!(
+                "path {} does not contain {}",
+                &f.ast.path.display(),
+                &travis_rust_src_path.display()
+            );
         }
     }
     files.retain(|_k: &usize, f: &mut File| {

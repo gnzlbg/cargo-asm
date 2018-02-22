@@ -1,10 +1,9 @@
 use super::ast;
+use options::*;
 use self::ast::*;
 
 /// Parses the body of a function `path` from the `function_line`
-fn function_body(
-    function_lines: Vec<String>, path: &str, opts: &::options::Options
-) -> ast::Function {
+fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
     let mut function = Function {
         id: path.to_string(),
         file: None,
@@ -25,17 +24,12 @@ fn function_body(
         .filter(|l| !l.is_empty())
         .enumerate()
     {
-        if opts.debug_mode {
-            println!("parsing {}", line);
-        }
+        debug!("parsing line: {}", line);
 
         // If the line contains a comment, split the line at the comment.
         let (node_str, comment_str) =
             if let Some(comment_start) = line.find(';') {
-                if opts.debug_mode {
-                    println!(" * contains a comment at: {}", comment_start);
-                }
-
+                debug!(" * contains a comment at: {:?}", comment_start);
                 let (node_str, comment_str) = line.split_at(comment_start);
                 (node_str, comment_str)
             } else {
@@ -44,26 +38,20 @@ fn function_body(
 
         // If the line contains a comment, we parse that first:
         if let Some(comment) = Comment::new(comment_str) {
-            if opts.debug_mode {
-                println!(" * parsing comment");
-            }
+            debug!(" * parsing comment: {:?}", comment);
             function.statements.push(Statement::Comment(comment));
         }
 
         // Then we parse the AST statements.
 
         if let Some(directive) = Directive::new(node_str) {
-            if opts.debug_mode {
-                println!(" * parsed directive: {:?}", directive);
-            }
+            debug!(" * parsed directive: {:?}", directive);
 
             // We set the first .file directive we parse as the functions file
             // path:
             if function.file.is_none() {
                 if let Some(file) = directive.file() {
-                    if opts.debug_mode {
-                        println!(" * file directive: {:?}", file);
-                    }
+                    debug!(" * file directive: {:?}", file);
 
                     // If there is a function location already set, we set the
                     // file only if the file index matches the location. Many
@@ -88,9 +76,7 @@ fn function_body(
             // If we find a .loc directive we parse the loc offset and set its
             // value as the current one:
             if let Some(new_loc) = directive.loc() {
-                if opts.debug_mode {
-                    println!(" * loc directive: {:?}", new_loc);
-                }
+                debug!(" * loc directive: {:?}", new_loc);
 
                 current_loc = Some(new_loc);
 
@@ -106,27 +92,21 @@ fn function_body(
                 }
             }
             let dir = Statement::Directive(directive);
-            if opts.debug_mode {
-                println!(" * appending directive: {:?}", dir);
-            }
+            debug!(" * appending directive: {:?}", dir);
 
             function.statements.push(dir);
             continue;
         }
 
         if let Some(label) = Label::new(node_str, current_loc) {
-            if opts.debug_mode {
-                println!(" * parsed label: {:?}", label);
-            }
+            debug!(" * parsed label: {:?}", label);
 
             function.statements.push(Statement::Label(label));
             continue;
         }
 
         if let Some(instruction) = Instruction::new(node_str, current_loc) {
-            if opts.debug_mode {
-                println!(" * parsed instruction: {:?}", instruction);
-            }
+            debug!(" * parsed instruction: {:?}", instruction);
 
             function
                 .statements
@@ -151,10 +131,8 @@ pub enum Result {
 
 /// Parses the assembly function at `path` from the file `file`.
 #[cfg_attr(feature = "cargo-clippy", allow(use_debug))]
-pub fn function(
-    file: &::std::path::Path, opts: &mut ::options::Options
-) -> Result {
-    let path = opts.path.clone();
+pub fn function(file: &::std::path::Path) -> Result {
+    let path: String = opts.path().to_string();
     use std::io::BufRead;
 
     let fh = ::std::fs::File::open(file).unwrap();
@@ -213,14 +191,14 @@ pub fn function(
                     }
                     lines.push(l);
                 }
-                if opts.debug_mode {
-                    println!("function lines for function: {}", path);
+                debug!("Function found: {}", path);
+                if opts.debug_mode() {
                     for l in &lines {
-                        println!("## {}", l)
+                        debug!("## {}", l);
                     }
                 }
 
-                function = Some(function_body(lines, &path, &opts));
+                function = Some(function_body(lines, &path));
                 // If the function contained a .file directive, we are
                 // done:
                 if let Some(ref function) = &function {
@@ -252,6 +230,7 @@ pub fn function(
         // If the line does not begin an assembly function try to parse the
         // line as a .file directive.
         if let Some(file) = ast::File::new(&line) {
+            debug!("found file directive: {:?}", file);
             let idx = file.index;
 
             // If the file directive is already in the table, check that
@@ -309,8 +288,10 @@ pub fn function(
         if let Statement::Directive(Directive::Loc(ref l)) = s {
             if !file_directive_table.contains_key(&l.file_index) {
                 done = false;
-
-                eprintln!("[ERROR]: File directive for location not found! Location: {:?}", l);
+                error!(
+                    "File directive for location not found! Location: {:?}",
+                    l
+                );
             }
         }
     }

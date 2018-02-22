@@ -83,10 +83,7 @@ impl File {
         if cfg!(target_os = "windows") {
             println!("DEBUG: parsed path: {}", path.display());
         }
-        Some(Self {
-            path,
-            index,
-        })
+        Some(Self { path, index })
     }
     pub fn rust_loc(&self) -> Option<Loc> {
         None

@@ -1,7 +1,6 @@
 //! Handles how to build the project.
 
-use options::Options;
-use process;
+use super::*;
 
 /// Type of the build.
 #[derive(Copy, Clone, Debug)]
@@ -25,7 +24,7 @@ impl ::std::str::FromStr for Type {
 
 /// Builds the project according to the CLI options and returns a list of
 /// assembly files generated.
-pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
+pub fn project() -> Vec<::std::path::PathBuf> {
     use std::process::Command;
     // Read the RUSTFLAGS environment variable
     let rustflags = ::std::env::var_os("RUSTFLAGS")
@@ -37,11 +36,11 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
     // TODO: figure out if this is really necessary.
     // UPDATE: seems to be necessary in some cases with incremental
     // compilation.
-    if opt.clean {
+    if opts.clean() {
         let mut cargo_clean = Command::new("cargo");
         cargo_clean.arg("clean");
         let error_msg = "cargo clean failed";
-        process::exec(&mut cargo_clean, error_msg, opt.debug_mode)
+        process::exec(&mut cargo_clean, error_msg, opts.debug_mode())
             .expect(error_msg);
     }
 
@@ -50,19 +49,19 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
     // TODO: unclear if `cargo build` + `RUSTFLAGS` should be used,
     // or instead one should use `cargo rustc -- --emit asm`
     cargo_build.arg("build");
-    if !opt.no_color {
+    if !opts.no_color() {
         cargo_build.arg("--color=always");
         cargo_build.env("LS_COLORS", "rs=0:di=38;5;27:mh=44;38;5;15");
     }
     if let Ok(v) = ::std::env::var("RUSTC") {
         cargo_build.env("RUSTC", v);
     }
-    match opt.build_type {
+    match opts.build_type() {
         Type::Release => cargo_build.arg("--release"),
         Type::Debug => cargo_build.arg("--debug"),
     };
     cargo_build.arg("--verbose");
-    let asm_syntax = match opt.asm_style {
+    let asm_syntax = match opts.asm_style() {
         ::asm::Style::Intel => {
             "-Z asm-comments -C llvm-args=-x86-asm-syntax=intel"
         }
@@ -76,7 +75,7 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
     // let build_start = ::std::time::SystemTime::now();
     let error_msg = "cargo build failed";
     let (_stdout, stderr) =
-        process::exec(&mut cargo_build, error_msg, opt.debug_mode)
+        process::exec(&mut cargo_build, error_msg, opts.debug_mode())
             .expect(error_msg);
 
     // Find output directories:
@@ -96,7 +95,7 @@ pub fn project(opt: &Options) -> Vec<::std::path::PathBuf> {
     }
 
     // Append the typical output directory:
-    let build_dir = match opt.build_type {
+    let build_dir = match opts.build_type() {
         Type::Release => "release",
         Type::Debug => "debug",
     };

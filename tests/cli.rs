@@ -201,7 +201,7 @@ LBB14_15:
  pop     rbp
  ret"#
     } else if cfg!(target_os = "windows") {
-    r#"lib_crate::sum_array (src\lib.rs:6):
+        r#"lib_crate::sum_array (src\lib.rs:6):
  push    rbp
  mov     rbp, rsp
  test    rdx, rdx

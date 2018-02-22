@@ -6,6 +6,12 @@ use structopt::StructOpt;
 use asm::Style;
 use build::Type;
 
+lazy_static! {
+    pub static ref opts: ::std::sync::Mutex<Options> = {
+        ::std::sync::Mutex::new(read())
+    };
+}
+
 /// CLI options of cargo-asm.
 #[derive(StructOpt, Debug)]
 pub struct Options {
@@ -36,6 +42,85 @@ pub struct Options {
     pub project_path: Option<String>,
 }
 
+pub trait OptionsExt {
+    fn path(&self) -> String;
+    fn TRIPLE(&self) -> Option<String>;
+    fn clean(&self) -> bool;
+    fn no_color(&self) -> bool;
+    fn asm_style(&self) -> Style;
+    fn build_type(&self) -> Type;
+    fn rust(&self) -> bool;
+    fn comments(&self) -> bool;
+    fn directives(&self) -> bool;
+    fn json(&self) -> bool;
+    fn debug_mode(&self) -> bool;
+    fn project_path(&self) -> Option<String>;
+    fn use_colors(&self) -> bool;
+    fn print_comments(&self) -> bool;
+    fn print_directives(&self) -> bool;
+    fn set_rust(&self, value: bool);
+}
+
+impl OptionsExt for ::std::sync::Mutex<Options> {
+    fn path(&self) -> String {
+        self.lock().unwrap().path.clone()
+    }
+    fn TRIPLE(&self) -> Option<String> {
+        self.lock().unwrap().TRIPLE.clone()
+    }
+    fn clean(&self) -> bool {
+        self.lock().unwrap().clean
+    }
+    fn no_color(&self) -> bool {
+        self.lock().unwrap().no_color
+    }
+    fn asm_style(&self) -> Style {
+        self.lock().unwrap().asm_style
+    }
+    fn build_type(&self) -> Type {
+        self.lock().unwrap().build_type
+    }
+    fn rust(&self) -> bool {
+        self.lock().unwrap().rust
+    }
+    fn comments(&self) -> bool {
+        self.lock().unwrap().comments
+    }
+    fn directives(&self) -> bool {
+        self.lock().unwrap().directives
+    }
+    fn json(&self) -> bool {
+        self.lock().unwrap().json
+    }
+    fn debug_mode(&self) -> bool {
+        self.lock().unwrap().debug_mode
+    }
+    fn project_path(&self) -> Option<String> {
+        self.lock().unwrap().project_path.clone()
+    }
+
+    fn use_colors(&self) -> bool {
+        !self.no_color()
+    }
+    fn print_comments(&self) -> bool {
+        if self.debug_mode() {
+            true
+        } else {
+            self.comments()
+        }
+    }
+    fn print_directives(&self) -> bool {
+        if self.debug_mode() {
+            true
+        } else {
+            self.directives()
+        }
+    }
+    fn set_rust(&self, value: bool) {
+        self.lock().unwrap().rust = value;
+    }
+}
+
 #[derive(StructOpt, Debug)]
 #[structopt(bin_name = "cargo")]
 enum Options_ {
@@ -54,9 +139,15 @@ Quick start: given a crate named \"crate\", to search:
     Asm(Options),
 }
 
-pub fn get() -> Options {
+fn read() -> Options {
     let o = Options_::from_args();
     match o {
-        Options_::Asm(a) => a,
+        Options_::Asm(mut o) => {
+            // In debug mode we always print the associated Rust code.
+            if o.debug_mode {
+                o.rust = true;
+            }
+            o
+        }
     }
 }

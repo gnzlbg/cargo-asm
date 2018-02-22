@@ -1,6 +1,4 @@
-use super::asm;
-use super::options;
-use super::rust;
+use super::*;
 
 /// Formatting of Rust source code:
 #[derive(Clone, Serialize)]
@@ -25,50 +23,16 @@ enum Kind {
     Rust(Rust),
 }
 
-/// Display options:
-#[derive(Copy, Clone)]
-pub struct Options {
-    pub use_color: bool,
-    pub print_comments: bool,
-    pub print_directives: bool,
-    pub debug_mode: bool,
-    pub rust: bool,
-}
-
-impl Options {
-    pub fn new(program: &options::Options) -> Self {
-        // In debug mode print the comments and directives
-        let print_comments = if program.debug_mode {
-            true
-        } else {
-            program.comments
-        };
-
-        let print_directives = if program.debug_mode {
-            true
-        } else {
-            program.directives
-        };
-        Self {
-            use_color: !program.no_color,
-            print_comments,
-            print_directives,
-            debug_mode: program.debug_mode,
-            rust: program.rust,
-        }
-    }
-}
-
 /// Prints `kind` using `opts`.
 #[cfg_attr(feature = "cargo-clippy", allow(items_after_statements))]
-fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
+fn write_output(kind: &Kind, function: &asm::ast::Function) {
     // Filter out what to print:
     match kind {
         Kind::Asm(ref a) => {
             use asm::ast::Statement::*;
             match a {
-                Comment(_) if !opts.print_comments => return,
-                Directive(_) if !opts.print_directives => return,
+                Comment(_) if !opts.print_comments() => return,
+                Directive(_) if !opts.print_directives() => return,
                 Label(ref l) => {
                     if cfg!(target_os = "windows") || cfg!(target_os = "linux")
                     {
@@ -90,7 +54,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
             }
         }
         Kind::Rust(_) => {
-            if !opts.rust {
+            if !opts.rust() {
                 return;
             }
         }
@@ -107,7 +71,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
             use asm::ast::Statement::*;
             match *a {
                 Comment(_) | Directive(_) | Instruction(_) => {
-                    if !opts.rust || part_of_main_function {
+                    if !opts.rust() || part_of_main_function {
                         1
                     } else {
                         5
@@ -130,7 +94,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                     WriteColor};
     use std::io::Write;
 
-    let bufwtr = if opts.use_color {
+    let bufwtr = if opts.use_colors() {
         BufferWriter::stdout(ColorChoice::Auto)
     } else {
         BufferWriter::stdout(ColorChoice::Never)
@@ -177,7 +141,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                     buffer.set_color(&label_color).unwrap();
                     write!(&mut buffer, "{}", l.id).unwrap();
                     write!(&mut buffer, ":").unwrap();
-                    if opts.debug_mode {
+                    if opts.debug_mode() {
                         debug_mode_format(&mut buffer, l.rust_loc());
                     }
                 }
@@ -204,7 +168,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                 Comment(c) => {
                     buffer.set_color(&comment_color).unwrap();
                     write!(&mut buffer, "{}", c.string).unwrap();
-                    if opts.debug_mode {
+                    if opts.debug_mode() {
                         debug_mode_format(&mut buffer, c.rust_loc());
                     }
                 }
@@ -226,7 +190,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
                     if !i.args.is_empty() {
                         write!(&mut buffer, " {}", i.args.join(", ")).unwrap();
                     }
-                    if opts.debug_mode {
+                    if opts.debug_mode() {
                         debug_mode_format(&mut buffer, i.rust_loc());
                     }
                 }
@@ -236,7 +200,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function, opts: &Options) {
             buffer.set_color(&rust_color).unwrap();
             if part_of_main_function {
                 write!(&mut buffer, "{}", r.line).unwrap();
-                if opts.debug_mode {
+                if opts.debug_mode() {
                     debug_mode_format(&mut buffer, Some(r.loc));
                 }
             } else {
@@ -330,13 +294,8 @@ fn make_std_lib_paths_relative(rust: &mut rust::Files) {
     }
 }
 
-pub fn print(
-    function: &asm::ast::Function, mut rust: rust::Files,
-    opts: &options::Options,
-) {
-    let opts = Options::new(opts);
-
-    if !opts.rust {
+pub fn print(function: &asm::ast::Function, mut rust: rust::Files) {
+    if !opts.rust() {
         // When emitting assembly without Rust code, print the requested
         // function path (the first function line will not be emitted):
         use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec,
@@ -349,7 +308,7 @@ pub fn print(
             .set_fg(Some(Color::Red))
             .set_bold(true);
 
-        let bufwtr = if opts.use_color {
+        let bufwtr = if opts.use_colors() {
             BufferWriter::stdout(ColorChoice::Auto)
         } else {
             BufferWriter::stdout(ColorChoice::Never)
@@ -365,7 +324,7 @@ pub fn print(
     let output = merge_rust_and_asm(function, &rust);
 
     for o in &output {
-        write_output(o, function, &opts);
+        write_output(o, function);
     }
     return;
 }
@@ -414,7 +373,7 @@ fn merge_rust_and_asm(
     output
 }
 
-pub fn write_error(msg: &str, opts: &options::Options) {
+pub fn write_error(msg: &str) {
     use std::io::Write;
     use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, WriteColor};
     let mut error_color = ColorSpec::new();
@@ -423,7 +382,7 @@ pub fn write_error(msg: &str, opts: &options::Options) {
         .set_fg(Some(Color::Red))
         .set_bold(true);
 
-    let bufwtr = if !opts.no_color {
+    let bufwtr = if opts.use_colors() {
         BufferWriter::stderr(ColorChoice::Auto)
     } else {
         BufferWriter::stderr(ColorChoice::Never)
@@ -443,7 +402,7 @@ pub fn to_json(
     match ::serde_json::to_string_pretty(&r) {
         Ok(s) => Some(s),
         Err(e) => {
-            eprintln!("[ERROR]: {}", e);
+            error!("{}", e);
             None
         }
     }
