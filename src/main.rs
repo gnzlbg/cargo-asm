@@ -28,6 +28,7 @@ mod display;
 mod rust;
 mod path;
 mod logger;
+mod target;
 
 use options::*;
 

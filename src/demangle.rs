@@ -18,7 +18,7 @@ fn is_ascii_hexdigit(byte: u8) -> bool {
 }
 
 pub fn demangle(n: &str) -> String {
-    let n = if cfg!(target_os = "linux") {
+    let n = if ::target::target().contains("linux") {
         n.split("@PLT").nth(0).unwrap().to_string()
     } else {
         n.to_string()

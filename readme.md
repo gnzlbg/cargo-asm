@@ -25,15 +25,17 @@ which outputs:
 
 #  Features
 
-* Works on Linux, Windows, and MacOSX. 
+* Platform support:
 
-* Intel and AT&T assembly syntax.
+  * OS: Linux, Windows, and MacOSX. 
+  * Rust: stable and nightly.
+  * Architectures: x86, x86_64, arm, aarch64, powerpc, mips, sparc.
 
-* Stable and nightly Rust.
+* Displaying:
 
-* Printing corresponding Rust code next to the assembly code.
-
-* Output to JSON.
+  * Assembly in Intel or AT&T syntax.
+  * Corresponding Rust source code alongside assembly.
+  * JSON AST for further processing.
 
 * Querying:
 

@@ -149,22 +149,31 @@ pub fn function(file: &::std::path::Path) -> Result {
 
     let mut function_table = Vec::<String>::new();
 
+    fn function_label_pattern() -> &'static str {
+        let t = ::target::target();
+        if t.contains("apple") {
+            "__"
+        } else {
+            "_"
+        }
+    }
+
+    fn function_end_pattern() -> &'static str {
+        let t = ::target::target();
+        if t.contains("windows") {
+            ".seh_endproc" // TODO: does this work with panic=abort ?
+        } else {
+            ".cfi_endproc"
+        }
+    }
+
     // This is the pattern at the beginning of an assembly label
     // that identifies the label as a function:
-    let function_label_pattern = if cfg!(target_os = "macosx") {
-        "__"
-    } else {
-        // windows and linux
-        "_"
-    };
+    let function_label_pattern = function_label_pattern();
 
     // This is the pattern that we match to know that we have finished
     // searching the function
-    let function_end_pattern = if cfg!(target_os = "windows") {
-        ".seh_endproc" // TODO: does this work with panic=abort ?
-    } else {
-        ".cfi_endproc"
-    };
+    let function_end_pattern = function_end_pattern();
 
     while let Some(line) = line_iter.next() {
         let line = line.unwrap().trim().to_string();
@@ -174,7 +183,6 @@ pub fn function(file: &::std::path::Path) -> Result {
             //
             // Assembly functions are labels that start with `_` or `__`
             // and have mangled names.
-
             if let Some(label) = ast::Label::new(&line, None) {
                 let demangled_function_name = ::demangle::demangle(&label.id);
                 function_table.push(demangled_function_name.clone());

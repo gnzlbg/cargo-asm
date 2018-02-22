@@ -67,6 +67,9 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         }
         ::asm::Style::ATT => "",
     };
+    if let Some(triple) = opts.TRIPLE() {
+        cargo_build.arg(&format!("--target={}", triple));
+    }
     cargo_build.env(
         "RUSTFLAGS",
         format!("{} --emit asm -g {}", rustflags, asm_syntax),

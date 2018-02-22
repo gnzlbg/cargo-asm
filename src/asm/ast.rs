@@ -56,19 +56,17 @@ pub struct File {
 
 impl File {
     pub fn new(s: &str) -> Option<Self> {
-        let file_label = if cfg!(target_os = "windows") {
-            ".cv_file"
-        } else {
-            // linux and macosx
-            ".file"
-        };
-        if !s.starts_with(file_label) {
-            return None;
-        }
-        if cfg!(target_os = "windows") {
-            if s.starts_with(".cv_filec") {
-                return None;
+        fn contains_file_label(s: &str) -> bool {
+            let t = ::target::target();
+            if t.contains("windows") {
+                s.contains(".cv_file") && !s.contains(".cv_filec")
+            } else {
+                s.contains(".file")
             }
+        }
+
+        if !contains_file_label(s) {
+            return None;
         }
         debug!("parsing file directive: {}", s);
 
@@ -88,7 +86,7 @@ impl File {
             .parse()
             .unwrap_or(0);
         let mut path_str = path.trim().to_string();
-        if cfg!(target_os = "windows") {
+        if ::target::target().contains("windows") {
             // Replace \\ with \ on windows
             replace_slashes(&mut path_str);
             // FIXME: on windows these paths do not follow the UNC, but we
@@ -118,17 +116,20 @@ pub struct Loc {
 
 impl Loc {
     pub fn new(s: &str) -> Option<Self> {
-        let loc_label = if cfg!(target_os = "windows") {
-            ".cv_loc"
-        } else {
-            // linux and macosx
-            ".loc"
-        };
-        if !s.starts_with(loc_label) {
+        fn contains_loc_label(s: &str) -> bool {
+            let t = ::target::target();
+            if t.contains("windows") {
+                s.contains(".cv_loc")
+            } else {
+                s.contains(".loc")
+            }
+        }
+
+        if !contains_loc_label(s) {
             return None;
         }
 
-        let file_index_index = if cfg!(target_os = "windows") {
+        let file_index_index = if ::target::target().contains("windows") {
             // on windows index 1 is the cv_func_id
             2
         } else {
@@ -136,14 +137,14 @@ impl Loc {
             1
         };
 
-        let file_line_index = if cfg!(target_os = "windows") {
+        let file_line_index = if ::target::target().contains("windows") {
             3
         } else {
             // linux and macosx
             2
         };
 
-        let file_column_index = if cfg!(target_os = "windows") {
+        let file_column_index = if ::target::target().contains("windows") {
             4
         } else {
             // linux and macosx
@@ -172,20 +173,25 @@ pub struct GenericDirective {
     pub string: String,
 }
 
+fn is_directive(s: &str) -> bool {
+    // Directives start with .
+    if !s.starts_with('.') { return false; }
+    // And do not end with : (in this case they are probably labels)
+    if s.ends_with(":") {
+        return false;
+    }
+    true
+}
+
 impl GenericDirective {
     pub fn new(s: &str) -> Option<Self> {
-        if s.starts_with('.') {
-            if (cfg!(target_os = "windows") || cfg!(target_os = "linux"))
-                && s.ends_with(":")
-            {
-                // On Windows and Linux .{pattern}: is a label
-                return None;
-            }
-            return Some(Self {
+        if is_directive(s) {
+            Some(Self {
                 string: s.trim().to_string(),
-            });
+            })
+        } else {
+            None
         }
-        None
     }
     pub fn rust_loc(&self) -> Option<Loc> {
         None
@@ -194,13 +200,7 @@ impl GenericDirective {
 
 impl Directive {
     pub fn new(s: &str) -> Option<Self> {
-        if s.starts_with('.') {
-            if (cfg!(target_os = "windows") || cfg!(target_os = "linux"))
-                && s.ends_with(":")
-            {
-                // On Windows and Linux .{pattern}: is a label
-                return None;
-            }
+        if is_directive(s) {
             if let Some(file) = File::new(s) {
                 return Some(Directive::File(file));
             }
@@ -271,16 +271,68 @@ impl Instruction {
                 args.push(arg_s);
             }
         }
-        if instr == "call" {
-            let demangled_function = ::demangle::demangle(&args[0]);
-            args[0] = demangled_function;
-        }
-        Some(Self {
+        let mut v = Self {
             instr,
             args,
             rust_loc,
-        })
+        };
+        v.demangle_args();
+        Some(v)
     }
+    pub fn is_jump(&self) -> bool {
+        let t = ::target::target();
+        if t.contains("x86") || t.contains("i386") || t.contains("i586") || t.contains("i686") {
+            self.instr.starts_with('j') && self.args.len() == 1
+        } else if t.contains("aarch64") {
+            self.instr == "b" || self.instr.starts_with("b.")
+        } else if t.contains("arm") || t.contains("sparc") {
+            self.args.iter().fold(false, |acc, x| acc || x.starts_with(".L"))
+        } else if t.contains("power") {
+            self.instr.starts_with("b") && self.instr != "bl" && self.args.len() == 2
+        } else if t.contains("mips") {
+            self.instr.starts_with("b") && self.instr.len() > 1
+        } else {
+            debug!("unimplemented target");
+            false
+        }
+    }
+    pub fn is_call(&self) -> bool {
+        let t = ::target::target();
+        if t.contains("x86") || t.contains("i386") || t.contains("i586") || t.contains("i686") || t.contains("sparc"){
+            self.instr.starts_with("call")
+        } else if t.contains("aarch64") || t.contains("power") || t.contains("arm") {
+            self.instr == "bl"
+        } else {
+            debug!("unimplemented target");
+            false
+        }
+    }
+
+    fn demangle_args(&mut self) {
+        let t = ::target::target();
+        if t.contains("mips") {
+            // On mips we need to inspect every argument of every instruction.
+            for arg in &mut self.args {
+                if !arg.contains("_Z") { continue; }
+                let f = arg.find("_Z").unwrap();
+                let l = arg.find(")");
+                if l.is_none() { continue; }
+                let l = l.unwrap();
+                let name_to_demangle = &arg[f..l].to_string();
+                let demangled_name = ::demangle::demangle(&name_to_demangle);
+                let new_arg = arg.replace(name_to_demangle, &demangled_name);
+                *arg = new_arg;
+            }
+        } else {
+            // Typically, we just check if the instruction is a call
+            // instruction, and the mangle the first argument.
+            if self.is_call() {
+                let demangled_function = ::demangle::demangle(&self.args[0]);
+                self.args[0] = demangled_function;
+            }
+        }
+    }
+
     pub fn rust_loc(&self) -> Option<Loc> {
         self.rust_loc
     }

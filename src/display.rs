@@ -34,21 +34,12 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                 &Comment(_) if !opts.print_comments() => return,
                 &Directive(_) if !opts.print_directives() => return,
                 &Label(ref l) => {
-                    if cfg!(target_os = "windows") || cfg!(target_os = "linux")
-                    {
-                        if l.id.starts_with(".Lcfi")
-                            || l.id.starts_with(".Ltmp")
-                            || l.id.starts_with(".Lfunc_end")
+                    if l.id.contains("Lcfi")
+                            || l.id.contains("Ltmp")
+                            || l.id.contains("Lfunc_end")
                         {
                             return;
                         }
-                    } else {
-                        if l.id.starts_with("Lcfi") || l.id.starts_with("Ltmp")
-                            || l.id.starts_with("Lfunc_end")
-                        {
-                            return;
-                        }
-                    }
                 }
                 _ => {}
             }
@@ -179,10 +170,10 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                     } else {
                         write!(&mut buffer, "{: <7}", i.instr).unwrap();
                     }
-                    if i.instr.starts_with('j') && i.args.len() == 1 {
+                    if i.is_jump() {
                         // jump instructions
                         buffer.set_color(&label_color).unwrap();
-                    } else if i.instr.starts_with("call") {
+                    } else if i.is_call() {
                         buffer.set_color(&instr_call_arg_color).unwrap();
                     } else {
                         buffer.set_color(&instr_arg_color).unwrap();
@@ -282,14 +273,7 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
     }
 
     // Trim std lib paths:
-    let rust_src_path =
-        if cfg!(target_os = "macos") || cfg!(target_os = "linux") {
-            ::std::path::PathBuf::from("lib/rustlib/src/rust/src/")
-        } else if cfg!(target_os = "windows") {
-            ::std::path::PathBuf::from(r#"lib\rustlib\src\rust\src\"#)
-        } else {
-            unimplemented!()
-        };
+    let rust_src_path = ::target::rust_src_path_component();
     let current_dir_path =
         ::std::env::current_dir().expect("cannot read the current dir");
     debug!("making paths relative: {}", path.display());
