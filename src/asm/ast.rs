@@ -175,7 +175,9 @@ pub struct GenericDirective {
 
 fn is_directive(s: &str) -> bool {
     // Directives start with .
-    if !s.starts_with('.') { return false; }
+    if !s.starts_with('.') {
+        return false;
+    }
     // And do not end with : (in this case they are probably labels)
     if s.ends_with(":") {
         return false;
@@ -281,14 +283,19 @@ impl Instruction {
     }
     pub fn is_jump(&self) -> bool {
         let t = ::target::target();
-        if t.contains("x86") || t.contains("i386") || t.contains("i586") || t.contains("i686") {
+        if t.contains("x86") || t.contains("i386") || t.contains("i586")
+            || t.contains("i686")
+        {
             self.instr.starts_with('j') && self.args.len() == 1
         } else if t.contains("aarch64") {
             self.instr == "b" || self.instr.starts_with("b.")
         } else if t.contains("arm") || t.contains("sparc") {
-            self.args.iter().fold(false, |acc, x| acc || x.starts_with(".L"))
+            self.args
+                .iter()
+                .fold(false, |acc, x| acc || x.starts_with(".L"))
         } else if t.contains("power") {
-            self.instr.starts_with("b") && self.instr != "bl" && self.args.len() == 2
+            self.instr.starts_with("b") && self.instr != "bl"
+                && self.args.len() == 2
         } else if t.contains("mips") {
             self.instr.starts_with("b") && self.instr.len() > 1
         } else {
@@ -298,9 +305,13 @@ impl Instruction {
     }
     pub fn is_call(&self) -> bool {
         let t = ::target::target();
-        if t.contains("x86") || t.contains("i386") || t.contains("i586") || t.contains("i686") || t.contains("sparc"){
+        if t.contains("x86") || t.contains("i386") || t.contains("i586")
+            || t.contains("i686") || t.contains("sparc")
+        {
             self.instr.starts_with("call")
-        } else if t.contains("aarch64") || t.contains("power") || t.contains("arm") {
+        } else if t.contains("aarch64") || t.contains("power")
+            || t.contains("arm")
+        {
             self.instr == "bl"
         } else {
             debug!("unimplemented target");
@@ -313,10 +324,14 @@ impl Instruction {
         if t.contains("mips") {
             // On mips we need to inspect every argument of every instruction.
             for arg in &mut self.args {
-                if !arg.contains("_Z") { continue; }
+                if !arg.contains("_Z") {
+                    continue;
+                }
                 let f = arg.find("_Z").unwrap();
                 let l = arg.find(")");
-                if l.is_none() { continue; }
+                if l.is_none() {
+                    continue;
+                }
                 let l = l.unwrap();
                 let name_to_demangle = &arg[f..l].to_string();
                 let demangled_name = ::demangle::demangle(&name_to_demangle);

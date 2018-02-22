@@ -1,4 +1,4 @@
-use ::options::*;
+use options::*;
 
 /// Returns the target that is being compiled.
 pub fn target() -> String {

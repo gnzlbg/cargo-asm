@@ -34,12 +34,11 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                 &Comment(_) if !opts.print_comments() => return,
                 &Directive(_) if !opts.print_directives() => return,
                 &Label(ref l) => {
-                    if l.id.contains("Lcfi")
-                            || l.id.contains("Ltmp")
-                            || l.id.contains("Lfunc_end")
-                        {
-                            return;
-                        }
+                    if l.id.contains("Lcfi") || l.id.contains("Ltmp")
+                        || l.id.contains("Lfunc_end")
+                    {
+                        return;
+                    }
                 }
                 _ => {}
             }
