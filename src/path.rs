@@ -14,6 +14,7 @@ pub fn contains(
 
     let mut matching = false;
     for c in path.components() {
+        println!("c: {:?} | nsp: {:?}", c, next_sub_path);
         if let Some(next_sp) = next_sub_path {
             if let ::std::path::Component::RootDir = next_sp {
                 next_sub_path = sub_path_iter.next();
