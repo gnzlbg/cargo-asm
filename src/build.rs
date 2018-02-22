@@ -137,7 +137,9 @@ pub fn project() -> Vec<::std::path::PathBuf> {
 
     // Canonicalize, sort the files, remove duplicates, and done:
     if !cfg!(target_os = "windows") {
-        // On windows canonicalizing the path breaks things:
+        // FIXME: On windows canonicalizing makes the path use UNC, but the
+        // paths in the assembly emitted by rustc do not use UNC and they are
+        // not currently canonicalized.
         for f in &mut output_files {
             let c = f.canonicalize().unwrap();
             debug!("canonicalize path {} into {}", f.display(), c.display());

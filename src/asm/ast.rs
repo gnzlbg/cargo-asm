@@ -83,6 +83,12 @@ impl File {
         if cfg!(target_os = "windows") {
             // Replace \\ with \ on windows
             path_str.replace("\\\\", "\\");
+            // FIXME: on windows these paths do not follow the UNC, but we can't
+            // canonicalize them here because they might not exist (e.g. they
+            // might point into the std library path of where the std library
+            // was built: this path is not the same as the path of where the rust-src
+            // component is installed in the user's machine, and the rust-src component
+            // does not necessarily need to be installed.
         }
         let path = ::std::path::PathBuf::from(path_str);
         debug!("parsed file path: {}", path.display());
