@@ -275,12 +275,12 @@ fn is_rust_in_function(f: &asm::ast::Function, rust: &Rust) -> bool {
     true
 }
 
-/// Standard library paths are formatted relatively to the component name:
-///
-/// For example: libcore/... instead of /path/to/libcore/...
-///
-/// This functions trims their path.
-fn make_paths_relative(rust: &mut rust::Files) {
+fn make_path_relative(path: &mut ::std::path::PathBuf) {
+    // The path might already be relative:
+    if !path.is_absolute() {
+        return;
+    }
+
     // Trim std lib paths:
     let rust_src_path =
         if cfg!(target_os = "macos") || cfg!(target_os = "linux") {
@@ -292,31 +292,45 @@ fn make_paths_relative(rust: &mut rust::Files) {
         };
     let current_dir_path =
         ::std::env::current_dir().expect("cannot read the current dir");
-    debug!("making lib paths relative");
+    debug!("making paths relative: {}", path.display());
     debug!(" * std lib paths contain: {}", rust_src_path.display());
     debug!(" * local paths contain: {}", current_dir_path.display());
-    for f in rust.files.values_mut() {
-        if !f.ast.path.is_absolute() {
-            continue;
-        }
-        debug!("  * path: {}", f.ast.path.display());
-        let ast = f.ast.clone();
-        if ::path::contains(&ast.path, &rust_src_path) {
-            let new_path = ::path::after(&ast.path, &rust_src_path);
-            debug!("  * rel path: {}", new_path.display());
-            f.ast.path = new_path;
-        } else if ::path::contains(&ast.path, &current_dir_path) {
-            let new_path = ::path::after(&ast.path, &current_dir_path);
-            debug!("  * rel path: {}", new_path.display());
-            f.ast.path = new_path;
-            continue;
-        } else {
-            debug!("  * path is neither local nor to std lib");
-        }
+
+    if ::path::contains(&path, &rust_src_path) {
+        let new_path = ::path::after(&path, &rust_src_path);
+        debug!("  * rel path: {}", new_path.display());
+        *path = new_path;
+    } else if ::path::contains(&path, &current_dir_path) {
+        let new_path = ::path::after(&path, &current_dir_path);
+        debug!("  * rel path: {}", new_path.display());
+        *path = new_path;
+        return;
+    } else {
+        debug!("  * path is neither local nor to std lib");
     }
 }
 
-pub fn print(function: &asm::ast::Function, mut rust: rust::Files) {
+/// Standard library paths are formatted relatively to the component name:
+///
+/// For example: libcore/... instead of /path/to/libcore/...
+///
+/// This functions trims their path.
+///
+/// The path of the current crate are also displayed as relative paths.
+fn make_paths_relative(
+    function: &mut asm::ast::Function, rust: &mut rust::Files
+) {
+    if let Some(ref mut file) = &mut function.file {
+        make_path_relative(&mut file.path)
+    }
+    for f in rust.files.values_mut() {
+        make_path_relative(&mut f.ast.path)
+    }
+}
+
+pub fn print(function: &mut asm::ast::Function, mut rust: rust::Files) {
+    make_paths_relative(function, &mut rust);
+
     if !opts.rust() {
         // When emitting assembly without Rust code, print the requested
         // function path (the first function line will not be emitted):
@@ -340,8 +354,6 @@ pub fn print(function: &asm::ast::Function, mut rust: rust::Files) {
         writeln!(&mut buffer, "{}:", format_function_name(function)).unwrap();
         bufwtr.print(&buffer).unwrap();
     }
-
-    make_paths_relative(&mut rust);
 
     let output = merge_rust_and_asm(function, &rust);
 

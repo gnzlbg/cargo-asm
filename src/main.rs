@@ -107,7 +107,7 @@ fn main() {
 
     // Parse the files
     match parse_files(&asm_files) {
-        asm::parse::Result::Found(function, file_table) => {
+        asm::parse::Result::Found(mut function, file_table) => {
             // If we found the assembly for the path, we parse the assembly:
             let rust = rust::parse(&function, &file_table);
 
@@ -120,7 +120,7 @@ fn main() {
             }
 
             if !opts.json() {
-                display::print(&function, rust.clone());
+                display::print(&mut function, rust.clone());
             }
         }
         asm::parse::Result::NotFound(mut table) => {
