@@ -79,7 +79,12 @@ impl File {
             .unwrap()
             .parse()
             .unwrap_or(0);
-        let path = ::std::path::PathBuf::from(path.trim());
+        let path_str = path.trim();
+        if cfg!(target_os = "windows") {
+            // Replace \\ with \ on windows
+            path_str.replace("\\\\", "\\");
+        }
+        let path = ::std::path::PathBuf::from(path_str);
         debug!("parsed file path: {}", path.display());
 
         Some(Self { path, index })

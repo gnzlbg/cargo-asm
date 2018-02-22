@@ -174,8 +174,12 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
 
     let travis_rust_src_path = if cfg!(target_os = "macos") {
         ::std::path::PathBuf::from("travis/build/rust-lang/rust/src")
-    } else {
+    } else if cfg!(target_os = "linux") {
         ::std::path::PathBuf::from("checkout/src/")
+    } else if cfg!(target_os = "windows") {
+        ::std::path::PathBuf::from("checkout\\src\\")
+    } else {
+        unimplemented!()
     };
     let mut missing_path_warning = false;
     for f in files.values_mut() {

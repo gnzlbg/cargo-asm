@@ -136,10 +136,13 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     }
 
     // Canonicalize, sort the files, remove duplicates, and done:
-    for f in &mut output_files {
-        let c = f.canonicalize().unwrap();
-        debug!("canonicalize path {} into {}", f.display(), c.display());
-        *f = c;
+    if !cfg!(target_os = "windows") {
+        // On windows canonicalizing the path breaks things:
+        for f in &mut output_files {
+            let c = f.canonicalize().unwrap();
+            debug!("canonicalize path {} into {}", f.display(), c.display());
+            *f = c;
+        }
     }
     output_files.sort_unstable();
     output_files.dedup();
