@@ -105,7 +105,8 @@ pub fn project() -> Vec<::std::path::PathBuf> {
             Type::Debug => "debug",
         };
 
-        let mut typical_path = ::std::env::current_dir().expect("cannot read the current working directory");
+        let mut typical_path = ::std::env::current_dir()
+            .expect("cannot read the current working directory");
         typical_path.push("target");
         typical_path.push(build_dir);
         typical_path.push("deps");

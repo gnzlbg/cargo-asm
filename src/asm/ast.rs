@@ -83,12 +83,13 @@ impl File {
         if cfg!(target_os = "windows") {
             // Replace \\ with \ on windows
             replace_slashes(&mut path_str);
-            // FIXME: on windows these paths do not follow the UNC, but we can't
-            // canonicalize them here because they might not exist (e.g. they
-            // might point into the std library path of where the std library
-            // was built: this path is not the same as the path of where the rust-src
-            // component is installed in the user's machine, and the rust-src component
-            // does not necessarily need to be installed.
+            // FIXME: on windows these paths do not follow the UNC, but we
+            // can't canonicalize them here because they might not
+            // exist (e.g. they might point into the std library
+            // path of where the std library was built: this path
+            // is not the same as the path of where the rust-src
+            // component is installed in the user's machine, and the rust-src
+            // component does not necessarily need to be installed.
         }
         let path = ::std::path::PathBuf::from(path_str);
         debug!("parsed file path: {}", path.display());
@@ -298,7 +299,8 @@ mod tests {
     #[test]
     fn replace_slashes() {
         let mut windows_path = r#"C:\\projects\\cargo-asm\\cargo-asm-test\\lib_crate\\src\\bar.rs"#.to_string();
-        let windows_path_norm = r#"C:\projects\cargo-asm\cargo-asm-test\lib_crate\src\bar.rs"#.to_string();
+        let windows_path_norm =
+            r#"C:\projects\cargo-asm\cargo-asm-test\lib_crate\src\bar.rs"#.to_string();
         super::replace_slashes(&mut windows_path);
         assert_eq!(windows_path_norm, windows_path);
     }

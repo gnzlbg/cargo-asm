@@ -138,7 +138,9 @@ fn main() {
             });
 
             for f in table.iter() {
-                if edit_distance(f.split(':').next_back().unwrap(), last_path) > 4 {
+                if edit_distance(f.split(':').next_back().unwrap(), last_path)
+                    > 4
+                {
                     break;
                 }
                 msg.push_str(&format!("  {}\n", f));

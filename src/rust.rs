@@ -163,7 +163,14 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
 
     debug!("sysroot: {}", sysroot.display());
     sysroot.parent();
-    let rust_src_path = ::std::path::PathBuf::from("lib/rustlib/src/rust/src");
+    let rust_src_path =
+        if cfg!(target_os = "macos") || cfg!(target_os = "linux") {
+            ::std::path::PathBuf::from("lib/rustlib/src/rust/src")
+        } else if cfg!(target_os = "windows") {
+            ::std::path::PathBuf::from(r#"lib\rustlib\src\rust\src"#)
+        } else {
+            unimplemented!()
+        };
 
     ::path::push(&mut sysroot, &rust_src_path);
     debug!(
@@ -177,12 +184,13 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
     } else if cfg!(target_os = "linux") {
         ::std::path::PathBuf::from("checkout/src/")
     } else if cfg!(target_os = "windows") {
-        ::std::path::PathBuf::from("checkout\\src\\")
+        ::std::path::PathBuf::from(r#"projects\rust\src\"#)
     } else {
         unimplemented!()
     };
     let mut missing_path_warning = false;
     for f in files.values_mut() {
+        debug!("correcting path: {}", f.ast.path.display());
         if ::path::contains(&f.ast.path, &travis_rust_src_path) {
             let path = {
                 let tail = ::path::after(&f.ast.path, &travis_rust_src_path);
