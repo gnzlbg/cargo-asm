@@ -25,9 +25,9 @@ matrix:
     os: osx
     osx_image: xcode9.2
   - env: TARGET=x86_64-unknown-linux-gnu
-    rust: 1.23.0
+    rust: 1.24.0
   - env: TARGET=x86_64-apple-darwin
-    rust: 1.23.0
+    rust: 1.24.0
     os: osx
     osx_image: xcode9.2
 
