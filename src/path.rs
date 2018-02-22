@@ -91,16 +91,28 @@ pub fn push(path: &mut ::std::path::PathBuf, tail: &::std::path::Path) {
 mod tests {
     #[test]
     fn contains() {
-        let sub_path = ::std::path::PathBuf::from("lib/rustlib/src/rust/src/");
+        {
+            let sub_path =
+                ::std::path::PathBuf::from("lib/rustlib/src/rust/src/");
 
-        let macosx_path = ::std::path::PathBuf::from("/Users/foo/.rustup/toolchains/nightly-x86_64-apple-darwin/lib/rustlib/src/rust/src/liballoc");
-        let macosx_path_typo = ::std::path::PathBuf::from("/Users/foo/.rustup/toolchains/nightly-x86_64-apple-darwin/lib/rustlib2/src/rust/src/liballoc");
+            let macosx_path = ::std::path::PathBuf::from("/Users/foo/.rustup/toolchains/nightly-x86_64-apple-darwin/lib/rustlib/src/rust/src/liballoc");
+            let macosx_path_typo = ::std::path::PathBuf::from("/Users/foo/.rustup/toolchains/nightly-x86_64-apple-darwin/lib/rustlib2/src/rust/src/liballoc");
 
-        assert!(super::contains(&macosx_path, &sub_path));
-        assert!(!super::contains(&macosx_path_typo, &sub_path));
-        assert_eq!(
-            super::after(&macosx_path, &sub_path),
-            ::std::path::PathBuf::from("liballoc")
-        );
+            assert!(super::contains(&macosx_path, &sub_path));
+            assert!(!super::contains(&macosx_path_typo, &sub_path));
+            assert_eq!(
+                super::after(&macosx_path, &sub_path),
+                ::std::path::PathBuf::from("liballoc")
+            );
+        }
+        if cfg!(target_os = "windows") {
+            let sub_path = ::std::path::PathBuf::from(
+                r#"C:\projects\cargo-asm\cargo-asm-test\lib_crate"#,
+            );
+            let windows_path = ::std::path::PathBuf::from(
+                r#"C:\projects\cargo-asm\cargo-asm-test\lib_crate\src\lib.rs"#,
+            );
+            assert!(super::contains(&windows_path, &sub_path));
+        }
     }
 }
