@@ -57,7 +57,7 @@ pub struct File {
 impl File {
     pub fn new(s: &str) -> Option<Self> {
         let file_label = if cfg!(target_os = "windows") {
-            ".cv_file"
+            ".cv_file "
         } else {
             // linux and macosx
             ".file"
