@@ -24,7 +24,7 @@ pub struct Options {
     pub clean: bool,
     #[structopt(long = "no-color", help = "Disable colored output.")]
     pub no_color: bool,
-    #[structopt(long = "asm-style", help = "Assembly style: intel, at&t.", default_value = "intel")]
+    #[structopt(long = "asm-style", help = "Assembly style: intel, att.", default_value = "intel")]
     pub asm_style: Style,
     #[structopt(long = "build-type", help = "Build type: debug, release.", default_value = "release")]
     pub build_type: Type,

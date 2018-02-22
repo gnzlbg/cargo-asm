@@ -12,8 +12,8 @@ impl ::std::str::FromStr for Style {
     fn from_str(s: &str) -> ::std::result::Result<Self, Self::Err> {
         match s {
             "intel" => Ok(Style::Intel),
-            "at&t" => Ok(Style::ATT),
-            v => Err(format!("\"{}\" is not a valid assembly style. Try \"intel\" or \"at&t\"", v))
+            "att" => Ok(Style::ATT),
+            v => Err(format!("\"{}\" is not a valid assembly style. Try \"intel\" or \"att\"", v))
         }
     }
 }
