@@ -13,9 +13,45 @@ lazy_static! {
 }
 
 /// CLI options of cargo-asm.
-#[derive(StructOpt, Debug)]
+#[derive(Debug)]
 pub struct Options {
-    /// Name of the symbol to disassembly.
+    pub path: String,
+    pub TRIPLE: Option<String>,
+    pub clean: bool,
+    pub no_color: bool,
+    pub asm_style: Style,
+    pub build_type: Type,
+    pub rust: bool,
+    pub comments: bool,
+    pub directives: bool,
+    pub json: bool,
+    pub debug_mode: bool,
+    pub project_path: Option<::std::path::PathBuf>,
+}
+
+impl From<AsmOptions> for Options {
+    fn from(a: AsmOptions) -> Self {
+        Self {
+            path: a.path,
+            TRIPLE: a.TRIPLE,
+            clean: a.clean,
+            no_color: a.no_color,
+            asm_style: a.asm_style,
+            build_type: a.build_type,
+            rust: a.rust,
+            comments: a.comments,
+            directives: a.directives,
+            json: a.json,
+            debug_mode: a.debug_mode,
+            project_path: a.project_path,
+        }
+    }
+}
+
+
+/// CLI options of cargo asm.
+#[derive(StructOpt, Debug)]
+pub struct AsmOptions {
     #[structopt(help = "Path of the function to disassebly, e.g., foo::bar::baz() .")]
     pub path: String,
     #[structopt(long = "target", help = "Build for the target triple.")]
@@ -38,9 +74,10 @@ pub struct Options {
     pub json: bool,
     #[structopt(long = "debug-mode", help = "Prints output useful for debugging.")]
     pub debug_mode: bool,
-    #[structopt(long = "project-path", help = "Runs cargo-asm in a different path.")]
-    pub project_path: Option<String>,
+    #[structopt(long = "project-path", help = "Runs cargo-asm in a different path.", parse(from_os_str))]
+    pub project_path: Option<::std::path::PathBuf>,
 }
+
 
 pub trait OptionsExt {
     fn path(&self) -> String;
@@ -54,7 +91,7 @@ pub trait OptionsExt {
     fn directives(&self) -> bool;
     fn json(&self) -> bool;
     fn debug_mode(&self) -> bool;
-    fn project_path(&self) -> Option<String>;
+    fn project_path(&self) -> Option<::std::path::PathBuf>;
     fn use_colors(&self) -> bool;
     fn print_comments(&self) -> bool;
     fn print_directives(&self) -> bool;
@@ -95,7 +132,7 @@ impl OptionsExt for ::std::sync::Mutex<Options> {
     fn debug_mode(&self) -> bool {
         self.lock().unwrap().debug_mode
     }
-    fn project_path(&self) -> Option<String> {
+    fn project_path(&self) -> Option<::std::path::PathBuf> {
         self.lock().unwrap().project_path.clone()
     }
 
@@ -136,7 +173,7 @@ Quick start: given a crate named \"crate\", to search:
   * an implementation of the trait method \"bar\" of the trait \"Bar\" for the type \"Foo\":
       cargo asm \"<crate::path::to::Foo as crate::path::to::Bar>::bar\"
 ")]
-    Asm(Options),
+    Asm(AsmOptions),
 }
 
 fn read() -> Options {
@@ -147,7 +184,7 @@ fn read() -> Options {
             if o.debug_mode {
                 o.rust = true;
             }
-            o
+            Options::from(o)
         }
     }
 }

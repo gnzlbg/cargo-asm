@@ -83,7 +83,6 @@ fn main() {
     // Executing cargo asm into a different path via --project-path=... is done
     // by changing the current working directory.
     if let Some(ref new_path) = opts.project_path() {
-        let new_path = ::std::path::PathBuf::from(new_path.trim());
         assert!(
             ::std::env::set_current_dir(&new_path).is_ok(),
             "failed to change the working path to {}",
