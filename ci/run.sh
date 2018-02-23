@@ -10,4 +10,5 @@ rustup component add rust-src
 cargo build --release
 cargo test --release --target=$TARGET -- --nocapture
 
-cargo run -- asm --project-path cargo-asm-test/lib_crate lib_crate::sum_array --rust --debug-mode
+cargo run --bin cargo-asm -- asm --project-path cargo-asm-test/lib_crate lib_crate::sum_array --rust --debug-mode
+cargo run --bin cargo-llvm-ir -- llvm-ir --project-path cargo-asm-test/lib_crate lib_crate::sum_array --debug-mode
