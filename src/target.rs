@@ -57,3 +57,52 @@ pub fn rust_src_path_component() -> ::std::path::PathBuf {
 
     ::std::path::PathBuf::from(p)
 }
+
+
+pub fn directory() -> ::std::path::PathBuf {
+    // Run cargo metadata to get the target directory
+    let mut target_directory = {
+        let mut cargo = ::std::process::Command::new("cargo");
+        cargo.arg("metadata");
+        cargo.arg("--format-version");
+        cargo.arg("1");
+        let error_msg = "cargo metadata failed";
+        let (stdout, _stderr) =
+            ::process::exec(&mut cargo, error_msg, opts.debug_mode())
+            .expect(error_msg);
+
+        // Parse the metadata format
+        let v: ::serde_json::Value
+            = ::serde_json::from_str(&stdout)
+            .expect("failed to parse cargo metadata's output as json");
+        ::std::path::PathBuf::from(v["target_directory"].as_str().expect("could not find key \"target_directory\" in the output of `cargo metadata`"))
+    };
+
+    // Generate build type path component:
+    let build_type = match opts.build_type() {
+        ::build::Type::Release => "release",
+        ::build::Type::Debug => "debug",
+    };
+
+    let t = target();
+
+    // Is the target the "native" target?
+    let is_native = match t.as_str() {
+        "x86_64-apple-darwin" if cfg!(target_os = "macos") => true,
+        "x86_64-unknown-linux-gnu" if cfg!(target_os = "linux") => true,
+        "x86_64-pc-windows-msvc" if cfg!(target_os = "windows") => true,
+        _ => false,
+    };
+
+    if !is_native {
+        target_directory.push(t);
+    }
+    target_directory.push(build_type);
+    target_directory.push("deps");
+
+    if !target_directory.exists() {
+        error!("The target directory for the build does not exist: {}", target_directory.display())
+    }
+
+    target_directory
+}

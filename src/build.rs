@@ -32,18 +32,6 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         .into_string()
         .expect("RUSTFLAGS are not valid UTF-8");
 
-    // Runs `cargo clean` before generating assembly code.
-    // TODO: figure out if this is really necessary.
-    // UPDATE: seems to be necessary in some cases with incremental
-    // compilation.
-    if opts.clean() {
-        let mut cargo_clean = Command::new("cargo");
-        cargo_clean.arg("clean");
-        let error_msg = "cargo clean failed";
-        process::exec(&mut cargo_clean, error_msg, opts.debug_mode())
-            .expect(error_msg);
-    }
-
     // Compile project generating assembly output:
     let mut cargo_build = Command::new("cargo");
     // TODO: unclear if `cargo build` + `RUSTFLAGS` should be used,
@@ -75,69 +63,26 @@ pub fn project() -> Vec<::std::path::PathBuf> {
 
     // let build_start = ::std::time::SystemTime::now();
     let error_msg = "cargo build failed";
-    let (_stdout, stderr) =
-        process::exec(&mut cargo_build, error_msg, opts.debug_mode())
-            .expect(error_msg);
+    process::exec(&mut cargo_build, error_msg, opts.debug_mode())
+        .expect(error_msg);
 
-    // Find output directories:
-    // TODO: is this really necessary? Assembly output "should" be in
-    // ${working_dir}/targets/{release,debug}/build/*.s
-    let mut output_directories = Vec::<::std::path::PathBuf>::new();
-    for l in stderr.lines() {
-        // This goes through the Running "rustc ... " invokations printed to
-        // stderr looking for --out-dir and collects the directories into a
-        // Vec:
-        l.trim()
-            .split_whitespace()
-            .skip_while(|&s| s != "--out-dir")
-            .skip(1)
-            .take(1)
-            .for_each(|v| {
-                let path = ::std::path::PathBuf::from(v.to_string());
-                debug!("parsed --out-dir: {}", path.display());
-                output_directories.push(path)
-            });
-    }
-
-    // Append the typical output directory:
-    if output_directories.is_empty() {
-        let build_dir = match opts.build_type() {
-            Type::Release => "release",
-            Type::Debug => "debug",
-        };
-
-        let mut typical_path = ::std::env::current_dir()
-            .expect("cannot read the current working directory");
-        typical_path.push("target");
-        typical_path.push(build_dir);
-        typical_path.push("deps");
-        debug!("typical path: {}", typical_path.display());
-
-        output_directories.push(typical_path);
-    }
+    let target_directory = ::target::directory();
 
     // Scan the output directories for assembly files ".s" that have been
     // generated after the build start.
     let mut output_files = Vec::new();
-    for dir in output_directories {
-        debug!("scanning directory for assembly files: {}", dir.display());
-        if !dir.exists() {
-            debug!("directory {} doe snot exist", dir.display());
-            continue;
-        }
-        for entry in ::walkdir::WalkDir::new(dir.clone()) {
-            let e = entry.expect(&format!(
-                "failed to iterate over the directory: {}",
-                dir.display()
-            ));
-            let p = e.path();
-            let is_assembly_file =
-                p.extension().map_or("", |v| v.to_str().unwrap_or("")) == "s";
-            if is_assembly_file {
-                let p = p.to_path_buf();
-                debug!("found assembly file: {}", p.display());
-                output_files.push(p);
-            }
+    for entry in ::walkdir::WalkDir::new(target_directory.clone()) {
+        let e = entry.expect(&format!(
+            "failed to iterate over the directory: {}",
+            target_directory.display()
+        ));
+        let p = e.path();
+        let is_assembly_file =
+            p.extension().map_or("", |v| v.to_str().unwrap_or("")) == "s";
+        if is_assembly_file {
+            let p = p.to_path_buf();
+            debug!("found assembly file: {}", p.display());
+            output_files.push(p);
         }
     }
 
