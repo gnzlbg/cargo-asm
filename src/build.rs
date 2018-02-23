@@ -100,7 +100,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     }
 
     // Append the typical output directory:
-    {
+    if output_directories.is_empty() {
         let build_dir = match opts.build_type() {
             Type::Release => "release",
             Type::Debug => "debug",
@@ -121,6 +121,10 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     let mut output_files = Vec::new();
     for dir in output_directories {
         debug!("scanning directory for assembly files: {}", dir.display());
+        if !dir.exists() {
+            debug!("directory {} doe snot exist", dir.display());
+            continue;
+        }
         for entry in ::walkdir::WalkDir::new(dir.clone()) {
             let e = entry.expect(&format!(
                 "failed to iterate over the directory: {}",
