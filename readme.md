@@ -13,7 +13,12 @@
 
 To view the assembly of the function `double_n` in the module `bar` of the crate
 [`lib_crate`] annotated with its corresponding Rust code, go to the crate's root
-directory and type:
+directory 
+
+> git clone git@github.com:gnzlbg/cargo-asm.git
+> cd cargo-asm/cargo-asm-test/lib_crate
+
+and type:
 
 > cargo asm lib_crate::bar::double_n --rust
 
@@ -77,4 +82,4 @@ shall be dual licensed as above, without any additional terms or conditions.
 [license]: https://github.com/gnzlbg/cargo-asm/blob/master/license.md
 [crate-shield]: https://img.shields.io/crates/v/cargo-asm.svg?style=flat-square
 [crate]: https://crates.io/crates/cargo-asm
-
+[`lib_crate`]: https://github.com/gnzlbg/cargo-asm/tree/master/cargo-asm-test/lib_crate
