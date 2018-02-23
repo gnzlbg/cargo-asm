@@ -75,6 +75,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
             );
         }
         ::options::Options::LlvmIr(ref _o) => {
+            // TODO: the debug info really clutters the llvm-ir (-g)
             cargo_build
                 .env("RUSTFLAGS", format!("{} --emit=llvm-ir", rustflags));
         }
