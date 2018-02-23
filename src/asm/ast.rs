@@ -59,9 +59,9 @@ impl File {
         fn contains_file_label(s: &str) -> bool {
             let t = ::target::target();
             if t.contains("windows") {
-                s.contains(".cv_file") && !s.contains(".cv_filec")
+                s.starts_with(".cv_file") && !s.starts_with(".cv_filec")
             } else {
-                s.contains(".file")
+                s.starts_with(".file")
             }
         }
 
@@ -79,12 +79,20 @@ impl File {
         let path = colon_tokens
             .get(file_path_index)
             .expect(&format!("could not get file path of {} | file_path_index: {} | tokens: {:?}", s, file_path_index, &colon_tokens));
+
+        if colon_tokens.is_empty() {
+            return None;
+        }
         // On Linux some files miss the file index:
         let index = ws_tokens
             .get(file_path_index_index)
             .expect(&format!("could not get file index of {} | file_path_index_index: {} | tokens: {:?}", s, file_path_index_index, &ws_tokens))
             .parse()
             .unwrap_or(0);
+        if ws_tokens.is_empty() {
+            return None;
+        }
+
         let mut path_str = path.trim().to_string();
         if ::target::target().contains("windows") {
             // Replace \\ with \ on windows
