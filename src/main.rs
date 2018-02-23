@@ -123,7 +123,7 @@ fn main() {
         }
         asm::parse::Result::NotFound(mut table) => {
             use edit_distance::edit_distance;
-            let mut msg = format!("could not find function at path \"{}\" in the generated assembly.\nMaybe you meant one of the following functions?\n\n", &opts.path());
+            let mut msg = format!("could not find function at path \"{}\" in the generated assembly.\n", &opts.path());
 
             let last_path = opts.path();
             let last_path = last_path.split(':').next_back().unwrap();
@@ -135,16 +135,19 @@ fn main() {
                     ))
             });
 
-            for f in table.iter() {
-                if edit_distance(f.split(':').next_back().unwrap(), last_path)
-                    > 4
-                {
-                    break;
+            for (i, f) in table.iter().take_while(|f| edit_distance(f.split(':').next_back().unwrap(), last_path)
+                                                  <= 4).enumerate() {
+                if i == 0 {
+                    msg.push_str(&format!("Is it one of the following functions?\n\n"));
                 }
                 msg.push_str(&format!("  {}\n", f));
             }
 
-            msg.push_str("\nOtherwise make sure that the function is present in the final binary (e.g. if it's a generic function, make sure that it is actually monomorphized) or try to do a --clean build (sometimes changes are not picked up).\n"
+            msg.push_str(r#"
+Tips:
+  * make sure that the function is present in the final binary (e.g. if it's a generic function, make sure that it is actually monomorphized)
+  * try to do a --clean build (sometimes changes are not picked up)
+"#
             );
 
             display::write_error(&msg);
