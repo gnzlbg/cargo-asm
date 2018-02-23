@@ -19,6 +19,10 @@ maintenance = { status = "experimental" }
 name = "cargo-asm"
 path = "src/main.rs"
 
+[[bin]]
+name = "cargo-llvm-ir"
+path = "src/main.rs"
+
 [dependencies]
 structopt = "0.2.*"
 walkdir = "2.*"

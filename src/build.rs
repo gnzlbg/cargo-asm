@@ -26,11 +26,15 @@ impl ::std::str::FromStr for Type {
 /// assembly files generated.
 pub fn project() -> Vec<::std::path::PathBuf> {
     use std::process::Command;
+    debug!("Building project...");
+
     // Read the RUSTFLAGS environment variable
     let rustflags = ::std::env::var_os("RUSTFLAGS")
         .unwrap_or_default()
         .into_string()
         .expect("RUSTFLAGS are not valid UTF-8");
+
+    debug!("RUSTFLAGS={}", rustflags);
 
     // Compile project generating assembly output:
     let mut cargo_build = Command::new("cargo");
@@ -49,27 +53,47 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         Type::Debug => cargo_build.arg("--debug"),
     };
     cargo_build.arg("--verbose");
-    let asm_syntax = match opts.asm_style() {
-        ::asm::Style::Intel => "-C llvm-args=-x86-asm-syntax=intel",
-        ::asm::Style::ATT => "",
-    };
+
     if let Some(triple) = opts.TRIPLE() {
         cargo_build.arg(&format!("--target={}", triple));
     }
-    cargo_build.env(
-        "RUSTFLAGS",
-        format!("{} --emit asm -g {}", rustflags, asm_syntax),
-    );
 
-    // let build_start = ::std::time::SystemTime::now();
+    let t = target::target();
+
+    match *opts.read().unwrap() {
+        ::options::Options::Asm(ref o) => {
+            let asm_syntax = match o.asm_style {
+                ::asm::Style::Intel if t.contains("86") => {
+                    "-C llvm-args=-x86-asm-syntax=intel"
+                }
+                _ => "",
+            };
+
+            cargo_build.env(
+                "RUSTFLAGS",
+                format!("{} --emit asm -g {}", rustflags, asm_syntax),
+            );
+        }
+        ::options::Options::LlvmIr(ref _o) => {
+            cargo_build
+                .env("RUSTFLAGS", format!("{} --emit=llvm-ir", rustflags));
+        }
+    }
+
+    debug!("starting cargo build...");
     let error_msg = "cargo build failed";
     process::exec(&mut cargo_build, error_msg, opts.debug_mode())
         .expect(error_msg);
+    debug!("cargo build finished...");
 
     let target_directory = ::target::directory();
 
-    // Scan the output directories for assembly files ".s" that have been
-    // generated after the build start.
+    let ext = match *opts.read().unwrap() {
+        ::options::Options::Asm(_) => "s",
+        ::options::Options::LlvmIr(_) => "ll",
+    };
+
+    // Scan the output directories for files matching the extension:
     let mut output_files = Vec::new();
     for entry in ::walkdir::WalkDir::new(target_directory.clone()) {
         let e = entry.expect(&format!(
@@ -78,10 +102,14 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         ));
         let p = e.path();
         let is_assembly_file =
-            p.extension().map_or("", |v| v.to_str().unwrap_or("")) == "s";
+            p.extension().map_or("", |v| v.to_str().unwrap_or("")) == ext;
         if is_assembly_file {
             let p = p.to_path_buf();
-            debug!("found assembly file: {}", p.display());
+            debug!(
+                "found file matching extension \"{}\": {}",
+                ext,
+                p.display()
+            );
             output_files.push(p);
         }
     }

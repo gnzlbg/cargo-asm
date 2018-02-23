@@ -3,7 +3,7 @@
 [![crates.io version][crate-shield]][crate] [![Travis build status][travis-shield]][travis] [![Appveyor build status][appveyor-shield]][appveyor] [![License][license-shield]][license]
 
 
-> A [`cargo`] subcommand that displays the generated assembly generated from Rust source code.
+> A [`cargo`] subcommand that displays the assembly or llvm-ir generated for Rust source code.
 
 # Install
 
@@ -34,6 +34,12 @@ which outputs:
 ![screenshot](https://raw.githubusercontent.com/gnzlbg/cargo-asm/images/screenshot.png)
 
 
+To view the LLVM IR type
+
+```
+cargo llvm-ir lib_crate::bar::double_n
+```
+
 #  Features
 
 * Platform support:
@@ -47,6 +53,7 @@ which outputs:
   * Assembly in Intel or AT&T syntax.
   * Corresponding Rust source code alongside assembly.
   * JSON AST for further processing.
+  * LLVM-IR.
 
 * Querying:
 

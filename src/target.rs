@@ -58,8 +58,8 @@ pub fn rust_src_path_component() -> ::std::path::PathBuf {
     ::std::path::PathBuf::from(p)
 }
 
-
 pub fn directory() -> ::std::path::PathBuf {
+    debug!("obtaining the target directory...");
     // Run cargo metadata to get the target directory
     let mut target_directory = {
         let mut cargo = ::std::process::Command::new("cargo");
@@ -69,11 +69,10 @@ pub fn directory() -> ::std::path::PathBuf {
         let error_msg = "cargo metadata failed";
         let (stdout, _stderr) =
             ::process::exec(&mut cargo, error_msg, opts.debug_mode())
-            .expect(error_msg);
+                .expect(error_msg);
 
         // Parse the metadata format
-        let v: ::serde_json::Value
-            = ::serde_json::from_str(&stdout)
+        let v: ::serde_json::Value = ::serde_json::from_str(&stdout)
             .expect("failed to parse cargo metadata's output as json");
         ::std::path::PathBuf::from(v["target_directory"].as_str().expect("could not find key \"target_directory\" in the output of `cargo metadata`"))
     };
@@ -101,8 +100,13 @@ pub fn directory() -> ::std::path::PathBuf {
     target_directory.push("deps");
 
     if !target_directory.exists() {
-        error!("The target directory for the build does not exist: {}", target_directory.display())
+        error!(
+            "The target directory for the build does not exist: {}",
+            target_directory.display()
+        )
     }
+
+    debug!("the target directory is {}", target_directory.display());
 
     target_directory
 }

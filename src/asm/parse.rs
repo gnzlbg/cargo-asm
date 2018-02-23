@@ -132,7 +132,7 @@ pub enum Result {
 /// Parses the assembly function at `path` from the file `file`.
 #[cfg_attr(feature = "cargo-clippy", allow(use_debug))]
 pub fn function(file: &::std::path::Path) -> Result {
-    let path: String = opts.path().to_string();
+    let path: String = opts.path();
     use std::io::BufRead;
 
     let fh = ::std::fs::File::open(file).unwrap();

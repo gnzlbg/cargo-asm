@@ -1,10 +1,10 @@
 extern crate assert_cli;
 
 fn lib_test(args: &[&str]) -> assert_cli::Assert {
-    assert_cli::Assert::main_binary()
+    assert_cli::Assert::cargo_binary("cargo-asm")
         .with_args(&[
             "asm",
-            "--project-path",
+            "--manifest-path",
             "cargo-asm-test/lib_crate",
             "--no-color",
         ])
