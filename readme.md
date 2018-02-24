@@ -33,6 +33,9 @@ which outputs:
 
 ![screenshot](https://raw.githubusercontent.com/gnzlbg/cargo-asm/images/screenshot.png)
 
+(note: the source-code mapping information emitted by rustc after optimizations is
+sometimes far from perfect, like in this case. Take it with a grain of salt.)
+
 
 To view the LLVM IR type
 
