@@ -79,6 +79,10 @@ cargo llvm-ir lib_crate::bar::double_n
   ```
 
   * generic functions, methods, ...
+  
+To search for a function named `foo` in some path, one can just type `cargo asm
+foo`. The command will return a list of all similarly named functions
+independently of the path.
 
 # License
 This project is licensed under either of
