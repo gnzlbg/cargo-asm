@@ -7,6 +7,7 @@ fn lib_test(args: &[&str]) -> assert_cli::Assert {
             "--manifest-path",
             "cargo-asm-test/lib_crate",
             "--no-color",
+            "--debug-info",
         ])
         .with_args(args)
 }
