@@ -70,7 +70,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
             };
 
             let debug_info = if o.rust || o.debug_info {
-                "-g"
+                "-C debuginfo=2"
             } else {
                 ""
             };
