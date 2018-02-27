@@ -37,6 +37,8 @@ pub struct AsmOptions {
     pub debug_mode: bool,
     #[structopt(long = "manifest-path", help = "Runs cargo-asm in a different path.", parse(from_os_str))]
     pub manifest_path: Option<::std::path::PathBuf>,
+    #[structopt(long = "-no-debug-info", help = "Generates assembly without debugging information.")]
+    pub no_debug_info: bool,
 }
 
 /// CLI options of cargo llvm-ir.

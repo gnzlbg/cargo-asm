@@ -69,9 +69,15 @@ pub fn project() -> Vec<::std::path::PathBuf> {
                 _ => "",
             };
 
+            let debug_info = if o.rust || !o.no_debug_info {
+                "-g"
+            } else {
+                ""
+            };
+
             cargo_build.env(
                 "RUSTFLAGS",
-                format!("{} --emit asm -g {}", rustflags, asm_syntax),
+                format!("{} --emit asm {} {}", rustflags, debug_info, asm_syntax),
             );
         }
         ::options::Options::LlvmIr(ref _o) => {
