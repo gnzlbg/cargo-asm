@@ -83,11 +83,11 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         ::options::Options::LlvmIr(ref _o) => {
             // TODO: the debug info really clutters the llvm-ir (-g)
             cargo_build
-                .env("RUSTFLAGS", format!("{} --emit=llvm-ir", rustflags));
+                .env("RUSTFLAGS", format!("{} -C debuginfo=0 --emit=llvm-ir", rustflags));
         }
     }
 
-    debug!("starting cargo build...");
+    debug!("starting cargo build... {:?}", cargo_build);
     let error_msg = "cargo build failed";
     process::exec(&mut cargo_build, error_msg, opts.debug_mode())
         .expect(error_msg);
