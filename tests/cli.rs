@@ -922,3 +922,26 @@ fn completions() {
         .fails()
         .unwrap();
 }
+
+#[test]
+fn cargo_features() {
+    lib_test(&["lib_crate::bar::tiger_add"])
+        .stderr().contains("could not find function at path \"lib_crate::bar::tiger_add\" in the generated assembly.")
+        .fails()
+        .unwrap();
+
+    lib_test(&["lib_crate::bar::tiger_add", "--features=tiger"])
+        .stdout().contains("lib_crate::bar::tiger_add")
+        .succeeds()
+        .unwrap();
+
+    lib_test(&["lib_crate::bar::cat_tiger_add", "--features=tiger"])
+        .stderr().contains("could not find function at path \"lib_crate::bar::cat_tiger_add\" in the generated assembly.")
+        .fails()
+        .unwrap();
+
+    lib_test(&["lib_crate::bar::cat_tiger_add", "--features=tiger,cat"])
+        .stdout().contains("lib_crate::bar::cat_tiger_add")
+        .succeeds()
+        .unwrap();
+}

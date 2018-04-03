@@ -25,6 +25,8 @@ pub struct AsmOptions {
     pub asm_style: Style,
     #[structopt(long = "build-type", help = "Build type: debug, release.", default_value = "release")]
     pub build_type: Type,
+    #[structopt(long = "features", help = "cargo --features")]
+    pub features: Vec<String>,
     #[structopt(long = "rust", help = "Print interleaved Rust code.")]
     pub rust: bool,
     #[structopt(long = "comments", help = "Print assembly comments.")]
@@ -48,6 +50,8 @@ pub struct LlvmIrOptions {
     pub path: String,
     #[structopt(long = "target", help = "Build for the target triple.")]
     pub TRIPLE: Option<String>,
+    #[structopt(long = "features", help = "cargo --features")]
+    pub features: Vec<String>,
     #[structopt(long = "no-color", help = "Disable colored output.")]
     pub no_color: bool,
     #[structopt(long = "build-type", help = "Build type: debug, release.", default_value = "release")]
@@ -76,6 +80,7 @@ pub trait OptionsExt {
     fn print_comments(&self) -> bool;
     fn print_directives(&self) -> bool;
     fn set_rust(&self, value: bool);
+    fn features(&self) -> Vec<String>;
 }
 
 impl OptionsExt for ::std::sync::RwLock<Options> {
@@ -169,6 +174,13 @@ impl OptionsExt for ::std::sync::RwLock<Options> {
             Options::LlvmIr(ref mut o) => o.rust = value,
         }
     }
+    fn features(&self) -> Vec<String> {
+        match *self.read().unwrap() {
+            Options::Asm(ref o) => o.features.clone(),
+            Options::LlvmIr(ref o) => o.features.clone(),
+        }
+    }
+
 }
 
 #[derive(StructOpt, Debug)]
