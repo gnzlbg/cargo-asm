@@ -54,6 +54,12 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     };
     cargo_build.arg("--verbose");
 
+    if !opts.features().is_empty() {
+        cargo_build.arg(
+            &format!("--features={}", opts.features().join(","))
+        );
+    }
+
     if let Some(triple) = opts.TRIPLE() {
         cargo_build.arg(&format!("--target={}", triple));
     }

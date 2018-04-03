@@ -43,3 +43,12 @@ pub fn double_n(mut x: usize, mut n: usize) -> usize {
     x
 }
 
+#[cfg(feature = "tiger")]
+pub fn tiger_add(x: usize, y: usize) -> usize {
+    x + y
+}
+
+#[cfg(all(feature = "tiger", feature = "cat"))]
+pub fn cat_tiger_add(x: usize, y: usize) -> usize {
+    x + y
+}
