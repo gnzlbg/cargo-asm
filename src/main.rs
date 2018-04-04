@@ -18,6 +18,7 @@ extern crate serde_json;
 extern crate structopt;
 extern crate termcolor;
 extern crate walkdir;
+extern crate parking_lot;
 
 mod options;
 mod process;
@@ -35,6 +36,28 @@ use options::*;
 
 #[cfg_attr(feature = "cargo-clippy", allow(print_stdout, use_debug))]
 fn main() {
+    // Create a background thread which checks for deadlocks every 10s
+    std::thread::spawn(move || {
+        loop {
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            let deadlocks = parking_lot::deadlock::check_deadlock();
+            if deadlocks.is_empty() {
+                continue;
+            }
+
+            println!("{} deadlocks detected", deadlocks.len());
+            for (i, threads) in deadlocks.iter().enumerate() {
+                println!("Deadlock #{}", i);
+                for t in threads {
+                    println!("Thread Id {:#?}", t.thread_id());
+                    println!("{:#?}", t.backtrace());
+                }
+            }
+
+            ::std::process::abort();
+        }
+    });
+
     // Initialize logger and options:
     if let Err(err) = logger::Logger::init() {
         eprintln!("failed to initialize logger: {}", err);
@@ -80,7 +103,7 @@ fn main() {
         debug!("  {}", f.display());
     }
 
-    match *opts.read().unwrap() {
+    match *opts.read() {
         ::options::Options::Asm(_) => asm::run(&files),
         ::options::Options::LlvmIr(_) => llvmir::run(&files),
     }

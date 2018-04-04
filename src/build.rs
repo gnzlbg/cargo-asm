@@ -66,7 +66,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
 
     let t = target::target();
 
-    match *opts.read().unwrap() {
+    match *opts.read() {
         ::options::Options::Asm(ref o) => {
             let asm_syntax = match o.asm_style {
                 ::asm::Style::Intel if t.contains("86") => {
@@ -101,7 +101,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
 
     let target_directory = ::target::directory();
 
-    let ext = match *opts.read().unwrap() {
+    let ext = match *opts.read() {
         ::options::Options::Asm(_) => "s",
         ::options::Options::LlvmIr(_) => "ll",
     };

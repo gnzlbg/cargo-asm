@@ -7,8 +7,8 @@ use asm::Style;
 use build::Type;
 
 lazy_static! {
-    pub static ref opts: ::std::sync::RwLock<Options> = {
-        ::std::sync::RwLock::new(read())
+    pub static ref opts: ::parking_lot::RwLock<Options> = {
+        ::parking_lot::RwLock::new(read())
     };
 }
 
@@ -83,69 +83,69 @@ pub trait OptionsExt {
     fn features(&self) -> Vec<String>;
 }
 
-impl OptionsExt for ::std::sync::RwLock<Options> {
+impl OptionsExt for ::parking_lot::RwLock<Options> {
     fn path(&self) -> String {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => o.path.clone(),
             Options::LlvmIr(ref o) => o.path.clone(),
         }
     }
     fn TRIPLE(&self) -> Option<String> {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => o.TRIPLE.clone(),
             Options::LlvmIr(ref o) => o.TRIPLE.clone(),
         }
     }
     fn no_color(&self) -> bool {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => o.no_color,
             Options::LlvmIr(ref o) => o.no_color,
         }
     }
     fn asm_style(&self) -> Option<Style> {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => Some(o.asm_style),
             Options::LlvmIr(_) => None,
         }
     }
     fn build_type(&self) -> Type {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => o.build_type,
             Options::LlvmIr(ref o) => o.build_type,
         }
     }
     fn rust(&self) -> bool {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => o.rust,
             Options::LlvmIr(ref o) => o.rust,
         }
     }
     fn comments(&self) -> Option<bool> {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => Some(o.comments),
             Options::LlvmIr(_) => None,
         }
     }
     fn directives(&self) -> Option<bool> {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => Some(o.directives),
             Options::LlvmIr(_) => None,
         }
     }
     fn json(&self) -> bool {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => o.json,
             Options::LlvmIr(ref _o) => false,
         }
     }
     fn debug_mode(&self) -> bool {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => o.debug_mode,
             Options::LlvmIr(ref o) => o.debug_mode,
         }
     }
     fn manifest_path(&self) -> Option<::std::path::PathBuf> {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => o.manifest_path.clone(),
             Options::LlvmIr(ref o) => o.manifest_path.clone(),
         }
@@ -169,13 +169,13 @@ impl OptionsExt for ::std::sync::RwLock<Options> {
         }
     }
     fn set_rust(&self, value: bool) {
-        match *self.write().unwrap() {
+        match *self.write() {
             Options::Asm(ref mut o) => o.rust = value,
             Options::LlvmIr(ref mut o) => o.rust = value,
         }
     }
     fn features(&self) -> Vec<String> {
-        match *self.read().unwrap() {
+        match *self.read() {
             Options::Asm(ref o) => o.features.clone(),
             Options::LlvmIr(ref o) => o.features.clone(),
         }
