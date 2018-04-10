@@ -9,7 +9,8 @@ export RUST_BACKTRACE=1
 
 rustup component add rust-src
 
-cargo build --release --target=$TARGET
+cargo test --target=$TARGET -- --nocapture
+rm -rf cargo-asm-test/lib_crate/target/
 cargo test --release --target=$TARGET -- --nocapture
 
 cargo run --bin cargo-asm -- asm --manifest-path cargo-asm-test/lib_crate lib_crate::sum_array --rust --debug-mode
