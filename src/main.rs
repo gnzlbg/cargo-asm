@@ -37,27 +37,28 @@ use options::*;
 
 #[cfg_attr(feature = "cargo-clippy", allow(print_stdout, use_debug))]
 fn main() {
-    // Create a background thread which checks for deadlocks every 10s
-    std::thread::spawn(move || {
-        loop {
-            std::thread::sleep(std::time::Duration::from_secs(1));
-            let deadlocks = parking_lot::deadlock::check_deadlock();
-            if deadlocks.is_empty() {
-                continue;
-            }
-
-            println!("{} deadlocks detected", deadlocks.len());
-            for (i, threads) in deadlocks.iter().enumerate() {
-                println!("Deadlock #{}", i);
-                for t in threads {
-                    println!("Thread Id {:#?}", t.thread_id());
-                    println!("{:#?}", t.backtrace());
+    #[cfg(feature ="deadlock_detection")]
+    {
+        // Create a background thread which checks for deadlocks every 10s
+        std::thread::spawn(move || {
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(1));
+                let deadlocks = parking_lot::deadlock::check_deadlock();
+                if deadlocks.is_empty() {
+                    continue;
                 }
+                println!("{} deadlocks detected", deadlocks.len());
+                for (i, threads) in deadlocks.iter().enumerate() {
+                    println!("Deadlock #{}", i);
+                    for t in threads {
+                        println!("Thread Id {:#?}", t.thread_id());
+                        println!("{:#?}", t.backtrace());
+                    }
+                }
+                ::std::process::abort();
             }
-
-            ::std::process::abort();
-        }
-    });
+        });
+    }
 
     // Initialize logger and options:
     if let Err(err) = logger::Logger::init() {
