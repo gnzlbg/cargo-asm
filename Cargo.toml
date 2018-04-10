@@ -1,6 +1,6 @@
 [package]
 name = "cargo-asm"
-version = "0.1.12"
+version = "0.1.13"
 authors = ["gnzlbg <gonzalobg88@gmail.com>"]
 description = "A cargo subcommand that displays the generated assembly of Rust source code."
 license = "MIT/Apache-2.0"
