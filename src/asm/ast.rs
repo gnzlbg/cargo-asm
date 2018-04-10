@@ -217,7 +217,9 @@ impl Directive {
             if let Some(loc) = Loc::new(s) {
                 return Some(Directive::Loc(loc));
             }
-            return Some(Directive::Generic(GenericDirective::new(s).unwrap()));
+            return Some(Directive::Generic(
+                GenericDirective::new(s).unwrap(),
+            ));
         }
         None
     }

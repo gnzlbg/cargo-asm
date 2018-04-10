@@ -1,6 +1,6 @@
+use self::ast::*;
 use super::ast;
 use options::*;
-use self::ast::*;
 
 /// Parses the body of a function `path` from the `function_line`
 fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
@@ -39,7 +39,9 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
         // If the line contains a comment, we parse that first:
         if let Some(comment) = Comment::new(comment_str) {
             debug!(" * parsing comment: {:?}", comment);
-            function.statements.push(Statement::Comment(comment));
+            function
+                .statements
+                .push(Statement::Comment(comment));
         }
 
         // Then we parse the AST statements.
@@ -101,7 +103,9 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
         if let Some(label) = Label::new(node_str, current_loc) {
             debug!(" * parsed label: {:?}", label);
 
-            function.statements.push(Statement::Label(label));
+            function
+                .statements
+                .push(Statement::Label(label));
             continue;
         }
 
@@ -125,7 +129,10 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
 /// Result of parsing a function, either a match, or a table of functions in
 /// the file.
 pub enum Result {
-    Found(ast::Function, ::std::collections::HashMap<usize, ast::File>),
+    Found(
+        ast::Function,
+        ::std::collections::HashMap<usize, ast::File>,
+    ),
     NotFound(Vec<String>),
 }
 

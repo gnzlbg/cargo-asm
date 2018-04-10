@@ -8,7 +8,7 @@ use std::process::Command;
 /// If `verbose` is `true` `stdout` and `stderr` are forwarded to `stderr` on
 /// success as well.
 pub fn exec(
-    cmd: &mut Command, error_msg: &str, verbose: bool
+    cmd: &mut Command, error_msg: &str, verbose: bool,
 ) -> Result<(String, String), ()> {
     let r = cmd.output().expect(error_msg);
     let success = r.status.success();

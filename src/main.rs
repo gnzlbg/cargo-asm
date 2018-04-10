@@ -1,9 +1,11 @@
 //! cargo-asm driver
 #![allow(non_snake_case, non_upper_case_globals)]
-
-#![cfg_attr(feature = "cargo-clippy",
-            allow(missing_docs_in_private_items, option_unwrap_used,
-                  result_unwrap_used))]
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(
+        missing_docs_in_private_items, option_unwrap_used, result_unwrap_used
+    )
+)]
 
 extern crate edit_distance;
 #[macro_use]
@@ -17,46 +19,44 @@ extern crate serde_derive;
 extern crate serde_json;
 #[macro_use]
 extern crate structopt;
+extern crate parking_lot;
 extern crate termcolor;
 extern crate walkdir;
-extern crate parking_lot;
 
-mod options;
-mod process;
-mod build;
 mod asm;
+mod build;
 mod demangle;
 mod display;
-mod rust;
-mod path;
-mod logger;
-mod target;
 mod llvmir;
+mod logger;
+mod options;
+mod path;
+mod process;
+mod rust;
+mod target;
 
 use options::*;
 
 #[cfg_attr(feature = "cargo-clippy", allow(print_stdout, use_debug))]
 fn main() {
-    #[cfg(feature ="deadlock_detection")]
+    #[cfg(feature = "deadlock_detection")]
     {
         // Create a background thread which checks for deadlocks every 10s
-        std::thread::spawn(move || {
-            loop {
-                std::thread::sleep(std::time::Duration::from_secs(1));
-                let deadlocks = parking_lot::deadlock::check_deadlock();
-                if deadlocks.is_empty() {
-                    continue;
-                }
-                println!("{} deadlocks detected", deadlocks.len());
-                for (i, threads) in deadlocks.iter().enumerate() {
-                    println!("Deadlock #{}", i);
-                    for t in threads {
-                        println!("Thread Id {:#?}", t.thread_id());
-                        println!("{:#?}", t.backtrace());
-                    }
-                }
-                ::std::process::abort();
+        std::thread::spawn(move || loop {
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            let deadlocks = parking_lot::deadlock::check_deadlock();
+            if deadlocks.is_empty() {
+                continue;
             }
+            println!("{} deadlocks detected", deadlocks.len());
+            for (i, threads) in deadlocks.iter().enumerate() {
+                println!("Deadlock #{}", i);
+                for t in threads {
+                    println!("Thread Id {:#?}", t.thread_id());
+                    println!("{:#?}", t.backtrace());
+                }
+            }
+            ::std::process::abort();
         });
     }
 
@@ -78,7 +78,10 @@ fn main() {
     // done by changing the current working directory.
     if let Some(ref new_path) = opts.manifest_path() {
         if !new_path.exists() {
-            error!("The manifest-path {} does not exist!", new_path.display());
+            error!(
+                "The manifest-path {} does not exist!",
+                new_path.display()
+            );
             ::std::process::exit(1);
         }
         let result = ::std::env::set_current_dir(&new_path);
@@ -89,7 +92,10 @@ fn main() {
             );
             ::std::process::exit(1);
         }
-        debug!("manifest path changed to {}", new_path.display());
+        debug!(
+            "manifest path changed to {}",
+            new_path.display()
+        );
     }
 
     // Builds the project and returns a list of all relevant assembly files:
@@ -104,9 +110,7 @@ fn main() {
     for f in &files {
         debug!("  {}", f.display());
     }
-    let o = {
-        (*opts.read()).clone()
-    };
+    let o = { (*opts.read()).clone() };
     match o {
         ::options::Options::Asm(_) => asm::run(&files),
         ::options::Options::LlvmIr(_) => llvmir::run(&files),

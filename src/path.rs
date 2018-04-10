@@ -2,7 +2,7 @@
 
 /// Does the path contain the sub path?
 pub fn contains(
-    path: &::std::path::Path, sub_path: &::std::path::Path
+    path: &::std::path::Path, sub_path: &::std::path::Path,
 ) -> bool {
     let mut sub_path_iter = sub_path.components();
     let mut next_sub_path = sub_path_iter.next();
@@ -42,7 +42,7 @@ pub fn contains(
 
 /// Path after sub-path:
 pub fn after(
-    path: &::std::path::Path, sub_path: &::std::path::Path
+    path: &::std::path::Path, sub_path: &::std::path::Path,
 ) -> ::std::path::PathBuf {
     assert!(contains(&path, &sub_path));
 
@@ -51,7 +51,11 @@ pub fn after(
     let mut sub_path_iter = sub_path.components();
     let mut next_sub_path = sub_path_iter.next();
 
-    let mut appending = if next_sub_path.is_none() { true } else { false };
+    let mut appending = if next_sub_path.is_none() {
+        true
+    } else {
+        false
+    };
     let mut matching = false;
     for c in path.components() {
         if appending {

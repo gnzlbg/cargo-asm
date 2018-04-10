@@ -36,7 +36,11 @@ fn parse_files(files: &[::std::path::PathBuf]) -> parse::Result {
     }
     let mut function_table = Vec::<String>::new();
     for f in files {
-        assert!(f.exists(), "path does not exist: {}", f.display());
+        assert!(
+            f.exists(),
+            "path does not exist: {}",
+            f.display()
+        );
         match self::parse::function(f.as_path()) {
             Result::Found(function, files) => {
                 return Result::Found(function, files)

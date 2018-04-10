@@ -1,9 +1,13 @@
-use ::options::*;
+use options::*;
 
 pub fn run(files: &[::std::path::PathBuf]) {
     let mut function_table: Option<Vec<String>> = None;
     for f in files {
-        assert!(f.exists(), "path does not exist: {}", f.display());
+        assert!(
+            f.exists(),
+            "path does not exist: {}",
+            f.display()
+        );
         let r = print_function(f);
         if r.is_none() {
             function_table = None;
@@ -17,39 +21,41 @@ pub fn run(files: &[::std::path::PathBuf]) {
         }
     }
 
-    if function_table.is_none() { return; }
+    if function_table.is_none() {
+        return;
+    }
     let mut function_table = function_table.unwrap();
 
     use edit_distance::edit_distance;
-    let mut msg = format!("could not find function at path \"{}\" in the generated LLVM IR.\n", &opts.path());
+    let mut msg = format!(
+        "could not find function at path \"{}\" in the generated LLVM IR.\n",
+        &opts.path()
+    );
 
     let last_path = opts.path();
     let last_path = last_path.split(':').next_back().unwrap();
     function_table.sort_by(|a, b| {
-        edit_distance(a.split(':').next_back().unwrap(), last_path)
-            .cmp(&edit_distance(
-                b.split(':').next_back().unwrap(),
-                last_path,
-            ))
+        edit_distance(a.split(':').next_back().unwrap(), last_path).cmp(
+            &edit_distance(b.split(':').next_back().unwrap(), last_path),
+        )
     });
-    
+
     for (i, f) in function_table
         .iter()
         .take_while(|f| {
-            edit_distance(f.split(':').next_back().unwrap(), last_path)
-                        <= 4
-                })
-                .enumerate()
-            {
-                if i == 0 {
-                    msg.push_str(&format!(
-                        "Is it one of the following functions?\n\n"
-                    ));
-                }
-                msg.push_str(&format!("  {}\n", f));
-            }
+            edit_distance(f.split(':').next_back().unwrap(), last_path) <= 4
+        })
+        .enumerate()
+    {
+        if i == 0 {
+            msg.push_str(&format!(
+                "Is it one of the following functions?\n\n"
+            ));
+        }
+        msg.push_str(&format!("  {}\n", f));
+    }
 
-            msg.push_str(r#"
+    msg.push_str(r#"
 Tips:
   * make sure that the function is present in the final binary (e.g. if it's a generic function, make sure that it is actually monomorphized)
 
@@ -86,7 +92,7 @@ fn print_function(file_name: &::std::path::PathBuf) -> Option<Vec<String>> {
 
             let first = line.find("@").unwrap();
             let last = line.find("(").unwrap();
-            let mangled_name = &line[first+1..last];
+            let mangled_name = &line[first + 1..last];
             let demangled_name = ::demangle::demangle(&mangled_name);
             if demangled_name != path {
                 function_names.push(demangled_name);
@@ -99,9 +105,11 @@ fn print_function(file_name: &::std::path::PathBuf) -> Option<Vec<String>> {
 
     if let Some(function_lines) = function_lines {
         // Find last }
-        let r = function_lines.iter().rposition(|s| s.trim() == "}");
-        let r = r.unwrap_or(function_lines.len()-1);
-        for l in &function_lines[0..r+1] {
+        let r = function_lines
+            .iter()
+            .rposition(|s| s.trim() == "}");
+        let r = r.unwrap_or(function_lines.len() - 1);
+        for l in &function_lines[0..r + 1] {
             println!("{}", l);
         }
         None

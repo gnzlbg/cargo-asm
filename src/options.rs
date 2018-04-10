@@ -2,28 +2,37 @@
 
 #![cfg_attr(feature = "cargo-clippy", allow(missing_docs_in_private_items))]
 
-use structopt::StructOpt;
 use asm::Style;
 use build::Type;
+use structopt::StructOpt;
 
 lazy_static! {
-    pub static ref opts: ::parking_lot::RwLock<Options> = {
-        ::parking_lot::RwLock::new(read())
-    };
+    pub static ref opts: ::parking_lot::RwLock<Options> =
+        { ::parking_lot::RwLock::new(read()) };
 }
 
 /// CLI options of cargo asm.
 #[derive(StructOpt, Debug, Clone)]
 pub struct AsmOptions {
-    #[structopt(help = "Path of the function to disassembly, e.g., foo::bar::baz() .")]
+    #[structopt(
+        help = "Path of the function to disassembly, e.g., foo::bar::baz() ."
+    )]
     pub path: String,
     #[structopt(long = "target", help = "Build for the target triple.")]
     pub TRIPLE: Option<String>,
     #[structopt(long = "no-color", help = "Disable colored output.")]
     pub no_color: bool,
-    #[structopt(long = "asm-style", help = "Assembly style: intel, att.", default_value = "intel")]
+    #[structopt(
+        long = "asm-style",
+        help = "Assembly style: intel, att.",
+        default_value = "intel"
+    )]
     pub asm_style: Style,
-    #[structopt(long = "build-type", help = "Build type: debug, release.", default_value = "release")]
+    #[structopt(
+        long = "build-type",
+        help = "Build type: debug, release.",
+        default_value = "release"
+    )]
     pub build_type: Type,
     #[structopt(long = "features", help = "cargo --features")]
     pub features: Vec<String>,
@@ -33,20 +42,34 @@ pub struct AsmOptions {
     pub comments: bool,
     #[structopt(long = "directives", help = "Print assembly directives.")]
     pub directives: bool,
-    #[structopt(long = "json", help = "Serialize asm AST to json (ignores most other options).")]
+    #[structopt(
+        long = "json",
+        help = "Serialize asm AST to json (ignores most other options)."
+    )]
     pub json: bool,
-    #[structopt(long = "debug-mode", help = "Prints output useful for debugging.")]
+    #[structopt(
+        long = "debug-mode", help = "Prints output useful for debugging."
+    )]
     pub debug_mode: bool,
-    #[structopt(long = "manifest-path", help = "Runs cargo-asm in a different path.", parse(from_os_str))]
+    #[structopt(
+        long = "manifest-path",
+        help = "Runs cargo-asm in a different path.",
+        parse(from_os_str)
+    )]
     pub manifest_path: Option<::std::path::PathBuf>,
-    #[structopt(long = "-debug-info", help = "Generates assembly with debugging information even if that's not required.")]
+    #[structopt(
+        long = "-debug-info",
+        help = "Generates assembly with debugging information even if that's not required."
+    )]
     pub debug_info: bool,
 }
 
 /// CLI options of cargo llvm-ir.
 #[derive(StructOpt, Debug, Clone)]
 pub struct LlvmIrOptions {
-    #[structopt(help = "Path of the function to disassembly, e.g., foo::bar::baz() .")]
+    #[structopt(
+        help = "Path of the function to disassembly, e.g., foo::bar::baz() ."
+    )]
     pub path: String,
     #[structopt(long = "target", help = "Build for the target triple.")]
     pub TRIPLE: Option<String>,
@@ -54,13 +77,23 @@ pub struct LlvmIrOptions {
     pub features: Vec<String>,
     #[structopt(long = "no-color", help = "Disable colored output.")]
     pub no_color: bool,
-    #[structopt(long = "build-type", help = "Build type: debug, release.", default_value = "release")]
+    #[structopt(
+        long = "build-type",
+        help = "Build type: debug, release.",
+        default_value = "release"
+    )]
     pub build_type: Type,
     #[structopt(long = "rust", help = "Print interleaved Rust code.")]
     pub rust: bool,
-    #[structopt(long = "debug-mode", help = "Prints output useful for debugging.")]
+    #[structopt(
+        long = "debug-mode", help = "Prints output useful for debugging."
+    )]
     pub debug_mode: bool,
-    #[structopt(long = "manifest-path", help = "Runs cargo-asm in a different path.", parse(from_os_str))]
+    #[structopt(
+        long = "manifest-path",
+        help = "Runs cargo-asm in a different path.",
+        parse(from_os_str)
+    )]
     pub manifest_path: Option<::std::path::PathBuf>,
 }
 
@@ -180,14 +213,14 @@ impl OptionsExt for ::parking_lot::RwLock<Options> {
             Options::LlvmIr(ref o) => o.features.clone(),
         }
     }
-
 }
 
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(bin_name = "cargo")]
 pub enum Options {
-    #[structopt(name = "asm",
-                about = "\
+    #[structopt(
+        name = "asm",
+        about = "\
 Shows the assembly generated for a Rust function.
 
 Quick start: given a crate named \"crate\", to search:
@@ -197,10 +230,12 @@ Quick start: given a crate named \"crate\", to search:
       cargo asm crate::path::to::Foo::foo,
   * an implementation of the trait method \"bar\" of the trait \"Bar\" for the type \"Foo\":
       cargo asm \"<crate::path::to::Foo as crate::path::to::Bar>::bar\"
-")]
+"
+    )]
     Asm(AsmOptions),
-    #[structopt(name = "llvm-ir",
-                about = "\
+    #[structopt(
+        name = "llvm-ir",
+        about = "\
         Shows the llvm-ir generated for a Rust function.
 
 Quick start: given a crate named \"crate\", to search:
@@ -210,9 +245,9 @@ Quick start: given a crate named \"crate\", to search:
       cargo asm crate::path::to::Foo::foo,
   * an implementation of the trait method \"bar\" of the trait \"Bar\" for the type \"Foo\":
       cargo asm \"<crate::path::to::Foo as crate::path::to::Bar>::bar\"
-")]
+"
+    )]
     LlvmIr(LlvmIrOptions),
-
 }
 
 fn read() -> Options {

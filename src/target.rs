@@ -106,7 +106,10 @@ pub fn directory() -> ::std::path::PathBuf {
         )
     }
 
-    debug!("the target directory is {}", target_directory.display());
+    debug!(
+        "the target directory is {}",
+        target_directory.display()
+    );
 
     target_directory
 }

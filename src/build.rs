@@ -54,9 +54,10 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     cargo_build.arg("--verbose");
 
     if !opts.features().is_empty() {
-        cargo_build.arg(
-            &format!("--features={}", opts.features().join(","))
-        );
+        cargo_build.arg(&format!(
+            "--features={}",
+            opts.features().join(",")
+        ));
     }
 
     if let Some(triple) = opts.TRIPLE() {
@@ -82,13 +83,18 @@ pub fn project() -> Vec<::std::path::PathBuf> {
 
             cargo_build.env(
                 "RUSTFLAGS",
-                format!("{} --emit asm {} {}", rustflags, debug_info, asm_syntax),
+                format!(
+                    "{} --emit asm {} {}",
+                    rustflags, debug_info, asm_syntax
+                ),
             );
         }
         ::options::Options::LlvmIr(ref _o) => {
             // TODO: the debug info really clutters the llvm-ir (-g)
-            cargo_build
-                .env("RUSTFLAGS", format!("{} -C debuginfo=0 --emit=llvm-ir", rustflags));
+            cargo_build.env(
+                "RUSTFLAGS",
+                format!("{} -C debuginfo=0 --emit=llvm-ir", rustflags),
+            );
         }
     }
 
@@ -113,8 +119,9 @@ pub fn project() -> Vec<::std::path::PathBuf> {
             target_directory.display()
         ));
         let p = e.path();
-        let is_assembly_file =
-            p.extension().map_or("", |v| v.to_str().unwrap_or("")) == ext;
+        let is_assembly_file = p.extension()
+            .map_or("", |v| v.to_str().unwrap_or(""))
+            == ext;
         if is_assembly_file {
             let p = p.to_path_buf();
             debug!(
@@ -133,7 +140,11 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         // not currently canonicalized.
         for f in &mut output_files {
             let c = f.canonicalize().unwrap();
-            debug!("canonicalize path {} into {}", f.display(), c.display());
+            debug!(
+                "canonicalize path {} into {}",
+                f.display(),
+                c.display()
+            );
             *f = c;
         }
     }

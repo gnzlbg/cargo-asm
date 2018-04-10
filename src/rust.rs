@@ -27,7 +27,7 @@ pub struct Files {
 
 impl Files {
     pub fn line_at(
-        &self, file_index: usize, line_idx: usize
+        &self, file_index: usize, line_idx: usize,
     ) -> Option<String> {
         if let Some(file) = self.files.get(&file_index) {
             return file.line(line_idx);
@@ -38,7 +38,7 @@ impl Files {
         self.line_at(loc.file_index, loc.file_line)
     }
     pub fn file_path(
-        &self, loc: asm::ast::Loc
+        &self, loc: asm::ast::Loc,
     ) -> Option<::std::path::PathBuf> {
         if let Some(file) = self.files.get(&loc.file_index) {
             return Some(file.ast.path.clone());
@@ -53,8 +53,8 @@ pub fn parse(
     function: &asm::ast::Function,
     file_table: &::std::collections::HashMap<usize, asm::ast::File>,
 ) -> Files {
-    use asm::ast::Statement;
     use asm::ast::Directive;
+    use asm::ast::Statement;
     let mut files = ::std::collections::HashMap::<usize, File>::new();
 
     // Go through all locations in the function and build a map of file indices
@@ -181,7 +181,11 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
             let path = {
                 let tail = ::path::after(&f.ast.path, &rust_src_build_path);
                 let mut path = sysroot.clone();
-                debug!("merging {} with {}", path.display(), tail.display());
+                debug!(
+                    "merging {} with {}",
+                    path.display(),
+                    tail.display()
+                );
                 path.push(&tail);
                 debug!("  merge result: {}", path.display());
 

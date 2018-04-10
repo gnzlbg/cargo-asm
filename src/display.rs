@@ -10,9 +10,13 @@ struct Rust {
 
 impl Rust {
     fn new(
-        line: String, path: ::std::path::PathBuf, loc: asm::ast::Loc
+        line: String, path: ::std::path::PathBuf, loc: asm::ast::Loc,
     ) -> Self {
-        Self { line, path, loc }
+        Self {
+            line,
+            path,
+            loc,
+        }
     }
 }
 
@@ -80,9 +84,9 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
     };
     let indent = (0..indent).map(|_| " ").collect::<String>();
 
+    use std::io::Write;
     use termcolor::{Buffer, BufferWriter, Color, ColorChoice, ColorSpec,
                     WriteColor};
-    use std::io::Write;
 
     let bufwtr = if opts.use_colors() {
         BufferWriter::stdout(ColorChoice::Auto)
@@ -116,8 +120,11 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
 
     fn debug_mode_format(mut buffer: &mut Buffer, loc: Option<asm::ast::Loc>) {
         if let Some(loc) = loc {
-            write!(&mut buffer, "   [{}:{}]", loc.file_index, loc.file_line)
-                .unwrap();
+            write!(
+                &mut buffer,
+                "   [{}:{}]",
+                loc.file_index, loc.file_line
+            ).unwrap();
         } else {
             write!(&mut buffer, "   [{0}:{0}]", "-").unwrap();
         }
@@ -233,7 +240,7 @@ fn format_function_name(function: &asm::ast::Function) -> String {
 /// Returns true if the statement is in the function. It returns true if the
 /// question cannot be answered.
 fn is_stmt_in_function(
-    f: &asm::ast::Function, stmt: &asm::ast::Statement
+    f: &asm::ast::Function, stmt: &asm::ast::Statement,
 ) -> bool {
     let function_file_index = if let Some(loc) = f.loc {
         Some(loc.file_index)
@@ -276,8 +283,14 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
     let current_dir_path =
         ::std::env::current_dir().expect("cannot read the current dir");
     debug!("making paths relative: {}", path.display());
-    debug!(" * std lib paths contain: {}", rust_src_path.display());
-    debug!(" * local paths contain: {}", current_dir_path.display());
+    debug!(
+        " * std lib paths contain: {}",
+        rust_src_path.display()
+    );
+    debug!(
+        " * local paths contain: {}",
+        current_dir_path.display()
+    );
 
     if ::path::contains(&path, &rust_src_path) {
         let new_path = ::path::after(&path, &rust_src_path);
@@ -301,7 +314,7 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
 ///
 /// The path of the current crate are also displayed as relative paths.
 fn make_paths_relative(
-    function: &mut asm::ast::Function, rust: &mut rust::Files
+    function: &mut asm::ast::Function, rust: &mut rust::Files,
 ) {
     if let &mut Some(ref mut file) = &mut function.file {
         make_path_relative(&mut file.path)
@@ -317,9 +330,9 @@ pub fn print(function: &mut asm::ast::Function, mut rust: rust::Files) {
     if !opts.rust() {
         // When emitting assembly without Rust code, print the requested
         // function path (the first function line will not be emitted):
+        use std::io::Write;
         use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec,
                         WriteColor};
-        use std::io::Write;
 
         let mut rust_color = ColorSpec::new();
         rust_color
@@ -334,7 +347,11 @@ pub fn print(function: &mut asm::ast::Function, mut rust: rust::Files) {
         };
         let mut buffer = bufwtr.buffer();
         buffer.set_color(&rust_color).unwrap();
-        writeln!(&mut buffer, "{}:", format_function_name(function)).unwrap();
+        writeln!(
+            &mut buffer,
+            "{}:",
+            format_function_name(function)
+        ).unwrap();
         bufwtr.print(&buffer).unwrap();
     }
 
@@ -347,7 +364,7 @@ pub fn print(function: &mut asm::ast::Function, mut rust: rust::Files) {
 }
 
 fn merge_rust_and_asm(
-    function: &asm::ast::Function, rust_files: &rust::Files
+    function: &asm::ast::Function, rust_files: &rust::Files,
 ) -> Vec<Kind> {
     let mut output = Vec::<Kind>::new();
     for stmt in &function.statements {
@@ -416,7 +433,7 @@ pub fn write_error(msg: &str) {
 }
 
 pub fn to_json(
-    function: &asm::ast::Function, rust_files: &rust::Files
+    function: &asm::ast::Function, rust_files: &rust::Files,
 ) -> Option<String> {
     let r = merge_rust_and_asm(&function, rust_files);
     match ::serde_json::to_string_pretty(&r) {
