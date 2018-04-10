@@ -112,20 +112,20 @@ LBB14_15:
  push    rbp
  mov     rbp, rsp
  test    rsi, rsi
- je      .LBB14_1
+ je      .LBB16_1
  lea     r9, [4*rsi, -, 4]
  shr     r9, 2
  add     r9, 1
  cmp     r9, 8
- jae     .LBB14_4
+ jae     .LBB16_4
  xor     eax, eax
  mov     rcx, rdi
- jmp     .LBB14_13
-.LBB14_1:
+ jmp     .LBB16_13
+.LBB16_1:
  xor     eax, eax
  pop     rbp
  ret
-.LBB14_4:
+.LBB16_4:
  movabs  r8, 9223372036854775800
  and     r8, r9
  lea     rcx, [r8, -, 8]
@@ -134,20 +134,20 @@ LBB14_15:
  lea     eax, [rdx, +, 1]
  and     eax, 3
  cmp     rcx, 24
- jae     .LBB14_6
+ jae     .LBB16_6
  pxor    xmm0, xmm0
  xor     edx, edx
  pxor    xmm1, xmm1
  test    rax, rax
- jne     .LBB14_9
- jmp     .LBB14_11
-.LBB14_6:
+ jne     .LBB16_9
+ jmp     .LBB16_11
+.LBB16_6:
  lea     rcx, [rax, -, 1]
  sub     rcx, rdx
  pxor    xmm0, xmm0
  xor     edx, edx
  pxor    xmm1, xmm1
-.LBB14_7:
+.LBB16_7:
  movdqu  xmm2, xmmword, ptr, [rdi, +, 4*rdx]
  paddd   xmm2, xmm0
  movdqu  xmm0, xmmword, ptr, [rdi, +, 4*rdx, +, 16]
@@ -166,22 +166,22 @@ LBB14_15:
  paddd   xmm1, xmm2
  add     rdx, 32
  add     rcx, 4
- jne     .LBB14_7
+ jne     .LBB16_7
  test    rax, rax
- je      .LBB14_11
-.LBB14_9:
+ je      .LBB16_11
+.LBB16_9:
  lea     rcx, [rdi, +, 4*rdx]
  add     rcx, 16
  neg     rax
-.LBB14_10:
+.LBB16_10:
  movdqu  xmm2, xmmword, ptr, [rcx, -, 16]
  paddd   xmm0, xmm2
  movdqu  xmm2, xmmword, ptr, [rcx]
  paddd   xmm1, xmm2
  add     rcx, 32
  add     rax, 1
- jne     .LBB14_10
-.LBB14_11:
+ jne     .LBB16_10
+.LBB16_11:
  paddd   xmm0, xmm1
  pshufd  xmm1, xmm0, 78
  paddd   xmm1, xmm0
@@ -189,16 +189,16 @@ LBB14_15:
  paddd   xmm0, xmm1
  movd    eax, xmm0
  cmp     r9, r8
- je      .LBB14_15
+ je      .LBB16_15
  lea     rcx, [rdi, +, 4*r8]
-.LBB14_13:
+.LBB16_13:
  lea     rdx, [rdi, +, 4*rsi]
-.LBB14_14:
+.LBB16_14:
  add     eax, dword, ptr, [rcx]
  add     rcx, 4
  cmp     rdx, rcx
- jne     .LBB14_14
-.LBB14_15:
+ jne     .LBB16_14
+.LBB16_15:
  pop     rbp
  ret"#
     } else if cfg!(target_os = "windows") {
@@ -506,21 +506,21 @@ LBB14_15:
  mov     rbp, rsp
      if self.ptr == self.end { (libcore/slice/mod.rs:1178)
      test    rsi, rsi
-     je      .LBB14_1
+     je      .LBB16_1
      lea     r9, [4*rsi, -, 4]
      shr     r9, 2
      add     r9, 1
      cmp     r9, 8
-     jae     .LBB14_4
+     jae     .LBB16_4
      xor     eax, eax
      mov     rcx, rdi
-     jmp     .LBB14_13
-.LBB14_1:
+     jmp     .LBB16_13
+.LBB16_1:
      xor     eax, eax
  }
  pop     rbp
  ret
-.LBB14_4:
+.LBB16_4:
      if self.ptr == self.end { (libcore/slice/mod.rs:1178)
      movabs  r8, 9223372036854775800
      and     r8, r9
@@ -530,20 +530,20 @@ LBB14_15:
      lea     eax, [rdx, +, 1]
      and     eax, 3
      cmp     rcx, 24
-     jae     .LBB14_6
+     jae     .LBB16_6
      pxor    xmm0, xmm0
      xor     edx, edx
      pxor    xmm1, xmm1
      test    rax, rax
-     jne     .LBB14_9
-     jmp     .LBB14_11
-.LBB14_6:
+     jne     .LBB16_9
+     jmp     .LBB16_11
+.LBB16_6:
      lea     rcx, [rax, -, 1]
      sub     rcx, rdx
      pxor    xmm0, xmm0
      xor     edx, edx
      pxor    xmm1, xmm1
-.LBB14_7:
+.LBB16_7:
      movdqu  xmm2, xmmword, ptr, [rdi, +, 4*rdx]
  x.iter().fold(0, |sum, next| sum + *next)
  paddd   xmm2, xmm0
@@ -563,22 +563,22 @@ LBB14_15:
  paddd   xmm1, xmm2
  add     rdx, 32
  add     rcx, 4
- jne     .LBB14_7
+ jne     .LBB16_7
  test    rax, rax
- je      .LBB14_11
-.LBB14_9:
+ je      .LBB16_11
+.LBB16_9:
  lea     rcx, [rdi, +, 4*rdx]
  add     rcx, 16
  neg     rax
-.LBB14_10:
+.LBB16_10:
  movdqu  xmm2, xmmword, ptr, [rcx, -, 16]
  paddd   xmm0, xmm2
  movdqu  xmm2, xmmword, ptr, [rcx]
  paddd   xmm1, xmm2
  add     rcx, 32
  add     rax, 1
- jne     .LBB14_10
-.LBB14_11:
+ jne     .LBB16_10
+.LBB16_11:
  paddd   xmm0, xmm1
  pshufd  xmm1, xmm0, 78
  paddd   xmm1, xmm0
@@ -587,20 +587,20 @@ LBB14_15:
  movd    eax, xmm0
  cmp     r9, r8
      if self.ptr == self.end { (libcore/slice/mod.rs:1178)
-     je      .LBB14_15
+     je      .LBB16_15
      lea     rcx, [rdi, +, 4*r8]
-.LBB14_13:
+.LBB16_13:
      intrinsics::offset(self, count) (libcore/ptr.rs:622)
      lea     rdx, [rdi, +, 4*rsi]
-.LBB14_14:
+.LBB16_14:
  x.iter().fold(0, |sum, next| sum + *next)
  add     eax, dword, ptr, [rcx]
      intrinsics::offset(self, count) (libcore/ptr.rs:622)
      add     rcx, 4
      if self.ptr == self.end { (libcore/slice/mod.rs:1178)
      cmp     rdx, rcx
-     jne     .LBB14_14
-.LBB14_15:
+     jne     .LBB16_14
+.LBB16_15:
  }
  pop     rbp
  ret"#
