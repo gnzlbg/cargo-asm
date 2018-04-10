@@ -48,10 +48,9 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     if let Ok(v) = ::std::env::var("RUSTC") {
         cargo_build.env("RUSTC", v);
     }
-    match opts.build_type() {
-        Type::Release => cargo_build.arg("--release"),
-        Type::Debug => cargo_build.arg("--debug"),
-    };
+    if let Type::Release = opts.build_type() {
+        cargo_build.arg("--release");
+    }
     cargo_build.arg("--verbose");
 
     if !opts.features().is_empty() {
