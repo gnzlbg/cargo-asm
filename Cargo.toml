@@ -38,7 +38,3 @@ parking_lot = "0.5.*"
 
 [dev-dependencies]
 assert_cli = "0.5"
-
-[features]
-default = [ ]
-deadlock_detection = [ "parking_lot/deadlock_detection" ]
