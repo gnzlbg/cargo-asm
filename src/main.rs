@@ -1,5 +1,6 @@
 //! cargo-asm driver
 #![allow(non_snake_case, non_upper_case_globals)]
+
 #![cfg_attr(feature = "cargo-clippy",
             allow(missing_docs_in_private_items, option_unwrap_used,
                   result_unwrap_used))]
@@ -102,8 +103,10 @@ fn main() {
     for f in &files {
         debug!("  {}", f.display());
     }
-
-    match *opts.read() {
+    let o = {
+        (*opts.read()).clone()
+    };
+    match o {
         ::options::Options::Asm(_) => asm::run(&files),
         ::options::Options::LlvmIr(_) => llvmir::run(&files),
     }

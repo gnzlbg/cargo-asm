@@ -13,7 +13,7 @@ lazy_static! {
 }
 
 /// CLI options of cargo asm.
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Clone)]
 pub struct AsmOptions {
     #[structopt(help = "Path of the function to disassembly, e.g., foo::bar::baz() .")]
     pub path: String,
@@ -44,7 +44,7 @@ pub struct AsmOptions {
 }
 
 /// CLI options of cargo llvm-ir.
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Clone)]
 pub struct LlvmIrOptions {
     #[structopt(help = "Path of the function to disassembly, e.g., foo::bar::baz() .")]
     pub path: String,
@@ -183,7 +183,7 @@ impl OptionsExt for ::parking_lot::RwLock<Options> {
 
 }
 
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Clone)]
 #[structopt(bin_name = "cargo")]
 pub enum Options {
     #[structopt(name = "asm",
