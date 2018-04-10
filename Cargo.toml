@@ -40,5 +40,5 @@ parking_lot = "0.5.*"
 assert_cli = "0.5"
 
 [features]
-default = [ "deadlock_detection" ]
+default = []
 deadlock_detection = [ "parking_lot/deadlock_detection" ]
