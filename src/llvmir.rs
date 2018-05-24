@@ -26,50 +26,59 @@ pub fn run(files: &[::std::path::PathBuf]) {
     }
     let mut function_table = function_table.unwrap();
 
-    use edit_distance::edit_distance;
-    let mut msg = format!(
-        "could not find function at path \"{}\" in the generated LLVM IR.\n",
-        &opts.path()
-    );
-
-    let last_path = opts.path();
-    let last_path = last_path.split(':').next_back().unwrap();
-    function_table.sort_by(|a, b| {
-        edit_distance(a.split(':').next_back().unwrap(), last_path).cmp(
-            &edit_distance(b.split(':').next_back().unwrap(), last_path),
-        )
-    });
-
-    for (i, f) in function_table
-        .iter()
-        .take_while(|f| {
-            edit_distance(f.split(':').next_back().unwrap(), last_path) <= 4
-        })
-        .enumerate()
-    {
-        if i == 0 {
-            msg.push_str(&format!(
-                "Is it one of the following functions?\n\n"
-            ));
-        }
-        msg.push_str(&format!("  {}\n", f));
-    }
-
-    msg.push_str(r#"
-Tips:
-  * make sure that the function is present in the final binary (e.g. if it's a generic function, make sure that it is actually monomorphized)
-
-"#
+    match opts.path() {
+        None => {
+            for f in function_table {
+                println!("{}", f);
+            }
+        },
+        Some(path) => {
+            use edit_distance::edit_distance;
+            let mut msg = format!(
+                "could not find function at path \"{}\" in the generated LLVM IR.\n",
+                &path
             );
 
-    ::display::write_error(&msg);
-    ::std::process::exit(1);
+            let last_path = path;
+            let last_path = last_path.split(':').next_back().unwrap();
+            function_table.sort_by(|a, b| {
+                edit_distance(a.split(':').next_back().unwrap(), last_path).cmp(
+                    &edit_distance(b.split(':').next_back().unwrap(), last_path),
+                )
+            });
+
+            for (i, f) in function_table
+                .iter()
+                .take_while(|f| {
+                    edit_distance(f.split(':').next_back().unwrap(), last_path) <= 4
+                })
+                .enumerate()
+            {
+                if i == 0 {
+                    msg.push_str(&format!(
+                        "Is it one of the following functions?\n\n"
+                    ));
+                }
+                msg.push_str(&format!("  {}\n", f));
+            }
+
+            msg.push_str(r#"
+Tips:
+* make sure that the function is present in the final binary (e.g. if it's a generic function, make sure that it is actually monomorphized)
+
+"#
+                    );
+
+            ::display::write_error(&msg);
+            ::std::process::exit(1);
+        }
+    }
 }
 
 fn print_function(file_name: &::std::path::PathBuf) -> Option<Vec<String>> {
     use std::io::BufRead;
 
-    let path = opts.path();
+    let path = if let Some(path) = opts.path() { path } else { "".to_owned() };
     let fh = ::std::fs::File::open(file_name).unwrap();
     let file_buf = ::std::io::BufReader::new(&fh);
 

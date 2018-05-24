@@ -75,44 +75,53 @@ pub fn run(files: &[::std::path::PathBuf]) {
             }
         }
         self::parse::Result::NotFound(mut table) => {
-            use edit_distance::edit_distance;
-            let mut msg = format!("could not find function at path \"{}\" in the generated assembly.\n", &opts.path());
+            match opts.path() {
+                None => {
+                    for f in table {
+                        println!("{}", f);
+                    }
+                },
+                Some(path) => {
+                    use edit_distance::edit_distance;
+                    let mut msg = format!("could not find function at path \"{}\" in the generated assembly.\n", &path);
 
-            let last_path = opts.path();
-            let last_path = last_path.split(':').next_back().unwrap();
-            table.sort_by(|a, b| {
-                edit_distance(a.split(':').next_back().unwrap(), last_path)
-                    .cmp(&edit_distance(
-                        b.split(':').next_back().unwrap(),
-                        last_path,
-                    ))
-            });
+                    let last_path = path;
+                    let last_path = last_path.split(':').next_back().unwrap();
+                    table.sort_by(|a, b| {
+                        edit_distance(a.split(':').next_back().unwrap(), last_path)
+                            .cmp(&edit_distance(
+                                b.split(':').next_back().unwrap(),
+                                last_path,
+                            ))
+                    });
 
-            for (i, f) in table
-                .iter()
-                .take_while(|f| {
-                    edit_distance(f.split(':').next_back().unwrap(), last_path)
-                        <= 4
-                })
-                .enumerate()
-            {
-                if i == 0 {
-                    msg.push_str(&format!(
-                        "Is it one of the following functions?\n\n"
-                    ));
-                }
-                msg.push_str(&format!("  {}\n", f));
-            }
+                    for (i, f) in table
+                        .iter()
+                        .take_while(|f| {
+                            edit_distance(f.split(':').next_back().unwrap(), last_path)
+                                <= 4
+                        })
+                        .enumerate()
+                    {
+                        if i == 0 {
+                            msg.push_str(&format!(
+                                "Is it one of the following functions?\n\n"
+                            ));
+                        }
+                        msg.push_str(&format!("  {}\n", f));
+                    }
 
-            msg.push_str(r#"
+                    msg.push_str(r#"
 Tips:
-  * make sure that the function is present in the final binary (e.g. if it's a generic function, make sure that it is actually monomorphized)
-  * try to do a --clean build (sometimes changes are not picked up)
+* make sure that the function is present in the final binary (e.g. if it's a generic function, make sure that it is actually monomorphized)
+* try to do a --clean build (sometimes changes are not picked up)
 "#
-            );
+                    );
 
-            ::display::write_error(&msg);
-            ::std::process::exit(1);
+                    ::display::write_error(&msg);
+                    ::std::process::exit(1);
+                }
+            }
         }
     }
 }
