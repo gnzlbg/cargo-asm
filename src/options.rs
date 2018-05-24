@@ -15,9 +15,9 @@ lazy_static! {
 #[derive(StructOpt, Debug, Clone)]
 pub struct AsmOptions {
     #[structopt(
-        help = "Path of the function to disassembly, e.g., foo::bar::baz() ."
+        help = "Path of the function to disassembly, e.g., foo::bar::baz(). If missing then all function names will be printed."
     )]
-    pub path: String,
+    pub path: Option<String>,
     #[structopt(long = "target", help = "Build for the target triple.")]
     pub TRIPLE: Option<String>,
     #[structopt(long = "no-color", help = "Disable colored output.")]
@@ -68,9 +68,9 @@ pub struct AsmOptions {
 #[derive(StructOpt, Debug, Clone)]
 pub struct LlvmIrOptions {
     #[structopt(
-        help = "Path of the function to disassembly, e.g., foo::bar::baz() ."
+        help = "Path of the function to disassembly, e.g., foo::bar::baz(). If missing then all function names will be printed."
     )]
-    pub path: String,
+    pub path: Option<String>,
     #[structopt(long = "target", help = "Build for the target triple.")]
     pub TRIPLE: Option<String>,
     #[structopt(long = "features", help = "cargo --features")]
@@ -98,7 +98,7 @@ pub struct LlvmIrOptions {
 }
 
 pub trait OptionsExt {
-    fn path(&self) -> String;
+    fn path(&self) -> Option<String>;
     fn TRIPLE(&self) -> Option<String>;
     fn no_color(&self) -> bool;
     fn asm_style(&self) -> Option<Style>;
@@ -117,7 +117,7 @@ pub trait OptionsExt {
 }
 
 impl OptionsExt for ::parking_lot::RwLock<Options> {
-    fn path(&self) -> String {
+    fn path(&self) -> Option<String> {
         match *self.read() {
             Options::Asm(ref o) => o.path.clone(),
             Options::LlvmIr(ref o) => o.path.clone(),
