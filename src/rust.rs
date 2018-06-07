@@ -181,11 +181,7 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
             let path = {
                 let tail = ::path::after(&f.ast.path, &rust_src_build_path);
                 let mut path = sysroot.clone();
-                debug!(
-                    "merging {} with {}",
-                    path.display(),
-                    tail.display()
-                );
+                debug!("merging {} with {}", path.display(), tail.display());
                 path.push(&tail);
                 debug!("  merge result: {}", path.display());
 

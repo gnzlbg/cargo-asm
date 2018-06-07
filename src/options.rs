@@ -62,10 +62,7 @@ pub struct AsmOptions {
         help = "Generates assembly with debugging information even if that's not required."
     )]
     pub debug_info: bool,
-    #[structopt(
-        long = "lib",
-        help = "Builds only the lib target."
-    )]
+    #[structopt(long = "lib", help = "Builds only the lib target.")]
     pub lib: bool,
     #[structopt(
         long = "no-default-features",
@@ -105,10 +102,7 @@ pub struct LlvmIrOptions {
         parse(from_os_str)
     )]
     pub manifest_path: Option<::std::path::PathBuf>,
-    #[structopt(
-        long = "lib",
-        help = "Builds only the lib target."
-    )]
+    #[structopt(long = "lib", help = "Builds only the lib target.")]
     pub lib: bool,
     #[structopt(
         long = "no-default-features",

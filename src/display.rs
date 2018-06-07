@@ -12,11 +12,7 @@ impl Rust {
     fn new(
         line: String, path: ::std::path::PathBuf, loc: asm::ast::Loc,
     ) -> Self {
-        Self {
-            line,
-            path,
-            loc,
-        }
+        Self { line, path, loc }
     }
 }
 
@@ -38,7 +34,8 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                 &Comment(_) if !opts.print_comments() => return,
                 &Directive(_) if !opts.print_directives() => return,
                 &Label(ref l) => {
-                    if l.id.contains("Lcfi") || l.id.contains("Ltmp")
+                    if l.id.contains("Lcfi")
+                        || l.id.contains("Ltmp")
                         || l.id.contains("Lfunc_end")
                     {
                         return;
@@ -85,8 +82,9 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
     let indent = (0..indent).map(|_| " ").collect::<String>();
 
     use std::io::Write;
-    use termcolor::{Buffer, BufferWriter, Color, ColorChoice, ColorSpec,
-                    WriteColor};
+    use termcolor::{
+        Buffer, BufferWriter, Color, ColorChoice, ColorSpec, WriteColor,
+    };
 
     let bufwtr = if opts.use_colors() {
         BufferWriter::stdout(ColorChoice::Auto)
@@ -120,11 +118,8 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
 
     fn debug_mode_format(mut buffer: &mut Buffer, loc: Option<asm::ast::Loc>) {
         if let Some(loc) = loc {
-            write!(
-                &mut buffer,
-                "   [{}:{}]",
-                loc.file_index, loc.file_line
-            ).unwrap();
+            write!(&mut buffer, "   [{}:{}]", loc.file_index, loc.file_line)
+                .unwrap();
         } else {
             write!(&mut buffer, "   [{0}:{0}]", "-").unwrap();
         }
@@ -283,14 +278,8 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
     let current_dir_path =
         ::std::env::current_dir().expect("cannot read the current dir");
     debug!("making paths relative: {}", path.display());
-    debug!(
-        " * std lib paths contain: {}",
-        rust_src_path.display()
-    );
-    debug!(
-        " * local paths contain: {}",
-        current_dir_path.display()
-    );
+    debug!(" * std lib paths contain: {}", rust_src_path.display());
+    debug!(" * local paths contain: {}", current_dir_path.display());
 
     if ::path::contains(&path, &rust_src_path) {
         let new_path = ::path::after(&path, &rust_src_path);
@@ -331,8 +320,9 @@ pub fn print(function: &mut asm::ast::Function, mut rust: rust::Files) {
         // When emitting assembly without Rust code, print the requested
         // function path (the first function line will not be emitted):
         use std::io::Write;
-        use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec,
-                        WriteColor};
+        use termcolor::{
+            BufferWriter, Color, ColorChoice, ColorSpec, WriteColor,
+        };
 
         let mut rust_color = ColorSpec::new();
         rust_color
@@ -347,11 +337,7 @@ pub fn print(function: &mut asm::ast::Function, mut rust: rust::Files) {
         };
         let mut buffer = bufwtr.buffer();
         buffer.set_color(&rust_color).unwrap();
-        writeln!(
-            &mut buffer,
-            "{}:",
-            format_function_name(function)
-        ).unwrap();
+        writeln!(&mut buffer, "{}:", format_function_name(function)).unwrap();
         bufwtr.print(&buffer).unwrap();
     }
 

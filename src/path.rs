@@ -51,11 +51,7 @@ pub fn after(
     let mut sub_path_iter = sub_path.components();
     let mut next_sub_path = sub_path_iter.next();
 
-    let mut appending = if next_sub_path.is_none() {
-        true
-    } else {
-        false
-    };
+    let mut appending = if next_sub_path.is_none() { true } else { false };
     let mut matching = false;
     for c in path.components() {
         if appending {

@@ -941,10 +941,8 @@ fn cargo_features() {
         .fails()
         .unwrap();
 
-    lib_test(&[
-        "lib_crate::bar::cat_tiger_add",
-        "--features=tiger,cat",
-    ]).stdout()
+    lib_test(&["lib_crate::bar::cat_tiger_add", "--features=tiger,cat"])
+        .stdout()
         .contains("lib_crate::bar::cat_tiger_add")
         .succeeds()
         .unwrap();

@@ -217,9 +217,7 @@ impl Directive {
             if let Some(loc) = Loc::new(s) {
                 return Some(Directive::Loc(loc));
             }
-            return Some(Directive::Generic(
-                GenericDirective::new(s).unwrap(),
-            ));
+            return Some(Directive::Generic(GenericDirective::new(s).unwrap()));
         }
         None
     }
@@ -293,7 +291,9 @@ impl Instruction {
     }
     pub fn is_jump(&self) -> bool {
         let t = ::target::target();
-        if t.contains("x86") || t.contains("i386") || t.contains("i586")
+        if t.contains("x86")
+            || t.contains("i386")
+            || t.contains("i586")
             || t.contains("i686")
         {
             self.instr.starts_with('j') && self.args.len() == 1
@@ -304,7 +304,8 @@ impl Instruction {
                 .iter()
                 .fold(false, |acc, x| acc || x.starts_with(".L"))
         } else if t.contains("power") {
-            self.instr.starts_with("b") && self.instr != "bl"
+            self.instr.starts_with("b")
+                && self.instr != "bl"
                 && self.args.len() == 2
         } else if t.contains("mips") {
             self.instr.starts_with("b") && self.instr.len() > 1
@@ -315,11 +316,15 @@ impl Instruction {
     }
     pub fn is_call(&self) -> bool {
         let t = ::target::target();
-        if t.contains("x86") || t.contains("i386") || t.contains("i586")
-            || t.contains("i686") || t.contains("sparc")
+        if t.contains("x86")
+            || t.contains("i386")
+            || t.contains("i586")
+            || t.contains("i686")
+            || t.contains("sparc")
         {
             self.instr.starts_with("call")
-        } else if t.contains("aarch64") || t.contains("power")
+        } else if t.contains("aarch64")
+            || t.contains("power")
             || t.contains("arm")
         {
             self.instr == "bl"

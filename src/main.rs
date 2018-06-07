@@ -78,10 +78,7 @@ fn main() {
     // done by changing the current working directory.
     if let Some(ref new_path) = opts.manifest_path() {
         if !new_path.exists() {
-            error!(
-                "The manifest-path {} does not exist!",
-                new_path.display()
-            );
+            error!("The manifest-path {} does not exist!", new_path.display());
             ::std::process::exit(1);
         }
         let result = ::std::env::set_current_dir(&new_path);
@@ -92,10 +89,7 @@ fn main() {
             );
             ::std::process::exit(1);
         }
-        debug!(
-            "manifest path changed to {}",
-            new_path.display()
-        );
+        debug!("manifest path changed to {}", new_path.display());
     }
 
     // Builds the project and returns a list of all relevant assembly files:

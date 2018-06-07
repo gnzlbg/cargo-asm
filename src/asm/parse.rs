@@ -39,9 +39,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
         // If the line contains a comment, we parse that first:
         if let Some(comment) = Comment::new(comment_str) {
             debug!(" * parsing comment: {:?}", comment);
-            function
-                .statements
-                .push(Statement::Comment(comment));
+            function.statements.push(Statement::Comment(comment));
         }
 
         // Then we parse the AST statements.
@@ -103,9 +101,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
         if let Some(label) = Label::new(node_str, current_loc) {
             debug!(" * parsed label: {:?}", label);
 
-            function
-                .statements
-                .push(Statement::Label(label));
+            function.statements.push(Statement::Label(label));
             continue;
         }
 
@@ -129,17 +125,18 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
 /// Result of parsing a function, either a match, or a table of functions in
 /// the file.
 pub enum Result {
-    Found(
-        ast::Function,
-        ::std::collections::HashMap<usize, ast::File>,
-    ),
+    Found(ast::Function, ::std::collections::HashMap<usize, ast::File>),
     NotFound(Vec<String>),
 }
 
 /// Parses the assembly function at `path` from the file `file`.
 #[cfg_attr(feature = "cargo-clippy", allow(use_debug))]
 pub fn function(file: &::std::path::Path) -> Result {
-    let path = if let Some(path) = opts.path() { path } else { "".to_owned() };
+    let path = if let Some(path) = opts.path() {
+        path
+    } else {
+        "".to_owned()
+    };
     use std::io::BufRead;
 
     let fh = ::std::fs::File::open(file).unwrap();

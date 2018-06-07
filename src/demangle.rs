@@ -9,7 +9,8 @@ fn has_hash(name: &str) -> bool {
             return false;
         }
     }
-    bytes.next() == Some(b'h') && bytes.next() == Some(b':')
+    bytes.next() == Some(b'h')
+        && bytes.next() == Some(b':')
         && bytes.next() == Some(b':')
 }
 

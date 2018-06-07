@@ -54,10 +54,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     cargo_build.arg("--verbose");
 
     if !opts.features().is_empty() {
-        cargo_build.arg(&format!(
-            "--features={}",
-            opts.features().join(",")
-        ));
+        cargo_build.arg(&format!("--features={}", opts.features().join(",")));
     }
 
     if opts.no_default_features() {
@@ -127,9 +124,8 @@ pub fn project() -> Vec<::std::path::PathBuf> {
             target_directory.display()
         ));
         let p = e.path();
-        let is_assembly_file = p.extension()
-            .map_or("", |v| v.to_str().unwrap_or(""))
-            == ext;
+        let is_assembly_file =
+            p.extension().map_or("", |v| v.to_str().unwrap_or("")) == ext;
         if is_assembly_file {
             let p = p.to_path_buf();
             debug!(
@@ -148,11 +144,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         // not currently canonicalized.
         for f in &mut output_files {
             let c = f.canonicalize().unwrap();
-            debug!(
-                "canonicalize path {} into {}",
-                f.display(),
-                c.display()
-            );
+            debug!("canonicalize path {} into {}", f.display(), c.display());
             *f = c;
         }
     }

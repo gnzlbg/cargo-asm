@@ -5,11 +5,7 @@ pub fn run(files: &[::std::path::PathBuf]) {
 
     for f in files {
         debug!("Scanning file: {:?}", f);;
-        assert!(
-            f.exists(),
-            "path does not exist: {}",
-            f.display()
-        );
+        assert!(f.exists(), "path does not exist: {}", f.display());
         let r = print_function(f);
 
         if r.is_ok() {
@@ -39,7 +35,7 @@ pub fn run(files: &[::std::path::PathBuf]) {
             for f in function_table {
                 println!("{}", f);
             }
-        },
+        }
         Some(path) => {
             use edit_distance::edit_distance;
             let mut msg = format!(
@@ -50,15 +46,18 @@ pub fn run(files: &[::std::path::PathBuf]) {
             let last_path = path;
             let last_path = last_path.split(':').next_back().unwrap();
             function_table.sort_by(|a, b| {
-                edit_distance(a.split(':').next_back().unwrap(), last_path).cmp(
-                    &edit_distance(b.split(':').next_back().unwrap(), last_path),
-                )
+                edit_distance(a.split(':').next_back().unwrap(), last_path)
+                    .cmp(&edit_distance(
+                        b.split(':').next_back().unwrap(),
+                        last_path,
+                    ))
             });
 
             for (i, f) in function_table
                 .iter()
                 .take_while(|f| {
-                    edit_distance(f.split(':').next_back().unwrap(), last_path) <= 4
+                    edit_distance(f.split(':').next_back().unwrap(), last_path)
+                        <= 4
                 })
                 .enumerate()
             {
@@ -83,10 +82,16 @@ Tips:
     }
 }
 
-fn print_function(file_name: &::std::path::PathBuf) -> Result<(), Vec<String>> {
+fn print_function(
+    file_name: &::std::path::PathBuf,
+) -> Result<(), Vec<String>> {
     use std::io::BufRead;
 
-    let path = if let Some(path) = opts.path() { path } else { "".to_owned() };
+    let path = if let Some(path) = opts.path() {
+        path
+    } else {
+        "".to_owned()
+    };
     let fh = ::std::fs::File::open(file_name).unwrap();
     let file_buf = ::std::io::BufReader::new(&fh);
 
@@ -111,14 +116,21 @@ fn print_function(file_name: &::std::path::PathBuf) -> Result<(), Vec<String>> {
 
             let first = line.find("@").unwrap();
             let last = (&line[first..]).find("(").unwrap() + first;
-            assert!(first < last, "first: {:?}, last: {:?}, line:\n{:?}", first, last, line);
+            assert!(
+                first < last,
+                "first: {:?}, last: {:?}, line:\n{:?}",
+                first,
+                last,
+                line
+            );
             let mangled_name = &line[first + 1..last];
             let demangled_name = ::demangle::demangle(&mangled_name);
             if demangled_name != path {
                 function_names.push(demangled_name);
                 continue;
             }
-            function_lines = Some(vec![line.replace(mangled_name, &demangled_name)]);
+            function_lines =
+                Some(vec![line.replace(mangled_name, &demangled_name)]);
             debug!("Found function with path: {:?}", path);
             continue;
         }
@@ -127,9 +139,7 @@ fn print_function(file_name: &::std::path::PathBuf) -> Result<(), Vec<String>> {
     if let Some(function_lines) = function_lines {
         debug!("Function found! Displaying function...");
         // Find last }
-        let r = function_lines
-            .iter()
-            .rposition(|s| s.trim() == "}");
+        let r = function_lines.iter().rposition(|s| s.trim() == "}");
         let r = r.unwrap_or(function_lines.len() - 1);
         for line in &function_lines[0..r + 1] {
             let mut demangled_line = String::new();
@@ -143,13 +153,18 @@ fn print_function(file_name: &::std::path::PathBuf) -> Result<(), Vec<String>> {
                 let l = &line[f..].find("\"").unwrap() + f;
                 let mangled_name = &line[f..l];
                 let demangled_name = if mangled_name.ends_with(".exit") {
-                    let mut v = ::demangle::demangle(&mangled_name[0..mangled_name.len() - 5]);
+                    let mut v = ::demangle::demangle(
+                        &mangled_name[0..mangled_name.len() - 5],
+                    );
                     v.extend(".exit".chars());
                     v
                 } else {
                     ::demangle::demangle(&mangled_name)
                 };
-                debug!("  f: {}, l: {}, mn: {}, dm: {}", f, l, mangled_name, demangled_name);
+                debug!(
+                    "  f: {}, l: {}, mn: {}, dm: {}",
+                    f, l, mangled_name, demangled_name
+                );
                 demangled_line.extend(line[start..f].chars());
                 demangled_line.extend(demangled_name.chars());
                 demangled_line.extend("\"".chars());
