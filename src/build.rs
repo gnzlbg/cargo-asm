@@ -60,6 +60,14 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         ));
     }
 
+    if opts.no_default_features() {
+        cargo_build.arg("--no-default-features");
+    }
+
+    if opts.lib() {
+        cargo_build.arg("--lib");
+    }
+
     if let Some(triple) = opts.TRIPLE() {
         cargo_build.arg(&format!("--target={}", triple));
     }

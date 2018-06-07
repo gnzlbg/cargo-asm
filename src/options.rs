@@ -58,10 +58,20 @@ pub struct AsmOptions {
     )]
     pub manifest_path: Option<::std::path::PathBuf>,
     #[structopt(
-        long = "-debug-info",
+        long = "debug-info",
         help = "Generates assembly with debugging information even if that's not required."
     )]
     pub debug_info: bool,
+    #[structopt(
+        long = "lib",
+        help = "Builds only the lib target."
+    )]
+    pub lib: bool,
+    #[structopt(
+        long = "no-default-features",
+        help = "Disables all cargo features when building the project."
+    )]
+    pub no_default_features: bool,
 }
 
 /// CLI options of cargo llvm-ir.
@@ -95,6 +105,16 @@ pub struct LlvmIrOptions {
         parse(from_os_str)
     )]
     pub manifest_path: Option<::std::path::PathBuf>,
+    #[structopt(
+        long = "lib",
+        help = "Builds only the lib target."
+    )]
+    pub lib: bool,
+    #[structopt(
+        long = "no-default-features",
+        help = "Disables all cargo features when building the project."
+    )]
+    pub no_default_features: bool,
 }
 
 pub trait OptionsExt {
@@ -114,6 +134,8 @@ pub trait OptionsExt {
     fn print_directives(&self) -> bool;
     fn set_rust(&self, value: bool);
     fn features(&self) -> Vec<String>;
+    fn lib(&self) -> bool;
+    fn no_default_features(&self) -> bool;
 }
 
 impl OptionsExt for ::parking_lot::RwLock<Options> {
@@ -211,6 +233,18 @@ impl OptionsExt for ::parking_lot::RwLock<Options> {
         match *self.read() {
             Options::Asm(ref o) => o.features.clone(),
             Options::LlvmIr(ref o) => o.features.clone(),
+        }
+    }
+    fn lib(&self) -> bool {
+        match *self.read() {
+            Options::Asm(ref o) => o.lib,
+            Options::LlvmIr(ref o) => o.lib,
+        }
+    }
+    fn no_default_features(&self) -> bool {
+        match *self.read() {
+            Options::Asm(ref o) => o.no_default_features,
+            Options::LlvmIr(ref o) => o.no_default_features,
         }
     }
 }
