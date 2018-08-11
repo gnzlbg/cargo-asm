@@ -128,8 +128,7 @@ LBB14_15:
  lea     rcx, [r8, -, 8]
  mov     rdx, rcx
  shr     rdx, 3
- add     rdx, 1
- mov     eax, edx
+ lea     eax, [rdx, +, 1]
  and     eax, 3
  cmp     rcx, 24
  jae     .LBB13_6
@@ -141,7 +140,6 @@ LBB14_15:
  jmp     .LBB13_11
 .LBB13_6:
  lea     rcx, [rax, -, 1]
- add     rdx, -1
  sub     rcx, rdx
  pxor    xmm0, xmm0
  xor     edx, edx
@@ -198,7 +196,8 @@ LBB14_15:
  cmp     rdx, rcx
  jne     .LBB13_14
 .LBB13_15:
- ret"#
+ ret
+"#
     } else if cfg!(target_os = "windows") {
         r#"lib_crate::sum_array (src\lib.rs:6):
  push    rbp
@@ -334,26 +333,25 @@ LBB0_1:
 "#
     } else if cfg!(target_os = "linux") {
         r#"lib_crate::bar::max_array (src/bar.rs:3):
- xor     eax, eax
+ mov     rax, -524288
 .LBB0_1:
- movupd  xmm0, xmmword, ptr, [rsi, +, 8*rax]
- movupd  xmm1, xmmword, ptr, [rsi, +, 8*rax, +, 16]
- movupd  xmm2, xmmword, ptr, [rdi, +, 8*rax]
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524288]
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524288]
+ maxpd   xmm0, xmm1
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524304]
+ movupd  xmm2, xmmword, ptr, [rdi, +, rax, +, 524320]
+ movupd  xmm3, xmmword, ptr, [rdi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524288], xmm0
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524304]
+ maxpd   xmm0, xmm1
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524304], xmm0
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524320]
  maxpd   xmm0, xmm2
- movupd  xmm2, xmmword, ptr, [rdi, +, 8*rax, +, 16]
- maxpd   xmm1, xmm2
- movupd  xmm2, xmmword, ptr, [rdi, +, 8*rax, +, 32]
- movupd  xmm3, xmmword, ptr, [rdi, +, 8*rax, +, 48]
- movupd  xmmword, ptr, [rdi, +, 8*rax], xmm0
- movupd  xmmword, ptr, [rdi, +, 8*rax, +, 16], xmm1
- movupd  xmm0, xmmword, ptr, [rsi, +, 8*rax, +, 32]
- maxpd   xmm0, xmm2
- movupd  xmm1, xmmword, ptr, [rsi, +, 8*rax, +, 48]
+ movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524320], xmm0
  maxpd   xmm1, xmm3
- movupd  xmmword, ptr, [rdi, +, 8*rax, +, 32], xmm0
- movupd  xmmword, ptr, [rdi, +, 8*rax, +, 48], xmm1
- add     rax, 8
- cmp     rax, 65536
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524336], xmm1
+ add     rax, 64
  jne     .LBB0_1
  ret
 "#
@@ -498,9 +496,8 @@ LBB14_15:
  ret"#
     } else if cfg!(target_os = "linux") {
         r#"pub fn sum_array(x: &[i32]) -> i32 {
-     } (libcore/slice/mod.rs:2396)
+     if self.ptr == self.end { (libcore/slice/mod.rs:2390)
      test    rsi, rsi
-     } (libcore/slice/mod.rs:2396)
      je      .LBB13_1
      intrinsics::offset(self, count) (libcore/ptr.rs:621)
      lea     r9, [4*rsi, -, 4]
@@ -516,14 +513,13 @@ LBB14_15:
  }
  ret
 .LBB13_4:
- movabs  r8, 9223372036854775800
      intrinsics::offset(self, count) (libcore/ptr.rs:621)
+     movabs  r8, 9223372036854775800
      and     r8, r9
      lea     rcx, [r8, -, 8]
      mov     rdx, rcx
      shr     rdx, 3
-     add     rdx, 1
-     mov     eax, edx
+     lea     eax, [rdx, +, 1]
      and     eax, 3
      cmp     rcx, 24
      jae     .LBB13_6
@@ -535,7 +531,6 @@ LBB14_15:
      jmp     .LBB13_11
 .LBB13_6:
      lea     rcx, [rax, -, 1]
-     add     rdx, -1
      sub     rcx, rdx
      pxor    xmm0, xmm0
      xor     edx, edx
@@ -593,13 +588,13 @@ LBB14_15:
  add     eax, dword, ptr, [rcx]
      intrinsics::offset(self, count) (libcore/ptr.rs:621)
      add     rcx, 4
-     } (libcore/slice/mod.rs:2396)
+     if self.ptr == self.end { (libcore/slice/mod.rs:2390)
      cmp     rdx, rcx
-     } (libcore/slice/mod.rs:2396)
      jne     .LBB13_14
 .LBB13_15:
  }
- ret"#
+ ret
+"#
     } else if cfg!(target_os = "windows") {
         r#"pub fn sum_array(x: &[i32]) -> i32 {
  push    rbp
@@ -746,38 +741,26 @@ LBB0_1:
  ret"#
     } else if cfg!(target_os = "linux") {
         r#"pub fn max_array(x: &mut[f64; 65536], y: &[f64; 65536]) {
- xor     eax, eax
+ mov     rax, -524288
 .LBB0_1:
  x[i] = if y[i] > x[i] { y[i] } else { x[i] };
- movupd  xmm0, xmmword, ptr, [rsi, +, 8*rax]
- movupd  xmm1, xmmword, ptr, [rsi, +, 8*rax, +, 16]
- x[i] = if y[i] > x[i] { y[i] } else { x[i] };
- movupd  xmm2, xmmword, ptr, [rdi, +, 8*rax]
- x[i] = if y[i] > x[i] { y[i] } else { x[i] };
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524288]
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524288]
+ maxpd   xmm0, xmm1
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524304]
+ movupd  xmm2, xmmword, ptr, [rdi, +, rax, +, 524320]
+ movupd  xmm3, xmmword, ptr, [rdi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524288], xmm0
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524304]
+ maxpd   xmm0, xmm1
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524304], xmm0
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524320]
  maxpd   xmm0, xmm2
- x[i] = if y[i] > x[i] { y[i] } else { x[i] };
- movupd  xmm2, xmmword, ptr, [rdi, +, 8*rax, +, 16]
- x[i] = if y[i] > x[i] { y[i] } else { x[i] };
- maxpd   xmm1, xmm2
- x[i] = if y[i] > x[i] { y[i] } else { x[i] };
- movupd  xmm2, xmmword, ptr, [rdi, +, 8*rax, +, 32]
- movupd  xmm3, xmmword, ptr, [rdi, +, 8*rax, +, 48]
- x[i] = if y[i] > x[i] { y[i] } else { x[i] };
- movupd  xmmword, ptr, [rdi, +, 8*rax], xmm0
- movupd  xmmword, ptr, [rdi, +, 8*rax, +, 16], xmm1
- x[i] = if y[i] > x[i] { y[i] } else { x[i] };
- movupd  xmm0, xmmword, ptr, [rsi, +, 8*rax, +, 32]
- x[i] = if y[i] > x[i] { y[i] } else { x[i] };
- maxpd   xmm0, xmm2
- x[i] = if y[i] > x[i] { y[i] } else { x[i] };
- movupd  xmm1, xmmword, ptr, [rsi, +, 8*rax, +, 48]
- x[i] = if y[i] > x[i] { y[i] } else { x[i] };
+ movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524320], xmm0
  maxpd   xmm1, xmm3
- x[i] = if y[i] > x[i] { y[i] } else { x[i] };
- movupd  xmmword, ptr, [rdi, +, 8*rax, +, 32], xmm0
- movupd  xmmword, ptr, [rdi, +, 8*rax, +, 48], xmm1
- add     rax, 8
- cmp     rax, 65536
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524336], xmm1
+ add     rax, 64
  jne     .LBB0_1
  }
  ret"#
@@ -824,7 +807,6 @@ fn trait_method() {
         r#"fn addd(&self) -> usize {
  self.x + self.y
  mov     rax, qword, ptr, [rdi, +, 8]
- self.x + self.y
  add     rax, qword, ptr, [rdi]
  }
  ret
@@ -886,7 +868,6 @@ fn inherent_method() {
         r#"pub fn foo_add(&self) -> usize {
  self.x + self.y
  mov     rax, qword, ptr, [rdi, +, 8]
- self.x + self.y
  add     rax, qword, ptr, [rdi]
  }
  ret
