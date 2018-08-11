@@ -325,12 +325,33 @@ LBB0_1:
  movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524336]
  movupd  xmmword, ptr, [rdi, +, rax, +, 524320], xmm0
  maxpd   xmm1, xmm4
- movupd  xmmword, ptr, [rdi, +, rax, +, 524336], xmm1
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524288]
+ maxpd   xmm0, xmm1
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524304]
+ movupd  xmm2, xmmword, ptr, [rdi, +, rax, +, 524320]
+ movupd  xmm3, xmmword, ptr, [rdi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524288], xmm0
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524304]
+ maxpd   xmm0, xmm1
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524304], xmm0
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524320]
+ maxpd   xmm0, xmm2
+ movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524320], xmm0
+ maxpd   xmm1, xmm3 524288]
+ maxpd   xmm0, movupd  xmmword, ptr, [rdi, +, rax, +, 524304]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524320]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524288], xmm0
+ movupd  xmmword, ptr, +, rax, +, xmm0, xmmword, ptr, [rsi, +, rax, +, movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524320]
+ maxpd   xmm0, movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524320], xmm0
+ maxpd   xmm1,  
+  movupd  xmmword, ptr, [rdi, +, rax, +, 524336], xmm1
  add     rax, 64
  jne     LBB0_1
  pop     rbp
- ret
-"#
+ ret"#
     } else if cfg!(target_os = "linux") {
         r#"lib_crate::bar::max_array (src/bar.rs:3):
  mov     rax, -524288
@@ -733,7 +754,29 @@ LBB0_1:
  movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524336]
  movupd  xmmword, ptr, [rdi, +, rax, +, 524320], xmm0
  maxpd   xmm1, xmm4
- movupd  xmmword, ptr, [rdi, +, rax, +, 524336], xmm1
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524288]
+ maxpd   xmm0, xmm1
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524304]
+ movupd  xmm2, xmmword, ptr, [rdi, +, rax, +, 524320]
+ movupd  xmm3, xmmword, ptr, [rdi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524288], xmm0
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524304]
+ maxpd   xmm0, xmm1
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524304], xmm0
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524320]
+ maxpd   xmm0, xmm2
+ movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524320], xmm0
+ maxpd   xmm1, xmm3 524288]
+ maxpd   xmm0, movupd  xmmword, ptr, [rdi, +, rax, +, 524304]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524320]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524288], xmm0
+ movupd  xmmword, ptr, +, rax, +, xmm0, xmmword, ptr, [rsi, +, rax, +, movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524320]
+ maxpd   xmm0, movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524336]
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524320], xmm0
+ maxpd   xmm1,  
+  movupd  xmmword, ptr, [rdi, +, rax, +, 524336], xmm1
  add     rax, 64
  jne     LBB0_1
  }
@@ -803,7 +846,17 @@ LBB0_1:
 
 #[test]
 fn trait_method() {
-    let expected = if cfg!(target_os = "macos") || cfg!(target_os = "linux") {
+    let expected = if cfg!(target_os = "macos") {
+        r#"fn addd(&self) -> usize {
+ push    rbp
+ mov     rbp, rsp
+  self.x + self.y
+ mov     rax, qword, ptr, [rdi, +, 8]
+ add     rax, qword, ptr, [rdi]
+ }
+ pop     rbp
+  ret"#
+    } else if cfg!(target_os = "linux") {
         r#"fn addd(&self) -> usize {
  self.x + self.y
  mov     rax, qword, ptr, [rdi, +, 8]
@@ -835,7 +888,16 @@ fn trait_method() {
 
 #[test]
 fn generic_function() {
-    let expected = if cfg!(target_os = "macos") || cfg!(target_os = "linux") {
+    let expected = if cfg!(target_os = "macos") {
+        r#"pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
+ push    rbp
+ mov     rbp, rsp
+     fn add(self, other: $t) -> $t { self + other } (libcore/ops/arith.rs:110)
+     lea     rax, [rdi, +, rsi]
+ pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
+ pop     rbp
+ ret"#
+    } else if cfg!(target_os = "linux") {
         r#"pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
      fn add(self, other: $t) -> $t { self + other } (libcore/ops/arith.rs:110)
      lea     rax, [rdi, +, rsi]
@@ -864,7 +926,17 @@ fn generic_function() {
 
 #[test]
 fn inherent_method() {
-    let expected = if cfg!(target_os = "macos") || cfg!(target_os = "linux") {
+    let expected = if cfg!(target_os = "macos") {
+        r#"pub fn foo_add(&self) -> usize {
+ push    rbp
+ mov     rbp, rsp
+  self.x + self.y
+ mov     rax, qword, ptr, [rdi, +, 8]
+ add     rax, qword, ptr, [rdi]
+ }
+ pop     rbp
+  ret"#
+    } else if cfg!(target_os = "linux") {
         r#"pub fn foo_add(&self) -> usize {
  self.x + self.y
  mov     rax, qword, ptr, [rdi, +, 8]
