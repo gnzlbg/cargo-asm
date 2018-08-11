@@ -48,7 +48,7 @@ cargo llvm-ir lib_crate::bar::double_n
 * Platform support:
 
   * OS: Linux, Windows, and MacOSX. 
-  * Rust: nightly and stable.
+  * Rust: nightly.
   * Architectures: x86, x86_64, arm, aarch64, powerpc, mips, sparc.
 
 * Displaying:
