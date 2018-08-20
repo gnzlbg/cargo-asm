@@ -37,4 +37,4 @@ lazy_static = "1.*"
 parking_lot = "0.5.*"
 
 [dev-dependencies]
-assert_cli = "0.5"
+assert_cli = "0.6"
