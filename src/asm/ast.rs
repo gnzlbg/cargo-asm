@@ -390,7 +390,8 @@ mod tests {
     fn replace_slashes() {
         let mut windows_path = r#"C:\\projects\\cargo-asm\\cargo-asm-test\\lib_crate\\src\\bar.rs"#.to_string();
         let windows_path_norm =
-            r#"C:\projects\cargo-asm\cargo-asm-test\lib_crate\src\bar.rs"#.to_string();
+            r#"C:\projects\cargo-asm\cargo-asm-test\lib_crate\src\bar.rs"#
+                .to_string();
         super::replace_slashes(&mut windows_path);
         assert_eq!(windows_path_norm, windows_path);
     }

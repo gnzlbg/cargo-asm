@@ -97,8 +97,7 @@ pub fn run(files: &[::std::path::PathBuf]) {
                             f.split(':').next_back().unwrap(),
                             last_path,
                         ) <= 4
-                    })
-                    .enumerate()
+                    }).enumerate()
                 {
                     if i == 0 {
                         msg.push_str(&format!(
