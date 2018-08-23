@@ -2,31 +2,25 @@ language: rust
 services: docker
 matrix:
   fast_finish: true
-  allow_failures:
-  - env: RUSTFMT
-  - env: CLIPPY
   include:
-  - env: RUSTFMT
+  - name: "rustfmt"
     rust: nightly
-    before_script:
-    - cargo install rustfmt-nightly --force
-    script:
-    - cargo fmt -- --write-mode=diff
-  - env: CLIPPY
+    before_script: rustup component add rustfmt-preview
+    script: cargo fmt --all -- --check
+  - name: "clippy"
     rust: nightly
-    before_script:
-    - cargo install clippy --force
-    script:
-    - cargo clippy -- -D clippy-pedantic
+    before_script: rustup component add clippy-preview
+    script: cargo clippy -- -D clippy-pedantic
   - env: TARGET=x86_64-unknown-linux-gnu
-    rust: 1.25.0
+    name: "linux-stable"
+    rust: 1.28.0
   - env: TARGET=x86_64-apple-darwin
-    rust: 1.25.0
+    name: "osx-stable"
+    rust: 1.28.0
     os: osx
     osx_image: xcode9.2
 
-script:
-  - ci/run.sh
+script: ci/run.sh
 
 notifications:
   email:
