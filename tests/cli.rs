@@ -19,20 +19,20 @@ fn sum_array() {
  push    rbp
  mov     rbp, rsp
  test    rsi, rsi
- je      LBB14_1
+ je      LBB13_1
  lea     r9, [4*rsi, -, 4]
  shr     r9, 2
  inc     r9
  cmp     r9, 8
- jae     LBB14_4
+ jae     LBB13_4
  xor     eax, eax
  mov     rcx, rdi
- jmp     LBB14_13
-LBB14_1:
+ jmp     LBB13_13
+LBB13_1:
  xor     eax, eax
  pop     rbp
  ret
-LBB14_4:
+LBB13_4:
  movabs  r8, 9223372036854775800
  and     r8, r9
  lea     rcx, [r8, -, 8]
@@ -41,20 +41,20 @@ LBB14_4:
  lea     eax, [rdx, +, 1]
  and     eax, 3
  cmp     rcx, 24
- jae     LBB14_6
+ jae     LBB13_6
  pxor    xmm0, xmm0
  xor     edx, edx
  pxor    xmm1, xmm1
  test    rax, rax
- jne     LBB14_9
- jmp     LBB14_11
-LBB14_6:
+ jne     LBB13_9
+ jmp     LBB13_11
+LBB13_6:
  lea     rcx, [rax, -, 1]
  sub     rcx, rdx
  pxor    xmm0, xmm0
  xor     edx, edx
  pxor    xmm1, xmm1
-LBB14_7:
+LBB13_7:
  movdqu  xmm2, xmmword, ptr, [rdi, +, 4*rdx]
  paddd   xmm2, xmm0
  movdqu  xmm0, xmmword, ptr, [rdi, +, 4*rdx, +, 16]
@@ -73,37 +73,37 @@ LBB14_7:
  paddd   xmm1, xmm2
  add     rdx, 32
  add     rcx, 4
- jne     LBB14_7
+ jne     LBB13_7
  test    rax, rax
- je      LBB14_11
-LBB14_9:
+ je      LBB13_11
+LBB13_9:
  lea     rcx, [rdi, +, 4*rdx, +, 16]
  neg     rax
-LBB14_10:
+LBB13_10:
  movdqu  xmm2, xmmword, ptr, [rcx, -, 16]
  paddd   xmm0, xmm2
  movdqu  xmm2, xmmword, ptr, [rcx]
  paddd   xmm1, xmm2
  add     rcx, 32
  inc     rax
- jne     LBB14_10
-LBB14_11:
+ jne     LBB13_10
+LBB13_11:
  paddd   xmm0, xmm1
  pshufd  xmm1, xmm0, 78
  paddd   xmm1, xmm0
  phaddd  xmm1, xmm1
  movd    eax, xmm1
  cmp     r9, r8
- je      LBB14_15
+ je      LBB13_15
  lea     rcx, [rdi, +, 4*r8]
-LBB14_13:
+LBB13_13:
  lea     rdx, [rdi, +, 4*rsi]
-LBB14_14:
+LBB13_14:
  add     eax, dword, ptr, [rcx]
  add     rcx, 4
  cmp     rdx, rcx
- jne     LBB14_14
-LBB14_15:
+ jne     LBB13_14
+LBB13_15:
  pop     rbp
  ret
 "#
@@ -314,20 +314,20 @@ fn max_array() {
  mov     rax, -524288
 LBB0_1:
  movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524288]
- movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524304]
- movupd  xmm2, xmmword, ptr, [rdi, +, rax, +, 524288]
- maxpd   xmm0, xmm2
- movupd  xmm2, xmmword, ptr, [rdi, +, rax, +, 524304]
- movupd  xmm3, xmmword, ptr, [rdi, +, rax, +, 524320]
- movupd  xmm4, xmmword, ptr, [rdi, +, rax, +, 524336]
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524288]
+ maxpd   xmm0, xmm1
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524304]
+ movupd  xmm2, xmmword, ptr, [rdi, +, rax, +, 524320]
+ movupd  xmm3, xmmword, ptr, [rdi, +, rax, +, 524336]
  movupd  xmmword, ptr, [rdi, +, rax, +, 524288], xmm0
- maxpd   xmm1, xmm2
- movupd  xmmword, ptr, [rdi, +, rax, +, 524304], xmm1
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524304]
+ maxpd   xmm0, xmm1
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524304], xmm0
  movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524320]
- maxpd   xmm0, xmm3
+ maxpd   xmm0, xmm2
  movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524336]
  movupd  xmmword, ptr, [rdi, +, rax, +, 524320], xmm0
- maxpd   xmm1, xmm4
+ maxpd   xmm1, xmm3
  movupd  xmmword, ptr, [rdi, +, rax, +, 524336], xmm1
  add     rax, 64
  jne     LBB0_1
@@ -402,24 +402,25 @@ fn sum_array_rust() {
         r#" pub fn sum_array(x: &[i32]) -> i32 {
  push    rbp
  mov     rbp, rsp
-     if self.ptr == self.end { (libcore/slice/mod.rs:1178)
+     if self.ptr == self.end { (libcore/slice/mod.rs:2390)
      test    rsi, rsi
-     je      LBB14_1
+     je      LBB13_1
+     intrinsics::offset(self, count) (libcore/ptr.rs:621)
      lea     r9, [4*rsi, -, 4]
      shr     r9, 2
      inc     r9
      cmp     r9, 8
-     jae     LBB14_4
+     jae     LBB13_4
      xor     eax, eax
      mov     rcx, rdi
-     jmp     LBB14_13
-LBB14_1:
+     jmp     LBB13_13
+LBB13_1:
      xor     eax, eax
  }
  pop     rbp
  ret
-LBB14_4:
-     if self.ptr == self.end { (libcore/slice/mod.rs:1178)
+LBB13_4:
+     intrinsics::offset(self, count) (libcore/ptr.rs:621)
      movabs  r8, 9223372036854775800
      and     r8, r9
      lea     rcx, [r8, -, 8]
@@ -428,20 +429,20 @@ LBB14_4:
      lea     eax, [rdx, +, 1]
      and     eax, 3
      cmp     rcx, 24
-     jae     LBB14_6
+     jae     LBB13_6
      pxor    xmm0, xmm0
      xor     edx, edx
      pxor    xmm1, xmm1
      test    rax, rax
-     jne     LBB14_9
-     jmp     LBB14_11
-LBB14_6:
+     jne     LBB13_9
+     jmp     LBB13_11
+LBB13_6:
      lea     rcx, [rax, -, 1]
      sub     rcx, rdx
      pxor    xmm0, xmm0
      xor     edx, edx
      pxor    xmm1, xmm1
-LBB14_7:
+LBB13_7:
      movdqu  xmm2, xmmword, ptr, [rdi, +, 4*rdx]
  x.iter().fold(0, |sum, next| sum + *next)
  paddd   xmm2, xmm0
@@ -461,42 +462,41 @@ LBB14_7:
  paddd   xmm1, xmm2
  add     rdx, 32
  add     rcx, 4
- jne     LBB14_7
+ jne     LBB13_7
  test    rax, rax
- je      LBB14_11
-LBB14_9:
+ je      LBB13_11
+LBB13_9:
  lea     rcx, [rdi, +, 4*rdx, +, 16]
  neg     rax
-LBB14_10:
+LBB13_10:
  movdqu  xmm2, xmmword, ptr, [rcx, -, 16]
  paddd   xmm0, xmm2
  movdqu  xmm2, xmmword, ptr, [rcx]
  paddd   xmm1, xmm2
  add     rcx, 32
  inc     rax
- jne     LBB14_10
-LBB14_11:
+ jne     LBB13_10
+LBB13_11:
  paddd   xmm0, xmm1
  pshufd  xmm1, xmm0, 78
  paddd   xmm1, xmm0
  phaddd  xmm1, xmm1
  movd    eax, xmm1
  cmp     r9, r8
-     if self.ptr == self.end { (libcore/slice/mod.rs:1178)
-     je      LBB14_15
+     intrinsics::offset(self, count) (libcore/ptr.rs:621)
+     je      LBB13_15
      lea     rcx, [rdi, +, 4*r8]
-LBB14_13:
-     intrinsics::offset(self, count) (libcore/ptr.rs:622)
+LBB13_13:
      lea     rdx, [rdi, +, 4*rsi]
-LBB14_14:
+LBB13_14:
  x.iter().fold(0, |sum, next| sum + *next)
  add     eax, dword, ptr, [rcx]
-     intrinsics::offset(self, count) (libcore/ptr.rs:622)
+     intrinsics::offset(self, count) (libcore/ptr.rs:621)
      add     rcx, 4
-     if self.ptr == self.end { (libcore/slice/mod.rs:1178)
+     if self.ptr == self.end { (libcore/slice/mod.rs:2390)
      cmp     rdx, rcx
-     jne     LBB14_14
-LBB14_15:
+     jne     LBB13_14
+LBB13_15:
  }
  pop     rbp
  ret"#
@@ -728,20 +728,20 @@ fn max_array_rust() {
 LBB0_1:
  x[i] = if y[i] > x[i] { y[i] } else { x[i] };
  movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524288]
- movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524304]
- movupd  xmm2, xmmword, ptr, [rdi, +, rax, +, 524288]
- maxpd   xmm0, xmm2
- movupd  xmm2, xmmword, ptr, [rdi, +, rax, +, 524304]
- movupd  xmm3, xmmword, ptr, [rdi, +, rax, +, 524320]
- movupd  xmm4, xmmword, ptr, [rdi, +, rax, +, 524336]
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524288]
+ maxpd   xmm0, xmm1
+ movupd  xmm1, xmmword, ptr, [rdi, +, rax, +, 524304]
+ movupd  xmm2, xmmword, ptr, [rdi, +, rax, +, 524320]
+ movupd  xmm3, xmmword, ptr, [rdi, +, rax, +, 524336]
  movupd  xmmword, ptr, [rdi, +, rax, +, 524288], xmm0
- maxpd   xmm1, xmm2
- movupd  xmmword, ptr, [rdi, +, rax, +, 524304], xmm1
+ movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524304]
+ maxpd   xmm0, xmm1
+ movupd  xmmword, ptr, [rdi, +, rax, +, 524304], xmm0
  movupd  xmm0, xmmword, ptr, [rsi, +, rax, +, 524320]
- maxpd   xmm0, xmm3
+ maxpd   xmm0, xmm2
  movupd  xmm1, xmmword, ptr, [rsi, +, rax, +, 524336]
  movupd  xmmword, ptr, [rdi, +, rax, +, 524320], xmm0
- maxpd   xmm1, xmm4
+ maxpd   xmm1, xmm3
  movupd  xmmword, ptr, [rdi, +, rax, +, 524336], xmm1
  add     rax, 64
  jne     LBB0_1
@@ -854,7 +854,7 @@ fn generic_function() {
         r#"pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
  push    rbp
  mov     rbp, rsp
-     fn add(self, other: $t) -> $t { self + other } (libcore/ops/arith.rs:108)
+     fn add(self, other: $t) -> $t { self + other } (libcore/ops/arith.rs:110)
      lea     rax, [rdi, +, rsi]
  pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
  pop     rbp
@@ -864,8 +864,8 @@ fn generic_function() {
         r#"pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
  push    rbp
  mov     rbp, rsp
-     fn add(self, other: $t) -> $t { self + other } (libcore\ops\arith.rs:108)
-     lea     rax, [rcx, +, rdx]
+     fn add(self, other: $t) -> $t { self + other } (libcore\ops\arith.rs:110)
+     lea     rax, [rcx, +, rsi]
  pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
  pop     rbp
  ret
