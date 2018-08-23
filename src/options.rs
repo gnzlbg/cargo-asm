@@ -48,7 +48,8 @@ pub struct AsmOptions {
     )]
     pub json: bool,
     #[structopt(
-        long = "debug-mode", help = "Prints output useful for debugging."
+        long = "debug-mode",
+        help = "Prints output useful for debugging."
     )]
     pub debug_mode: bool,
     #[structopt(
@@ -93,7 +94,8 @@ pub struct LlvmIrOptions {
     #[structopt(long = "rust", help = "Print interleaved Rust code.")]
     pub rust: bool,
     #[structopt(
-        long = "debug-mode", help = "Prints output useful for debugging."
+        long = "debug-mode",
+        help = "Prints output useful for debugging."
     )]
     pub debug_mode: bool,
     #[structopt(

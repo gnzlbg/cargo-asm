@@ -3,7 +3,9 @@
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
-        missing_docs_in_private_items, option_unwrap_used, result_unwrap_used
+        missing_docs_in_private_items,
+        option_unwrap_used,
+        result_unwrap_used
     )
 )]
 
