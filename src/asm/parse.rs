@@ -59,7 +59,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
                     // beginnin (only a location) but they contain .file
                     // directives in the body when code from other files gets
                     // inlined:
-                    if let &Some(ref loc) = &function.loc {
+                    if let Some(ref loc) = &function.loc {
                         if loc.file_index == file.index {
                             function.file = Some(file);
                         }
@@ -85,7 +85,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
                 if function.loc.is_none() {
                     // If there is a function file already set, we check
                     // that the new location matches the file idx.
-                    if let &Some(ref file) = &function.file {
+                    if let Some(ref file) = &function.file {
                         assert_eq!(new_loc.file_index, file.index);
                     }
                     function.loc = Some(new_loc);
@@ -130,21 +130,28 @@ pub enum Result {
 }
 
 /// Parses the assembly function at `path` from the file `file`.
-#[cfg_attr(feature = "cargo-clippy", allow(use_debug))]
+#[cfg_attr(
+    feature = "cargo-clippy",
+    allow(use_debug, cyclomatic_complexity)
+)]
 pub fn function(file: &::std::path::Path) -> Result {
+    use std::{
+        collections::HashMap,
+        fs::File,
+        io::{BufRead, BufReader},
+    };
+
     let path = if let Some(path) = opts.path() {
         path
     } else {
         "".to_owned()
     };
-    use std::io::BufRead;
 
-    let fh = ::std::fs::File::open(file).unwrap();
-    let file_buf = ::std::io::BufReader::new(&fh);
+    let fh = File::open(file).unwrap();
+    let file_buf = BufReader::new(&fh);
 
     // We keep here the file ids of the already parsed files:
-    let mut file_directive_table =
-        ::std::collections::HashMap::<usize, ast::File>::new();
+    let mut file_directive_table = HashMap::<usize, ast::File>::new();
 
     // This is the AST of the function we are looking for:
     let mut function: Option<ast::Function> = None;
@@ -153,31 +160,27 @@ pub fn function(file: &::std::path::Path) -> Result {
 
     let mut function_table = Vec::<String>::new();
 
-    fn function_label_pattern() -> &'static str {
+    // This is the pattern at the beginning of an assembly label
+    // that identifies the label as a function:
+    let function_label_pattern = {
         let t = ::target::target();
         if t.contains("apple") {
             "__"
         } else {
             "_"
         }
-    }
+    };
 
-    fn function_end_pattern() -> &'static str {
+    // This is the pattern that we match to know that we have finished
+    // searching the function
+    let function_end_pattern = {
         let t = ::target::target();
         if t.contains("windows") {
             ".seh_endproc" // TODO: does this work with panic=abort ?
         } else {
             ".cfi_endproc"
         }
-    }
-
-    // This is the pattern at the beginning of an assembly label
-    // that identifies the label as a function:
-    let function_label_pattern = function_label_pattern();
-
-    // This is the pattern that we match to know that we have finished
-    // searching the function
-    let function_end_pattern = function_end_pattern();
+    };
 
     while let Some(line) = line_iter.next() {
         let line = line.unwrap().trim().to_string();
@@ -213,7 +216,7 @@ pub fn function(file: &::std::path::Path) -> Result {
                 function = Some(function_body(lines, &path));
                 // If the function contained a .file directive, we are
                 // done:
-                if let &Some(ref function) = &function {
+                if let Some(ref function) = &function {
                     if function.file.is_some() {
                         break;
                     }
@@ -222,7 +225,7 @@ pub fn function(file: &::std::path::Path) -> Result {
                 // If the function did not contain a .loc directive
                 // either, we can't finde its
                 // corresponding Rust code so we are done:
-                if let &Some(ref function) = &function {
+                if let Some(ref function) = &function {
                     if function.loc.is_none() {
                         break;
                     }
@@ -280,13 +283,13 @@ pub fn function(file: &::std::path::Path) -> Result {
     let function = function.unwrap();
 
     // Add all local .file directives in the body of the function to the table:
-    if let &Some(ref f) = &function.file {
+    if let Some(ref f) = &function.file {
         file_directive_table
             .entry(f.index)
             .or_insert_with(|| f.clone());
     }
     for s in &function.statements {
-        if let &Statement::Directive(Directive::File(ref f)) = s {
+        if let Statement::Directive(Directive::File(ref f)) = s {
             file_directive_table
                 .entry(f.index)
                 .or_insert_with(|| f.clone());
@@ -297,7 +300,7 @@ pub fn function(file: &::std::path::Path) -> Result {
     // within the function:
     let mut done = true;
     for s in &function.statements {
-        if let &Statement::Directive(Directive::Loc(ref l)) = s {
+        if let Statement::Directive(Directive::Loc(ref l)) = s {
             if !file_directive_table.contains_key(&l.file_index) {
                 done = false;
                 error!(

@@ -12,7 +12,7 @@ pub struct File {
 impl File {
     pub fn line(&self, line_idx: usize) -> Option<String> {
         if let Some(l) = self.lines.get(&line_idx) {
-            if let &Some(ref l) = l {
+            if let Some(ref l) = l {
                 return Some(l.clone());
             }
         }
@@ -61,11 +61,11 @@ pub fn parse(
     // to files. The files contain a map of line indices to lines, the map is
     // initialized here to contain the lines pointed to by the locations.
     for s in &function.statements {
-        if let &Statement::Directive(Directive::Loc(ref l)) = s {
+        if let Statement::Directive(Directive::Loc(ref l)) = s {
             debug!("inserting locs: {:?}", l);
             files.entry(l.file_index).or_insert_with(|| {
-                let ast = file_table.get(&l.file_index).expect(
-                    &format!("[ERROR]: incomplete file table. Location {:?} 's file is not in the file table:\n{:?}",
+                let ast = file_table.get(&l.file_index).unwrap_or_else(||
+                    panic!("[ERROR]: incomplete file table. Location {:?} 's file is not in the file table:\n{:?}",
                              l, file_table));
                 File {
                     ast: ast.clone(),
@@ -110,12 +110,18 @@ pub fn parse(
 
     // Read the required lines from each Rust file:
     for f in files.values_mut() {
-        use std::io::BufRead;
-        let fh = ::std::fs::File::open(&f.ast.path).expect(&format!(
-            "[ERROR]: failed to open file: {}",
-            f.ast.path.display()
-        ));
-        let file_buf = ::std::io::BufReader::new(&fh);
+        use std::{
+            fs::File,
+            io::{BufRead, BufReader},
+        };
+        let fh = File::open(&f.ast.path).unwrap_or_else(|e| {
+            panic!(
+                "[ERROR]: failed to open file: {}\ncause: {:?}",
+                f.ast.path.display(),
+                e
+            )
+        });
+        let file_buf = BufReader::new(&fh);
 
         for (line_idx, line) in file_buf.lines().enumerate() {
             let line_idx = line_idx + 1;

@@ -11,11 +11,11 @@ use log::{self, Log};
 /// The simplest possible logger that logs to stderr.
 ///
 /// This logger does no filtering. Instead, it relies on the `log` crates
-/// filtering via its global max_level setting.
+/// filtering via its global `max_level` setting.
 #[derive(Debug)]
 pub struct Logger(());
 
-const LOGGER: &'static Logger = &Logger(());
+const LOGGER: &Logger = &Logger(());
 
 impl Logger {
     /// Create a new logger that logs to stderr and initialize it as the

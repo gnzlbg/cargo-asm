@@ -61,9 +61,7 @@ pub fn run(files: &[::std::path::PathBuf]) {
                 }).enumerate()
             {
                 if i == 0 {
-                    msg.push_str(&format!(
-                        "Is it one of the following functions?\n\n"
-                    ));
+                    msg.push_str("Is it one of the following functions?\n\n");
                 }
                 msg.push_str(&format!("  {}\n", f));
             }
@@ -94,10 +92,10 @@ fn print_function(
     let fh = ::std::fs::File::open(file_name).unwrap();
     let file_buf = ::std::io::BufReader::new(&fh);
 
-    let mut line_iter = file_buf.lines();
+    let line_iter = file_buf.lines();
     let mut function_names: Vec<String> = Vec::new();
     let mut function_lines: Option<Vec<String>> = None;
-    while let Some(line) = line_iter.next() {
+    for line in line_iter {
         let line = line.unwrap().trim().to_string();
 
         if let Some(ref mut function_lines) = function_lines {
@@ -113,8 +111,8 @@ fn print_function(
                 continue;
             }
 
-            let first = line.find("@").unwrap();
-            let last = (&line[first..]).find("(").unwrap() + first;
+            let first = line.find('@').unwrap();
+            let last = (&line[first..]).find('(').unwrap() + first;
             assert!(
                 first < last,
                 "first: {:?}, last: {:?}, line:\n{:?}",
@@ -143,19 +141,19 @@ fn print_function(
         for line in &function_lines[0..r + 1] {
             let mut demangled_line = String::new();
             let mut start = 0;
-            while let Some(f) = &line[start..].find("\"") {
+            while let Some(f) = &line[start..].find('"') {
                 if start == 0 {
                     debug!("line to demangle: {}", line);
                 }
                 debug!("s: {}, f: {}, dl: {}", start, f, demangled_line);
                 let f = f + start + 1;
-                let l = &line[f..].find("\"").unwrap() + f;
+                let l = line[f..].find('"').unwrap() + f;
                 let mangled_name = &line[f..l];
                 let demangled_name = if mangled_name.ends_with(".exit") {
                     let mut v = ::demangle::demangle(
                         &mangled_name[0..mangled_name.len() - 5],
                     );
-                    v.extend(".exit".chars());
+                    v += ".exit";
                     v
                 } else {
                     ::demangle::demangle(&mangled_name)
@@ -164,9 +162,9 @@ fn print_function(
                     "  f: {}, l: {}, mn: {}, dm: {}",
                     f, l, mangled_name, demangled_name
                 );
-                demangled_line.extend(line[start..f].chars());
-                demangled_line.extend(demangled_name.chars());
-                demangled_line.extend("\"".chars());
+                demangled_line += &line[start..f];
+                demangled_line += &demangled_name;
+                demangled_line.push('"');
                 start = l + 1;
                 debug!("  ns: {}, ndl: {}", start, demangled_line);
             }

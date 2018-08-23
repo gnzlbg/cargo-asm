@@ -13,7 +13,9 @@ lazy_static! {
 
 /// CLI options of cargo asm.
 #[derive(StructOpt, Debug, Clone)]
-pub struct AsmOptions {
+// FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2651
+#[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
+pub struct Asm {
     #[structopt(
         help = "Path of the function to disassembly, e.g., foo::bar::baz(). If missing then all function names will be printed."
     )]
@@ -74,7 +76,9 @@ pub struct AsmOptions {
 
 /// CLI options of cargo llvm-ir.
 #[derive(StructOpt, Debug, Clone)]
-pub struct LlvmIrOptions {
+// FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2651
+#[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
+pub struct LlvmIr {
     #[structopt(
         help = "Path of the function to disassembly, e.g., foo::bar::baz(). If missing then all function names will be printed."
     )]
@@ -113,7 +117,7 @@ pub struct LlvmIrOptions {
     pub no_default_features: bool,
 }
 
-pub trait OptionsExt {
+pub trait Ext {
     fn path(&self) -> Option<String>;
     fn TRIPLE(&self) -> Option<String>;
     fn no_color(&self) -> bool;
@@ -134,7 +138,7 @@ pub trait OptionsExt {
     fn no_default_features(&self) -> bool;
 }
 
-impl OptionsExt for ::parking_lot::RwLock<Options> {
+impl Ext for ::parking_lot::RwLock<Options> {
     fn path(&self) -> Option<String> {
         match *self.read() {
             Options::Asm(ref o) => o.path.clone(),
@@ -262,7 +266,7 @@ Quick start: given a crate named \"crate\", to search:
       cargo asm \"<crate::path::to::Foo as crate::path::to::Bar>::bar\"
 "
     )]
-    Asm(AsmOptions),
+    Asm(Asm),
     #[structopt(
         name = "llvm-ir",
         about = "\
@@ -277,7 +281,7 @@ Quick start: given a crate named \"crate\", to search:
       cargo asm \"<crate::path::to::Foo as crate::path::to::Bar>::bar\"
 "
     )]
-    LlvmIr(LlvmIrOptions),
+    LlvmIr(LlvmIr),
 }
 
 fn read() -> Options {

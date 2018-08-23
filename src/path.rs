@@ -29,7 +29,7 @@ pub fn contains(
             if next_sub_path.is_none() {
                 return true;
             }
-        } else if matching == true {
+        } else if matching {
             // We have found at least one match, but this component does
             // not match, so we restart the search:
             sub_path_iter = sub_path.components();
@@ -51,7 +51,7 @@ pub fn after(
     let mut sub_path_iter = sub_path.components();
     let mut next_sub_path = sub_path_iter.next();
 
-    let mut appending = if next_sub_path.is_none() { true } else { false };
+    let mut appending = next_sub_path.is_none();
     let mut matching = false;
     for c in path.components() {
         if appending {
@@ -73,7 +73,7 @@ pub fn after(
                 if next_sub_path.is_none() {
                     appending = true;
                 }
-            } else if matching == true {
+            } else if matching {
                 // We have found at least one match, but this component does
                 // not match, so we restart the search:
                 sub_path_iter = sub_path.components();
