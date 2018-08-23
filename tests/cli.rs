@@ -355,7 +355,6 @@ LBB0_1:
 "#
     } else if cfg!(target_os = "windows") {
         r#"lib_crate::bar::max_array (src\bar.rs:3):
- push    rbp
  mov     rbp, rsp
  mov     rax, -524288
 .LBB0_1:
@@ -377,7 +376,6 @@ LBB0_1:
  movupd  xmmword, ptr, [rcx, +, rax, +, 524336], xmm1
  add     rax, 64
  jne     .LBB0_1
- pop     rbp
  ret"#
     } else {
         unimplemented!()
@@ -594,7 +592,6 @@ LBB13_15:
  ret"#
     } else if cfg!(target_os = "windows") {
         r#"pub fn sum_array(x: &[i32]) -> i32 {
- push    rbp
  mov     rbp, rsp
      if self.ptr == self.end { (libcore\slice\mod.rs:1178)
      test    rdx, rdx
@@ -610,7 +607,6 @@ LBB13_15:
 .LBB14_1:
  }
  xor     eax, eax
- pop     rbp
  ret
 .LBB14_4:
      if self.ptr == self.end { (libcore\slice\mod.rs:1178)
@@ -862,8 +858,6 @@ fn generic_function() {
 "#
     } else if cfg!(target_os = "windows") {
         r#"pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
- push    rbp
- mov     rbp, rsp
      fn add(self, other: $t) -> $t { self + other } (libcore\ops\arith.rs:110)
      lea     rax, [rcx, +, rsi]
  pub fn generic_add<T: ::std::ops::Add<T,Output=T>>(x: T, y: T) -> T { x + y }
@@ -903,13 +897,10 @@ fn inherent_method() {
 "#
     } else if cfg!(target_os = "windows") {
         r#"pub fn foo_add(&self) -> usize {
- push    rbp
- mov     rbp, rsp
  self.x + self.y
  mov     rax, qword, ptr, [rcx, +, 8]
  add     rax, qword, ptr, [rcx]
  }
- pop     rbp
  ret
 "#
     } else {
