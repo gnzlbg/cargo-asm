@@ -84,7 +84,7 @@ fn main() {
             ::std::process::exit(1);
         }
         let result = ::std::env::set_current_dir(&new_path);
-        if !result.is_ok() {
+        if result.is_err() {
             error!(
                 "failed to change the working path to {}",
                 new_path.display()

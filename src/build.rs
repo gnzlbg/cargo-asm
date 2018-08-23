@@ -119,10 +119,12 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     // Scan the output directories for files matching the extension:
     let mut output_files = Vec::new();
     for entry in ::walkdir::WalkDir::new(target_directory.clone()) {
-        let e = entry.expect(&format!(
-            "failed to iterate over the directory: {}",
-            target_directory.display()
-        ));
+        let e = entry.unwrap_or_else(|_| {
+            panic!(
+                "failed to iterate over the directory: {}",
+                target_directory.display()
+            )
+        });
         let p = e.path();
         let is_assembly_file =
             p.extension().map_or("", |v| v.to_str().unwrap_or("")) == ext;

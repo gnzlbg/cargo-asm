@@ -21,12 +21,11 @@ impl ::std::str::FromStr for Style {
 
 fn parse_files(files: &[::std::path::PathBuf]) -> parse::Result {
     use self::parse::Result;
+    use std::io::BufRead;
     if opts.debug_mode() {
         // In debug mode dump all the raw assembly that we could find.
         for f in files {
             debug!("raw file dump {}:", f.display());
-            use std::io::BufRead;
-
             let fh = ::std::fs::File::open(f).unwrap();
             let file_buf = ::std::io::BufReader::new(&fh);
             for l in file_buf.lines() {
@@ -100,9 +99,9 @@ pub fn run(files: &[::std::path::PathBuf]) {
                     }).enumerate()
                 {
                     if i == 0 {
-                        msg.push_str(&format!(
-                            "Is it one of the following functions?\n\n"
-                        ));
+                        msg.push_str(
+                            "Is it one of the following functions?\n\n",
+                        );
                     }
                     msg.push_str(&format!("  {}\n", f));
                 }

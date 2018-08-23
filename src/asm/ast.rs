@@ -78,7 +78,7 @@ impl File {
 
         let path = colon_tokens
             .get(file_path_index)
-            .expect(&format!("could not get file path of {} | file_path_index: {} | tokens: {:?}", s, file_path_index, &colon_tokens));
+            .unwrap_or_else(|| panic!("could not get file path of {} | file_path_index: {} | tokens: {:?}", s, file_path_index, &colon_tokens));
 
         if colon_tokens.is_empty() {
             return None;
@@ -86,7 +86,7 @@ impl File {
         // On Linux some files miss the file index:
         let index = ws_tokens
             .get(file_path_index_index)
-            .expect(&format!("could not get file index of {} | file_path_index_index: {} | tokens: {:?}", s, file_path_index_index, &ws_tokens))
+            .unwrap_or_else(|| panic!("could not get file index of {} | file_path_index_index: {} | tokens: {:?}", s, file_path_index_index, &ws_tokens))
             .parse()
             .unwrap_or(0);
         if ws_tokens.is_empty() {
@@ -160,8 +160,8 @@ impl Loc {
         };
 
         let tokens = s.split_whitespace().collect::<Vec<_>>();
-        let file_index = tokens.get(file_index_index).unwrap();
-        let file_line = tokens.get(file_line_index).unwrap();
+        let file_index = tokens[file_index_index];
+        let file_line = tokens[file_line_index];
         // On Linux the file-column is not emitted so we just set it to zero
         // here.
         let file_column = tokens.get(file_column_index).unwrap_or(&"0");
@@ -172,7 +172,7 @@ impl Loc {
         })
     }
     pub fn rust_loc(&self) -> Option<Self> {
-        Some(self.clone())
+        Some(*self)
     }
 }
 
@@ -187,7 +187,7 @@ fn is_directive(s: &str) -> bool {
         return false;
     }
     // And do not end with : (in this case they are probably labels)
-    if s.ends_with(":") {
+    if s.ends_with(':') {
         return false;
     }
     true
@@ -276,9 +276,9 @@ impl Instruction {
         let instr = iter.next().unwrap().trim().to_string();
         let mut args = Vec::new();
         for arg in iter {
-            let arg_s = arg.trim().to_string();
-            if !arg_s.is_empty() {
-                args.push(arg_s);
+            let arg = arg.trim().to_string();
+            if !arg.is_empty() {
+                args.push(arg);
             }
         }
         let mut v = Self {
@@ -300,15 +300,13 @@ impl Instruction {
         } else if t.contains("aarch64") {
             self.instr == "b" || self.instr.starts_with("b.")
         } else if t.contains("arm") || t.contains("sparc") {
-            self.args
-                .iter()
-                .fold(false, |acc, x| acc || x.starts_with(".L"))
+            self.args.iter().any(|x| x.starts_with(".L"))
         } else if t.contains("power") {
-            self.instr.starts_with("b")
+            self.instr.starts_with('b')
                 && self.instr != "bl"
                 && self.args.len() == 2
         } else if t.contains("mips") {
-            self.instr.starts_with("b") && self.instr.len() > 1
+            self.instr.starts_with('b') && self.instr.len() > 1
         } else {
             debug!("unimplemented target");
             false
@@ -343,7 +341,7 @@ impl Instruction {
                     continue;
                 }
                 let f = arg.find("_Z").unwrap();
-                let l = arg.find(")");
+                let l = arg.find(')');
                 if l.is_none() {
                     continue;
                 }
@@ -353,13 +351,11 @@ impl Instruction {
                 let new_arg = arg.replace(name_to_demangle, &demangled_name);
                 *arg = new_arg;
             }
-        } else {
+        } else if self.is_call() {
             // Typically, we just check if the instruction is a call
             // instruction, and the mangle the first argument.
-            if self.is_call() {
-                let demangled_function = ::demangle::demangle(&self.args[0]);
-                self.args[0] = demangled_function;
-            }
+            let demangled_function = ::demangle::demangle(&self.args[0]);
+            self.args[0] = demangled_function;
         }
     }
 
@@ -371,10 +367,10 @@ impl Instruction {
 impl Statement {
     pub fn rust_loc(&self) -> Option<Loc> {
         match self {
-            &Statement::Label(ref l) => l.rust_loc(),
-            &Statement::Directive(ref l) => l.rust_loc(),
-            &Statement::Instruction(ref l) => l.rust_loc(),
-            &Statement::Comment(ref l) => l.rust_loc(),
+            Statement::Label(ref l) => l.rust_loc(),
+            Statement::Directive(ref l) => l.rust_loc(),
+            Statement::Instruction(ref l) => l.rust_loc(),
+            Statement::Comment(ref l) => l.rust_loc(),
         }
     }
 }
