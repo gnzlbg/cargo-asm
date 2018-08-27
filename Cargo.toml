@@ -27,7 +27,7 @@ path = "src/main.rs"
 
 [dependencies]
 structopt = "0.2"
-walkdir = "2.0"
+walkdir = "2.2"
 rustc-demangle = "0.1"
 termcolor = "1.0"
 edit-distance = "2.0"
