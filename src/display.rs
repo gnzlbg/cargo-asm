@@ -144,14 +144,16 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                             ".file {} \"{}\"",
                             f.index,
                             f.path.display(),
-                        ).unwrap();
+                        )
+                        .unwrap();
                     }
                     asm::ast::Directive::Loc(ref l) => {
                         write!(
                             &mut buffer,
                             ".loc {} {} {}",
                             l.file_index, l.file_line, l.file_column
-                        ).unwrap();
+                        )
+                        .unwrap();
                     }
                     asm::ast::Directive::Generic(ref g) => {
                         write!(&mut buffer, "{}", g.string).unwrap();
@@ -202,7 +204,8 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                     r.line,
                     r.path.display(),
                     r.loc.file_line
-                ).unwrap();
+                )
+                .unwrap();
             }
         }
     }

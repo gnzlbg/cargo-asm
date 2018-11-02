@@ -40,9 +40,11 @@ fn parse_files(files: &[::std::path::PathBuf]) -> parse::Result {
             Result::Found(function, files) => {
                 return Result::Found(function, files)
             }
-            Result::NotFound(table) => for f in table {
-                function_table.push(f);
-            },
+            Result::NotFound(table) => {
+                for f in table {
+                    function_table.push(f);
+                }
+            }
         }
     }
     function_table.sort();
@@ -96,7 +98,8 @@ pub fn run(files: &[::std::path::PathBuf]) {
                             f.split(':').next_back().unwrap(),
                             last_path,
                         ) <= 4
-                    }).enumerate()
+                    })
+                    .enumerate()
                 {
                     if i == 0 {
                         msg.push_str(

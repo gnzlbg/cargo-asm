@@ -8,7 +8,8 @@ fn lib_test(args: &[&str]) -> assert_cli::Assert {
             "cargo-asm-test/lib_crate",
             "--no-color",
             "--debug-info",
-        ]).with_args(args)
+        ])
+        .with_args(args)
 }
 
 #[test]
@@ -832,7 +833,8 @@ fn trait_method() {
     lib_test(&[
         "<lib_crate::baz::Foo as lib_crate::baz::Addd>::addd",
         "--rust",
-    ]).stdout()
+    ])
+    .stdout()
     .is(expected)
     .unwrap();
 }

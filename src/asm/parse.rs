@@ -130,10 +130,7 @@ pub enum Result {
 }
 
 /// Parses the assembly function at `path` from the file `file`.
-#[cfg_attr(
-    feature = "cargo-clippy",
-    allow(use_debug, cyclomatic_complexity)
-)]
+#[cfg_attr(feature = "cargo-clippy", allow(use_debug, cyclomatic_complexity))]
 pub fn function(file: &::std::path::Path) -> Result {
     use std::{
         collections::HashMap,
