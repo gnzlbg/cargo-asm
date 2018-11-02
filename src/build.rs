@@ -163,8 +163,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
 
 /// Scan a given output directory for files matching the predicate:
 fn scan_directory<P>(
-    target_directory: &::std::path::Path,
-    predicate: P,
+    target_directory: &::std::path::Path, predicate: P,
 ) -> Vec<::std::path::PathBuf>
 where
     P: Fn(Option<&str>, Option<&str>) -> bool,

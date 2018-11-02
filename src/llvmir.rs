@@ -58,7 +58,8 @@ pub fn run(files: &[::std::path::PathBuf]) {
                 .take_while(|f| {
                     edit_distance(f.split(':').next_back().unwrap(), last_path)
                         <= 4
-                }).enumerate()
+                })
+                .enumerate()
             {
                 if i == 0 {
                     msg.push_str("Is it one of the following functions?\n\n");
