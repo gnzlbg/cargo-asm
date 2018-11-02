@@ -58,7 +58,9 @@ pub fn rust_src_path_component() -> ::std::path::PathBuf {
     ::std::path::PathBuf::from(p)
 }
 
-pub fn directory() -> ::std::path::PathBuf {
+pub fn directory<P: AsRef<::std::path::Path>>(
+    sub_path: P,
+) -> ::std::path::PathBuf {
     debug!("obtaining the target directory...");
     // Run cargo metadata to get the target directory
     let mut target_directory = {
@@ -97,7 +99,7 @@ pub fn directory() -> ::std::path::PathBuf {
         target_directory.push(t);
     }
     target_directory.push(build_type);
-    target_directory.push("deps");
+    target_directory.push(sub_path);
 
     if !target_directory.exists() {
         error!(

@@ -36,8 +36,10 @@ pub struct Asm {
         default_value = "release"
     )]
     pub build_type: Type,
-    #[structopt(long = "features", help = "cargo --features")]
+    #[structopt(long = "features", help = "cargo build --features=…")]
     pub features: Vec<String>,
+    #[structopt(long = "example", help = "cargo build --example=…")]
+    pub example: Option<String>,
     #[structopt(long = "rust", help = "Print interleaved Rust code.")]
     pub rust: bool,
     #[structopt(long = "comments", help = "Print assembly comments.")]
@@ -85,8 +87,10 @@ pub struct LlvmIr {
     pub path: Option<String>,
     #[structopt(long = "target", help = "Build for the target triple.")]
     pub TRIPLE: Option<String>,
-    #[structopt(long = "features", help = "cargo --features")]
+    #[structopt(long = "features", help = "cargo build --features=…")]
     pub features: Vec<String>,
+    #[structopt(long = "example", help = "cargo build --example=…")]
+    pub example: Option<String>,
     #[structopt(long = "no-color", help = "Disable colored output.")]
     pub no_color: bool,
     #[structopt(
@@ -134,6 +138,7 @@ pub trait Ext {
     fn print_directives(&self) -> bool;
     fn set_rust(&self, value: bool);
     fn features(&self) -> Vec<String>;
+    fn example(&self) -> Option<String>;
     fn lib(&self) -> bool;
     fn no_default_features(&self) -> bool;
 }
@@ -233,6 +238,12 @@ impl Ext for ::parking_lot::RwLock<Options> {
         match *self.read() {
             Options::Asm(ref o) => o.features.clone(),
             Options::LlvmIr(ref o) => o.features.clone(),
+        }
+    }
+    fn example(&self) -> Option<String> {
+        match *self.read() {
+            Options::Asm(ref o) => o.example.clone(),
+            Options::LlvmIr(ref o) => o.example.clone(),
         }
     }
     fn lib(&self) -> bool {

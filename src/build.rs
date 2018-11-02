@@ -57,6 +57,10 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         cargo_build.arg(&format!("--features={}", opts.features().join(",")));
     }
 
+    if let Some(example) = opts.example() {
+        cargo_build.arg(&format!("--example={}", example));
+    }
+
     if opts.no_default_features() {
         cargo_build.arg("--no-default-features");
     }
@@ -109,34 +113,36 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         .expect(error_msg);
     debug!("cargo build finished...");
 
-    let target_directory = ::target::directory();
-
     let ext = match *opts.read() {
         ::options::Options::Asm(_) => "s",
         ::options::Options::LlvmIr(_) => "ll",
     };
 
-    // Scan the output directories for files matching the extension:
-    let mut output_files = Vec::new();
-    for entry in ::walkdir::WalkDir::new(target_directory.clone()) {
-        let e = entry.unwrap_or_else(|_| {
-            panic!(
-                "failed to iterate over the directory: {}",
-                target_directory.display()
-            )
-        });
-        let p = e.path();
-        let is_assembly_file =
-            p.extension().map_or("", |v| v.to_str().unwrap_or("")) == ext;
-        if is_assembly_file {
-            let p = p.to_path_buf();
-            debug!(
-                "found file matching extension \"{}\": {}",
-                ext,
-                p.display()
-            );
-            output_files.push(p);
-        }
+    let deps_directory = ::target::directory("deps");
+
+    let mut output_files = vec![];
+
+    // Scan files in "deps" target dir:
+    output_files.append(&mut scan_directory(
+        deps_directory.as_path(),
+        |_, extension| extension == Some(ext),
+    ));
+
+    if let Some(example) = opts.example() {
+        let example_directory = ::target::directory("examples");
+        let prefix = format!("{}-", example);
+
+        // Scan files in "examples" target dir, while making sure
+        // to only scanning those files belonging to the compiled example:
+        output_files.append(&mut scan_directory(
+            example_directory.as_path(),
+            |stem, extension| {
+                let has_prefix =
+                    stem.map_or(false, |stem| stem.starts_with(&prefix));
+                let has_extension = extension == Some(ext);
+                has_prefix && has_extension
+            },
+        ));
     }
 
     // Canonicalize, sort the files, remove duplicates, and done:
@@ -152,5 +158,35 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     }
     output_files.sort_unstable();
     output_files.dedup();
+    output_files
+}
+
+/// Scan a given output directory for files matching the predicate:
+fn scan_directory<P>(
+    target_directory: &::std::path::Path,
+    predicate: P,
+) -> Vec<::std::path::PathBuf>
+where
+    P: Fn(Option<&str>, Option<&str>) -> bool,
+{
+    let mut output_files = Vec::new();
+    for entry in ::walkdir::WalkDir::new(target_directory.clone()) {
+        let e = entry.unwrap_or_else(|_| {
+            panic!(
+                "failed to iterate over the directory: {}",
+                target_directory.display()
+            )
+        });
+        let p = e.path();
+
+        let stem = p.file_stem().and_then(|v| v.to_str());
+        let extension = p.extension().and_then(|v| v.to_str());
+
+        if predicate(stem, extension) {
+            let p = p.to_path_buf();
+            debug!("found file matching predicate: {}", p.display());
+            output_files.push(p);
+        }
+    }
     output_files
 }
