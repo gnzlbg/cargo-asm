@@ -33,6 +33,8 @@ pub fn rust_src_build_path() -> ::std::path::PathBuf {
         "checkout/src/"
     } else if t.contains("windows") {
         r#"projects\rust\src\"#
+    } else if t.contains("none") {
+        ""
     } else {
         error!("unknown target");
         ::std::process::exit(1);
