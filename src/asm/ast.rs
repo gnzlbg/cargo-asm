@@ -55,17 +55,16 @@ pub struct File {
 }
 
 impl File {
-    pub fn new(s: &str) -> Option<Self> {
-        fn contains_file_label(s: &str) -> bool {
-            let t = ::target::target();
-            if t.contains("windows") {
+    pub fn new(s: &str, target: &str) -> Option<Self> {
+        fn contains_file_label(s: &str, target: &str) -> bool {
+            if target.contains("windows") {
                 s.starts_with(".cv_file") && !s.starts_with(".cv_filec")
             } else {
                 s.starts_with(".file")
             }
         }
 
-        if !contains_file_label(s) {
+        if !contains_file_label(s, target) {
             return None;
         }
         debug!("parsing file directive: {}", s);
@@ -94,7 +93,7 @@ impl File {
         }
 
         let mut path_str = path.trim().to_string();
-        if ::target::target().contains("windows") {
+        if target.contains("windows") {
             // Replace \\ with \ on windows
             replace_slashes(&mut path_str);
             // FIXME: on windows these paths do not follow the UNC, but we
@@ -211,13 +210,15 @@ impl GenericDirective {
 impl Directive {
     pub fn new(s: &str) -> Option<Self> {
         if is_directive(s) {
-            if let Some(file) = File::new(s) {
+            if let Some(file) = File::new(s, &::target::target()) {
                 return Some(Directive::File(file));
             }
             if let Some(loc) = Loc::new(s) {
                 return Some(Directive::Loc(loc));
             }
-            return Some(Directive::Generic(GenericDirective::new(s).unwrap()));
+            return Some(Directive::Generic(
+                GenericDirective::new(s).unwrap(),
+            ));
         }
         None
     }
@@ -347,14 +348,18 @@ impl Instruction {
                 }
                 let l = l.unwrap();
                 let name_to_demangle = &arg[f..l].to_string();
-                let demangled_name = ::demangle::demangle(&name_to_demangle);
+                let demangled_name = ::demangle::demangle(
+                    &name_to_demangle,
+                    &::target::target(),
+                );
                 let new_arg = arg.replace(name_to_demangle, &demangled_name);
                 *arg = new_arg;
             }
         } else if self.is_call() {
             // Typically, we just check if the instruction is a call
             // instruction, and the mangle the first argument.
-            let demangled_function = ::demangle::demangle(&self.args[0]);
+            let demangled_function =
+                ::demangle::demangle(&self.args[0], &::target::target());
             self.args[0] = demangled_function;
         }
     }

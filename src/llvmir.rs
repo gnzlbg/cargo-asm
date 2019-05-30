@@ -122,7 +122,8 @@ fn print_function(
                 line
             );
             let mangled_name = &line[first + 1..last];
-            let demangled_name = ::demangle::demangle(&mangled_name);
+            let demangled_name =
+                ::demangle::demangle(&mangled_name, &::target::target());
             if demangled_name != path {
                 function_names.push(demangled_name);
                 continue;
@@ -153,11 +154,12 @@ fn print_function(
                 let demangled_name = if mangled_name.ends_with(".exit") {
                     let mut v = ::demangle::demangle(
                         &mangled_name[0..mangled_name.len() - 5],
+                        &::target::target(),
                     );
                     v += ".exit";
                     v
                 } else {
-                    ::demangle::demangle(&mangled_name)
+                    ::demangle::demangle(&mangled_name, &::target::target())
                 };
                 debug!(
                     "  f: {}, l: {}, mn: {}, dm: {}",

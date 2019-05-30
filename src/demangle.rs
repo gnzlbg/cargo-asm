@@ -18,8 +18,8 @@ fn is_ascii_hexdigit(byte: u8) -> bool {
     byte >= b'0' && byte <= b'9' || byte >= b'a' && byte <= b'f'
 }
 
-pub fn demangle(n: &str) -> String {
-    let n = if ::target::target().contains("linux") {
+pub fn demangle(n: &str, target: &str) -> String {
+    let n = if target.contains("linux") {
         n.split("@PLT").nth(0).unwrap().to_string()
     } else {
         n.to_string()
