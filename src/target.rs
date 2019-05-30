@@ -1,4 +1,5 @@
-use options::*;
+use crate::options::*;
+use log::{debug, error};
 
 /// Returns the target that is being compiled.
 pub fn target() -> String {
@@ -72,7 +73,7 @@ pub fn directory<P: AsRef<::std::path::Path>>(
         cargo.arg("1");
         let error_msg = "cargo metadata failed";
         let (stdout, _stderr) =
-            ::process::exec(&mut cargo, error_msg, opts.debug_mode())
+            crate::process::exec(&mut cargo, error_msg, opts.debug_mode())
                 .expect(error_msg);
 
         // Parse the metadata format
@@ -83,8 +84,8 @@ pub fn directory<P: AsRef<::std::path::Path>>(
 
     // Generate build type path component:
     let build_type = match opts.build_type() {
-        ::build::Type::Release => "release",
-        ::build::Type::Debug => "debug",
+        crate::build::Type::Release => "release",
+        crate::build::Type::Debug => "debug",
     };
 
     let t = target();

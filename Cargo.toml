@@ -1,5 +1,6 @@
 [package]
 name = "cargo-asm"
+edition = "2018"
 version = "0.1.17"
 authors = ["gnzlbg <gonzalobg88@gmail.com>"]
 description = "A cargo subcommand that displays the generated assembly of Rust source code."

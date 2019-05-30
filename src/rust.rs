@@ -1,7 +1,9 @@
 //! Parses Rust code
 
-use asm;
-use options::*;
+use crate::asm;
+use crate::options::*;
+
+use log::{debug, info};
 
 #[derive(Debug, Clone)]
 pub struct File {
@@ -27,7 +29,9 @@ pub struct Files {
 
 impl Files {
     pub fn line_at(
-        &self, file_index: usize, line_idx: usize,
+        &self,
+        file_index: usize,
+        line_idx: usize,
     ) -> Option<String> {
         if let Some(file) = self.files.get(&file_index) {
             return file.line(line_idx);
@@ -38,7 +42,8 @@ impl Files {
         self.line_at(loc.file_index, loc.file_line)
     }
     pub fn file_path(
-        &self, loc: asm::ast::Loc,
+        &self,
+        loc: asm::ast::Loc,
     ) -> Option<::std::path::PathBuf> {
         if let Some(file) = self.files.get(&loc.file_index) {
             return Some(file.ast.path.clone());
@@ -53,8 +58,8 @@ pub fn parse(
     function: &asm::ast::Function,
     file_table: &::std::collections::HashMap<usize, asm::ast::File>,
 ) -> Files {
-    use asm::ast::Directive;
-    use asm::ast::Statement;
+    use crate::asm::ast::Directive;
+    use crate::asm::ast::Statement;
     let mut files = ::std::collections::HashMap::<usize, File>::new();
 
     // Go through all locations in the function and build a map of file indices
@@ -87,7 +92,7 @@ pub fn parse(
     // lines:
     let N = 5;
     for f in files.values_mut() {
-        let mut prev = 0;
+        let prev = 0;
         let mut to_add = Vec::new();
         for &k in f.lines.keys() {
             if k > prev + 1 && k < prev + N {
@@ -156,7 +161,7 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
     let mut sysroot = ::std::process::Command::new(&rust);
     sysroot.arg("--print").arg("sysroot");
 
-    let r = ::process::exec(
+    let r = crate::process::exec(
         &mut sysroot,
         "failed to call rustc --print sysroot",
         false,
@@ -169,23 +174,24 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
 
     debug!("sysroot: {}", sysroot.display());
     sysroot.parent();
-    let rust_src_path = ::target::rust_src_path_component();
+    let rust_src_path = crate::target::rust_src_path_component();
 
-    ::path::push(&mut sysroot, &rust_src_path);
+    crate::path::push(&mut sysroot, &rust_src_path);
     debug!(
         "merging {} with sysroot results in {}",
         rust_src_path.display(),
         sysroot.display()
     );
 
-    let rust_src_build_path = ::target::rust_src_build_path();
+    let rust_src_build_path = crate::target::rust_src_build_path();
 
     let mut missing_path_warning = false;
     for f in files.values_mut() {
         debug!("correcting path: {}", f.ast.path.display());
-        if ::path::contains(&f.ast.path, &rust_src_build_path) {
+        if crate::path::contains(&f.ast.path, &rust_src_build_path) {
             let path = {
-                let tail = ::path::after(&f.ast.path, &rust_src_build_path);
+                let tail =
+                    crate::path::after(&f.ast.path, &rust_src_build_path);
                 let mut path = sysroot.clone();
                 debug!("merging {} with {}", path.display(), tail.display());
                 path.push(&tail);

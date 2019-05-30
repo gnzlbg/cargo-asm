@@ -1,6 +1,8 @@
 use self::ast::*;
 use super::ast;
-use options::*;
+use crate::options::{opts, Ext};
+
+use log::{debug, error};
 
 /// Parses the body of a function `path` from the `function_line`
 fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
@@ -157,7 +159,7 @@ pub fn function(file: &::std::path::Path) -> Result {
 
     let mut function_table = Vec::<String>::new();
 
-    let target = ::target::target();
+    let target = crate::target::target();
 
     // This is the pattern at the beginning of an assembly label
     // that identifies the label as a function:
@@ -189,7 +191,7 @@ pub fn function(file: &::std::path::Path) -> Result {
             // and have mangled names.
             if let Some(label) = ast::Label::new(&line, None) {
                 let demangled_function_name =
-                    ::demangle::demangle(&label.id, &target);
+                    crate::demangle::demangle(&label.id, &target);
                 function_table.push(demangled_function_name.clone());
                 if demangled_function_name != path {
                     continue;
