@@ -157,11 +157,12 @@ pub fn function(file: &::std::path::Path) -> Result {
 
     let mut function_table = Vec::<String>::new();
 
+    let target = ::target::target();
+
     // This is the pattern at the beginning of an assembly label
     // that identifies the label as a function:
     let function_label_pattern = {
-        let t = ::target::target();
-        if t.contains("apple") {
+        if target.contains("apple") {
             "__"
         } else {
             "_"
@@ -171,8 +172,7 @@ pub fn function(file: &::std::path::Path) -> Result {
     // This is the pattern that we match to know that we have finished
     // searching the function
     let function_end_pattern = {
-        let t = ::target::target();
-        if t.contains("windows") {
+        if target.contains("windows") {
             ".seh_endproc" // TODO: does this work with panic=abort ?
         } else {
             ".cfi_endproc"
@@ -188,7 +188,8 @@ pub fn function(file: &::std::path::Path) -> Result {
             // Assembly functions are labels that start with `_` or `__`
             // and have mangled names.
             if let Some(label) = ast::Label::new(&line, None) {
-                let demangled_function_name = ::demangle::demangle(&label.id);
+                let demangled_function_name =
+                    ::demangle::demangle(&label.id, &target);
                 function_table.push(demangled_function_name.clone());
                 if demangled_function_name != path {
                     continue;
@@ -241,7 +242,7 @@ pub fn function(file: &::std::path::Path) -> Result {
 
         // If the line does not begin an assembly function try to parse the
         // line as a .file directive.
-        if let Some(file) = ast::File::new(&line) {
+        if let Some(file) = ast::File::new(&line, &target) {
             debug!("found file directive: {:?}", file);
             let idx = file.index;
 
