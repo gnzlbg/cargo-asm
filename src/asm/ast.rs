@@ -1,5 +1,8 @@
 //! Abstract Syntax Tree
 
+use log::debug;
+use serde_derive::Serialize;
+
 /// AST of an asm function
 #[derive(Debug, Clone)]
 pub struct Function {
@@ -124,7 +127,7 @@ pub struct Loc {
 impl Loc {
     pub fn new(s: &str) -> Option<Self> {
         fn contains_loc_label(s: &str) -> bool {
-            let t = ::target::target();
+            let t = crate::target::target();
             if t.contains("windows") {
                 s.contains(".cv_loc")
             } else {
@@ -136,7 +139,7 @@ impl Loc {
             return None;
         }
 
-        let file_index_index = if ::target::target().contains("windows") {
+        let file_index_index = if crate::target::target().contains("windows") {
             // on windows index 1 is the cv_func_id
             2
         } else {
@@ -144,14 +147,15 @@ impl Loc {
             1
         };
 
-        let file_line_index = if ::target::target().contains("windows") {
+        let file_line_index = if crate::target::target().contains("windows") {
             3
         } else {
             // linux and macosx
             2
         };
 
-        let file_column_index = if ::target::target().contains("windows") {
+        let file_column_index = if crate::target::target().contains("windows")
+        {
             4
         } else {
             // linux and macosx
@@ -210,7 +214,7 @@ impl GenericDirective {
 impl Directive {
     pub fn new(s: &str) -> Option<Self> {
         if is_directive(s) {
-            if let Some(file) = File::new(s, &::target::target()) {
+            if let Some(file) = File::new(s, &crate::target::target()) {
                 return Some(Directive::File(file));
             }
             if let Some(loc) = Loc::new(s) {
@@ -291,7 +295,7 @@ impl Instruction {
         Some(v)
     }
     pub fn is_jump(&self) -> bool {
-        let t = ::target::target();
+        let t = crate::target::target();
         if t.contains("x86")
             || t.contains("i386")
             || t.contains("i586")
@@ -314,7 +318,7 @@ impl Instruction {
         }
     }
     pub fn is_call(&self) -> bool {
-        let t = ::target::target();
+        let t = crate::target::target();
         if t.contains("x86")
             || t.contains("i386")
             || t.contains("i586")
@@ -334,7 +338,7 @@ impl Instruction {
     }
 
     fn demangle_args(&mut self) {
-        let t = ::target::target();
+        let t = crate::target::target();
         if t.contains("mips") {
             // On mips we need to inspect every argument of every instruction.
             for arg in &mut self.args {
@@ -348,9 +352,9 @@ impl Instruction {
                 }
                 let l = l.unwrap();
                 let name_to_demangle = &arg[f..l].to_string();
-                let demangled_name = ::demangle::demangle(
+                let demangled_name = crate::demangle::demangle(
                     &name_to_demangle,
-                    &::target::target(),
+                    &crate::target::target(),
                 );
                 let new_arg = arg.replace(name_to_demangle, &demangled_name);
                 *arg = new_arg;
@@ -358,8 +362,10 @@ impl Instruction {
         } else if self.is_call() {
             // Typically, we just check if the instruction is a call
             // instruction, and the mangle the first argument.
-            let demangled_function =
-                ::demangle::demangle(&self.args[0], &::target::target());
+            let demangled_function = crate::demangle::demangle(
+                &self.args[0],
+                &crate::target::target(),
+            );
             self.args[0] = demangled_function;
         }
     }

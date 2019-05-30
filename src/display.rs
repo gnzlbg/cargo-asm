@@ -1,5 +1,7 @@
 use super::*;
 
+use serde_derive::Serialize;
+
 /// Formatting of Rust source code:
 #[derive(Clone, Serialize)]
 struct Rust {
@@ -10,7 +12,9 @@ struct Rust {
 
 impl Rust {
     fn new(
-        line: String, path: ::std::path::PathBuf, loc: asm::ast::Loc,
+        line: String,
+        path: ::std::path::PathBuf,
+        loc: asm::ast::Loc,
     ) -> Self {
         Self { line, path, loc }
     }
@@ -29,7 +33,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
     // Filter out what to print:
     match kind {
         Kind::Asm(ref a) => {
-            use asm::ast::Statement::*;
+            use crate::asm::ast::Statement::*;
             match a {
                 Comment(_) if !opts.print_comments() => return,
                 Directive(_) if !opts.print_directives() => return,
@@ -59,7 +63,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
 
     let indent = match kind {
         Kind::Asm(ref a) => {
-            use asm::ast::Statement::*;
+            use crate::asm::ast::Statement::*;
             match *a {
                 Comment(_) | Directive(_) | Instruction(_) => {
                     if !opts.rust() || part_of_main_function {
@@ -127,7 +131,7 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
 
     match kind {
         Kind::Asm(ref a) => {
-            use asm::ast::Statement::*;
+            use crate::asm::ast::Statement::*;
             match a {
                 Label(ref l) => {
                     buffer.set_color(&label_color).unwrap();
@@ -237,7 +241,8 @@ fn format_function_name(function: &asm::ast::Function) -> String {
 /// Returns true if the statement is in the function. It returns true if the
 /// question cannot be answered.
 fn is_stmt_in_function(
-    f: &asm::ast::Function, stmt: &asm::ast::Statement,
+    f: &asm::ast::Function,
+    stmt: &asm::ast::Statement,
 ) -> bool {
     let function_file_index = if let Some(loc) = f.loc {
         Some(loc.file_index)
@@ -276,19 +281,19 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
     }
 
     // Trim std lib paths:
-    let rust_src_path = ::target::rust_src_path_component();
+    let rust_src_path = crate::target::rust_src_path_component();
     let current_dir_path =
         ::std::env::current_dir().expect("cannot read the current dir");
     debug!("making paths relative: {}", path.display());
     debug!(" * std lib paths contain: {}", rust_src_path.display());
     debug!(" * local paths contain: {}", current_dir_path.display());
 
-    if ::path::contains(&path, &rust_src_path) {
-        let new_path = ::path::after(&path, &rust_src_path);
+    if crate::path::contains(&path, &rust_src_path) {
+        let new_path = crate::path::after(&path, &rust_src_path);
         debug!("  * rel path std: {}", new_path.display());
         *path = new_path;
-    } else if ::path::contains(&path, &current_dir_path) {
-        let new_path = ::path::after(&path, &current_dir_path);
+    } else if crate::path::contains(&path, &current_dir_path) {
+        let new_path = crate::path::after(&path, &current_dir_path);
         debug!("  * rel path loc: {}", new_path.display());
         *path = new_path;
         return;
@@ -305,7 +310,8 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
 ///
 /// The path of the current crate are also displayed as relative paths.
 fn make_paths_relative(
-    function: &mut asm::ast::Function, rust: &mut rust::Files,
+    function: &mut asm::ast::Function,
+    rust: &mut rust::Files,
 ) {
     if let Some(ref mut file) = &mut function.file {
         make_path_relative(&mut file.path)
@@ -352,7 +358,8 @@ pub fn print(function: &mut asm::ast::Function, mut rust: rust::Files) {
 }
 
 fn merge_rust_and_asm(
-    function: &asm::ast::Function, rust_files: &rust::Files,
+    function: &asm::ast::Function,
+    rust_files: &rust::Files,
 ) -> Vec<Kind> {
     let mut output = Vec::<Kind>::new();
     for stmt in &function.statements {
@@ -421,7 +428,8 @@ pub fn write_error(msg: &str) {
 }
 
 pub fn to_json(
-    function: &asm::ast::Function, rust_files: &rust::Files,
+    function: &asm::ast::Function,
+    rust_files: &rust::Files,
 ) -> Option<String> {
     let r = merge_rust_and_asm(&function, rust_files);
     match ::serde_json::to_string_pretty(&r) {

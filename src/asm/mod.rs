@@ -1,6 +1,7 @@
 pub mod ast;
 pub mod parse;
-use options::*;
+use crate::options::*;
+use log::{debug, error};
 
 #[derive(Copy, Clone, Debug)]
 pub enum Style {
@@ -57,10 +58,10 @@ pub fn run(files: &[::std::path::PathBuf]) {
     match parse_files(&files) {
         self::parse::Result::Found(mut function, file_table) => {
             // If we found the assembly for the path, we parse the assembly:
-            let rust = ::rust::parse(&function, &file_table);
+            let rust = crate::rust::parse(&function, &file_table);
 
             if opts.json() || opts.debug_mode() {
-                if let Some(s) = ::display::to_json(&function, &rust) {
+                if let Some(s) = crate::display::to_json(&function, &rust) {
                     println!("{}", s);
                 } else {
                     error!("failed to emit json output");
@@ -68,7 +69,7 @@ pub fn run(files: &[::std::path::PathBuf]) {
             }
 
             if !opts.json() {
-                ::display::print(&mut function, rust.clone());
+                crate::display::print(&mut function, rust.clone());
             }
         }
         self::parse::Result::NotFound(mut table) => match opts.path() {
@@ -116,7 +117,7 @@ Tips:
 "#
                     );
 
-                ::display::write_error(&msg);
+                crate::display::write_error(&msg);
                 ::std::process::exit(1);
             }
         },

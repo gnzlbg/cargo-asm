@@ -1,4 +1,6 @@
-use options::*;
+use crate::options::*;
+
+use log::debug;
 
 pub fn run(files: &[::std::path::PathBuf]) {
     let mut function_table: Option<Vec<String>> = None;
@@ -74,7 +76,7 @@ Tips:
 "#
                     );
 
-            ::display::write_error(&msg);
+            crate::display::write_error(&msg);
             ::std::process::exit(1);
         }
     }
@@ -122,8 +124,10 @@ fn print_function(
                 line
             );
             let mangled_name = &line[first + 1..last];
-            let demangled_name =
-                ::demangle::demangle(&mangled_name, &::target::target());
+            let demangled_name = crate::demangle::demangle(
+                &mangled_name,
+                &crate::target::target(),
+            );
             if demangled_name != path {
                 function_names.push(demangled_name);
                 continue;
@@ -152,14 +156,17 @@ fn print_function(
                 let l = line[f..].find('"').unwrap() + f;
                 let mangled_name = &line[f..l];
                 let demangled_name = if mangled_name.ends_with(".exit") {
-                    let mut v = ::demangle::demangle(
+                    let mut v = crate::demangle::demangle(
                         &mangled_name[0..mangled_name.len() - 5],
-                        &::target::target(),
+                        &crate::target::target(),
                     );
                     v += ".exit";
                     v
                 } else {
-                    ::demangle::demangle(&mangled_name, &::target::target())
+                    crate::demangle::demangle(
+                        &mangled_name,
+                        &crate::target::target(),
+                    )
                 };
                 debug!(
                     "  f: {}, l: {}, mn: {}, dm: {}",

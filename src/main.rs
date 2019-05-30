@@ -9,22 +9,6 @@
     )
 )]
 
-extern crate edit_distance;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate log;
-extern crate rustc_demangle;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
-#[macro_use]
-extern crate structopt;
-extern crate parking_lot;
-extern crate termcolor;
-extern crate walkdir;
-
 mod asm;
 mod build;
 mod demangle;
@@ -37,7 +21,8 @@ mod process;
 mod rust;
 mod target;
 
-use options::*;
+use crate::options::*;
+use log::{debug, error};
 
 #[cfg_attr(feature = "cargo-clippy", allow(print_stdout, use_debug))]
 fn main() {
@@ -108,7 +93,7 @@ fn main() {
     }
     let o = { (*opts.read()).clone() };
     match o {
-        ::options::Options::Asm(_) => asm::run(&files),
-        ::options::Options::LlvmIr(_) => llvmir::run(&files),
+        Options::Asm(_) => asm::run(&files),
+        Options::LlvmIr(_) => llvmir::run(&files),
     }
 }

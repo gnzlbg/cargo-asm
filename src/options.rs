@@ -2,8 +2,9 @@
 
 #![cfg_attr(feature = "cargo-clippy", allow(missing_docs_in_private_items))]
 
-use asm::Style;
-use build::Type;
+use crate::asm::Style;
+use crate::build::Type;
+use lazy_static::lazy_static;
 use structopt::StructOpt;
 
 lazy_static! {

@@ -76,9 +76,9 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     let t = target::target();
 
     match *opts.read() {
-        ::options::Options::Asm(ref o) => {
+        crate::options::Options::Asm(ref o) => {
             let asm_syntax = match o.asm_style {
-                ::asm::Style::Intel if t.contains("86") => {
+                crate::asm::Style::Intel if t.contains("86") => {
                     "-C llvm-args=-x86-asm-syntax=intel"
                 }
                 _ => "",
@@ -98,7 +98,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
                 ),
             );
         }
-        ::options::Options::LlvmIr(ref _o) => {
+        crate::options::Options::LlvmIr(ref _o) => {
             // TODO: the debug info really clutters the llvm-ir (-g)
             cargo_build.env(
                 "RUSTFLAGS",
@@ -114,11 +114,11 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     debug!("cargo build finished...");
 
     let ext = match *opts.read() {
-        ::options::Options::Asm(_) => "s",
-        ::options::Options::LlvmIr(_) => "ll",
+        crate::options::Options::Asm(_) => "s",
+        crate::options::Options::LlvmIr(_) => "ll",
     };
 
-    let deps_directory = ::target::directory("deps");
+    let deps_directory = crate::target::directory("deps");
 
     let mut output_files = vec![];
 
@@ -129,7 +129,7 @@ pub fn project() -> Vec<::std::path::PathBuf> {
     ));
 
     if let Some(example) = opts.example() {
-        let example_directory = ::target::directory("examples");
+        let example_directory = crate::target::directory("examples");
         let prefix = format!("{}-", example);
 
         // Scan files in "examples" target dir, while making sure
@@ -163,7 +163,8 @@ pub fn project() -> Vec<::std::path::PathBuf> {
 
 /// Scan a given output directory for files matching the predicate:
 fn scan_directory<P>(
-    target_directory: &::std::path::Path, predicate: P,
+    target_directory: &::std::path::Path,
+    predicate: P,
 ) -> Vec<::std::path::PathBuf>
 where
     P: Fn(Option<&str>, Option<&str>) -> bool,
