@@ -1,12 +1,9 @@
 //! cargo-asm driver
 #![allow(non_snake_case, non_upper_case_globals)]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(
-        missing_docs_in_private_items,
-        option_unwrap_used,
-        result_unwrap_used
-    )
+#![allow(
+    clippy::missing_docs_in_private_items,
+    clippy::option_unwrap_used,
+    clippy::result_unwrap_used
 )]
 
 mod asm;
@@ -24,7 +21,7 @@ mod target;
 use crate::options::*;
 use log::{debug, error};
 
-#[cfg_attr(feature = "cargo-clippy", allow(print_stdout, use_debug))]
+#[allow(clippy::print_stdout, clippy::use_debug)]
 fn main() {
     #[cfg(feature = "deadlock_detection")]
     {

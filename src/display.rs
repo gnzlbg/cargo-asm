@@ -28,7 +28,7 @@ enum Kind {
 }
 
 /// Prints `kind` using `opts`.
-#[cfg_attr(feature = "cargo-clippy", allow(items_after_statements))]
+#[allow(clippy::items_after_statements)]
 fn write_output(kind: &Kind, function: &asm::ast::Function) {
     // Filter out what to print:
     match kind {
