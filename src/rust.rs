@@ -53,7 +53,7 @@ impl Files {
 }
 
 /// Returns the files used by the function.
-#[cfg_attr(feature = "cargo-clippy", allow(use_debug))]
+#[allow(clippy::use_debug)]
 pub fn parse(
     function: &asm::ast::Function,
     file_table: &::std::collections::HashMap<usize, asm::ast::File>,

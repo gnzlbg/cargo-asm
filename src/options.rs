@@ -1,6 +1,6 @@
 //! Argument parsing utilities.
 
-#![cfg_attr(feature = "cargo-clippy", allow(missing_docs_in_private_items))]
+#![allow(clippy::missing_docs_in_private_items)]
 
 use crate::asm::Style;
 use crate::build::Type;
@@ -15,7 +15,7 @@ lazy_static! {
 /// CLI options of cargo asm.
 #[derive(StructOpt, Debug, Clone)]
 // FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2651
-#[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
+#[allow(clippy::similar_names)]
 pub struct Asm {
     #[structopt(
         help = "Path of the function to disassembly, e.g., foo::bar::baz(). If missing then all function names will be printed."
@@ -80,7 +80,7 @@ pub struct Asm {
 /// CLI options of cargo llvm-ir.
 #[derive(StructOpt, Debug, Clone)]
 // FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2651
-#[cfg_attr(feature = "cargo-clippy", allow(similar_names))]
+#[allow(clippy::similar_names)]
 pub struct LlvmIr {
     #[structopt(
         help = "Path of the function to disassembly, e.g., foo::bar::baz(). If missing then all function names will be printed."
