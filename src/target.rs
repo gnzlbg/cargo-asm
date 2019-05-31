@@ -23,26 +23,6 @@ pub fn target() -> String {
     }
 }
 
-/// Returns the base path in which the rust std library was built in the build
-/// bots. This path needs to be replaced by the path of the rust-src component
-/// in the user's computer.
-pub fn rust_src_build_path() -> ::std::path::PathBuf {
-    let t = target();
-    let p = if t.contains("apple") {
-        "travis/build/rust-lang/rust/src"
-    } else if t.contains("linux") {
-        "checkout/src/"
-    } else if t.contains("windows") {
-        r#"projects\rust\src\"#
-    } else if t.contains("none") {
-        ""
-    } else {
-        error!("unknown target");
-        ::std::process::exit(1);
-    };
-    ::std::path::PathBuf::from(p)
-}
-
 /// Returns a path component of the rust-src path (like rust std) that can be
 /// used to identify whether a path points to a file within the
 /// rust-src component.

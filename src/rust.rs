@@ -183,22 +183,31 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
         sysroot.display()
     );
 
-    let rust_src_build_path = crate::target::rust_src_build_path();
+    // Identify core source components by their name in the referenced path
+    let is_core_src_component = |path: std::path::Component| {
+        path.as_os_str() == "libstd"
+            || path.as_os_str() == "libcore"
+            || path.as_os_str() == "liballoc"
+    };
 
     let mut missing_path_warning = false;
     for f in files.values_mut() {
         debug!("correcting path: {}", f.ast.path.display());
-        if crate::path::contains(&f.ast.path, &rust_src_build_path) {
-            let path = {
-                let tail =
-                    crate::path::after(&f.ast.path, &rust_src_build_path);
-                let mut path = sysroot.clone();
-                debug!("merging {} with {}", path.display(), tail.display());
-                path.push(&tail);
-                debug!("  merge result: {}", path.display());
+        // Strip the build specific prefix and replace by the determined sysroot
+        if f.ast.path.components().any(is_core_src_component) {
+            debug!("prepending {}", sysroot.display());
+            let mut path = sysroot.clone();
+            path.push(
+                f.ast
+                    .path
+                    .components()
+                    .skip_while(|p| !is_core_src_component(*p))
+                    .collect::<std::path::PathBuf>()
+                    .as_path(),
+            );
 
-                path
-            };
+            debug!("  merge result: {}", path.display());
+
             f.ast.path = path;
             if !f.ast.path.exists() {
                 if !missing_path_warning {
@@ -208,11 +217,7 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
                 opts.set_rust(false);
             }
         } else {
-            debug!(
-                "path {} does not contain {}",
-                &f.ast.path.display(),
-                &rust_src_build_path.display()
-            );
+            debug!("couldn't correct {}", &f.ast.path.display());
         }
     }
     files.retain(|_k: &usize, f: &mut File| {
