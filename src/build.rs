@@ -170,7 +170,7 @@ where
     P: Fn(Option<&str>, Option<&str>) -> bool,
 {
     let mut output_files = Vec::new();
-    for entry in ::walkdir::WalkDir::new(target_directory.clone()) {
+    for entry in ::walkdir::WalkDir::new(&(*target_directory)) {
         let e = entry.unwrap_or_else(|_| {
             panic!(
                 "failed to iterate over the directory: {}",
