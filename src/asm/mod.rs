@@ -1,6 +1,7 @@
 pub mod ast;
 pub mod parse;
 use crate::options::*;
+use crate::target::TargetInfo;
 use log::{debug, error};
 
 #[derive(Copy, Clone, Debug)]
@@ -20,7 +21,10 @@ impl ::std::str::FromStr for Style {
     }
 }
 
-fn parse_files(files: &[::std::path::PathBuf]) -> parse::Result {
+fn parse_files(
+    files: &[::std::path::PathBuf],
+    target: &TargetInfo,
+) -> parse::Result {
     use self::parse::Result;
     use std::io::BufRead;
     if opts.debug_mode() {
@@ -37,7 +41,7 @@ fn parse_files(files: &[::std::path::PathBuf]) -> parse::Result {
     let mut function_table = Vec::<String>::new();
     for f in files {
         assert!(f.exists(), "path does not exist: {}", f.display());
-        match self::parse::function(f.as_path()) {
+        match self::parse::function(f.as_path(), &target) {
             Result::Found(function, files) => {
                 return Result::Found(function, files)
             }
@@ -53,9 +57,9 @@ fn parse_files(files: &[::std::path::PathBuf]) -> parse::Result {
     Result::NotFound(function_table)
 }
 
-pub fn run(files: &[::std::path::PathBuf]) {
+pub fn run(files: &[::std::path::PathBuf], target: &TargetInfo) {
     // Parse the files
-    match parse_files(&files) {
+    match parse_files(&files, &target) {
         self::parse::Result::Found(mut function, file_table) => {
             // If we found the assembly for the path, we parse the assembly:
             let rust = crate::rust::parse(&function, &file_table);
@@ -69,7 +73,7 @@ pub fn run(files: &[::std::path::PathBuf]) {
             }
 
             if !opts.json() {
-                crate::display::print(&mut function, rust.clone());
+                crate::display::print(&mut function, rust.clone(), &target);
             }
         }
         self::parse::Result::NotFound(mut table) => match opts.path() {

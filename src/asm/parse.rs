@@ -1,11 +1,16 @@
 use self::ast::*;
 use super::ast;
 use crate::options::{opts, Ext};
+use crate::target::TargetInfo;
 
 use log::{debug, error};
 
 /// Parses the body of a function `path` from the `function_line`
-fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
+fn function_body(
+    function_lines: Vec<String>,
+    path: &str,
+    target: &TargetInfo,
+) -> ast::Function {
     let mut function = Function {
         id: path.to_string(),
         file: None,
@@ -46,7 +51,7 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
 
         // Then we parse the AST statements.
 
-        if let Some(directive) = Directive::new(node_str) {
+        if let Some(directive) = Directive::new(node_str, target) {
             debug!(" * parsed directive: {:?}", directive);
 
             // We set the first .file directive we parse as the functions file
@@ -107,7 +112,9 @@ fn function_body(function_lines: Vec<String>, path: &str) -> ast::Function {
             continue;
         }
 
-        if let Some(instruction) = Instruction::new(node_str, current_loc) {
+        if let Some(instruction) =
+            Instruction::new(node_str, current_loc, &target)
+        {
             debug!(" * parsed instruction: {:?}", instruction);
 
             function
@@ -133,7 +140,7 @@ pub enum Result {
 
 /// Parses the assembly function at `path` from the file `file`.
 #[allow(clippy::use_debug, clippy::cognitive_complexity)]
-pub fn function(file: &::std::path::Path) -> Result {
+pub fn function(file: &::std::path::Path, target: &TargetInfo) -> Result {
     use std::{
         collections::HashMap,
         fs::File,
@@ -159,12 +166,10 @@ pub fn function(file: &::std::path::Path) -> Result {
 
     let mut function_table = Vec::<String>::new();
 
-    let target = crate::target::target();
-
     // This is the pattern at the beginning of an assembly label
     // that identifies the label as a function:
     let function_label_pattern = {
-        if target.contains("apple") {
+        if target.is_apple() {
             "__"
         } else {
             "_"
@@ -174,7 +179,7 @@ pub fn function(file: &::std::path::Path) -> Result {
     // This is the pattern that we match to know that we have finished
     // searching the function
     let function_end_pattern = {
-        if target.contains("windows") {
+        if target.is_windows() {
             ".seh_endproc" // TODO: does this work with panic=abort ?
         } else {
             ".cfi_endproc"
@@ -213,7 +218,7 @@ pub fn function(file: &::std::path::Path) -> Result {
                     }
                 }
 
-                function = Some(function_body(lines, &path));
+                function = Some(function_body(lines, &path, &target));
                 // If the function contained a .file directive, we are
                 // done:
                 if let Some(ref function) = &function {

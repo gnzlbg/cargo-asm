@@ -73,12 +73,12 @@ pub fn project() -> Vec<::std::path::PathBuf> {
         cargo_build.arg(&format!("--target={}", triple));
     }
 
-    let t = target::target();
+    let ti = crate::target::TargetInfo::new_from_target();
 
     match *opts.read() {
         crate::options::Options::Asm(ref o) => {
             let asm_syntax = match o.asm_style {
-                crate::asm::Style::Intel if t.contains("86") => {
+                crate::asm::Style::Intel if ti.is_intel() => {
                     "-C llvm-args=-x86-asm-syntax=intel"
                 }
                 _ => "",

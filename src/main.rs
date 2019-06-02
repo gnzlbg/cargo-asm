@@ -89,8 +89,11 @@ fn main() {
         debug!("  {}", f.display());
     }
     let o = { (*opts.read()).clone() };
+
+    let target = crate::target::TargetInfo::new_from_target();
+
     match o {
-        Options::Asm(_) => asm::run(&files),
-        Options::LlvmIr(_) => llvmir::run(&files),
+        Options::Asm(_) => asm::run(&files, &target),
+        Options::LlvmIr(_) => llvmir::run(&files, &target),
     }
 }

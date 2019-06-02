@@ -4,8 +4,84 @@ use log::{debug, error};
 use serde_derive::Deserialize;
 use std::io::prelude::*;
 
+pub struct TargetInfo {
+    triple: String,
+}
+
+impl Default for TargetInfo {
+    fn default() -> Self {
+        TargetInfo {
+            triple: "none-none-none".to_owned(),
+        }
+    }
+}
+
+impl TargetInfo {
+    pub fn new_from_target() -> Self {
+        TargetInfo::new_from_triple(target())
+    }
+
+    pub fn new_from_triple(triple: String) -> Self {
+        let mut ti = TargetInfo::default();
+        ti.triple = triple.clone();
+        ti
+    }
+
+    pub fn is_intel(&self) -> bool {
+        self.triple.contains("86")
+    }
+
+    pub fn is_linux(&self) -> bool {
+        self.triple.contains("linux")
+    }
+
+    pub fn is_windows(&self) -> bool {
+        self.triple.contains("windows")
+    }
+
+    pub fn is_apple(&self) -> bool {
+        self.triple.contains("apple")
+    }
+
+    pub fn is_x86(&self) -> bool {
+        self.triple.contains("x86")
+    }
+
+    pub fn is_i386(&self) -> bool {
+        self.triple.contains("i386")
+    }
+
+    pub fn is_i586(&self) -> bool {
+        self.triple.contains("i586")
+    }
+
+    pub fn is_i686(&self) -> bool {
+        self.triple.contains("i686")
+    }
+
+    pub fn is_aarch64(&self) -> bool {
+        self.triple.contains("aarch64")
+    }
+
+    pub fn is_arm(&self) -> bool {
+        self.triple.contains("arm")
+    }
+
+    pub fn is_sparc(&self) -> bool {
+        self.triple.contains("sparc")
+    }
+
+    pub fn is_power(&self) -> bool {
+        self.triple.contains("power")
+    }
+
+    pub fn is_mips(&self) -> bool {
+        self.triple.contains("mips")
+    }
+}
+
 /// Returns the target that is being compiled.
-pub fn target() -> String {
+fn target() -> String {
     if let Some(triple) = opts.TRIPLE() {
         // If the user specified it, we know it:
         triple
