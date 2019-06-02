@@ -1,4 +1,5 @@
 use super::*;
+use crate::target::TargetInfo;
 
 use serde_derive::Serialize;
 
@@ -29,7 +30,11 @@ enum Kind {
 
 /// Prints `kind` using `opts`.
 #[allow(clippy::items_after_statements)]
-fn write_output(kind: &Kind, function: &asm::ast::Function) {
+fn write_output(
+    kind: &Kind,
+    function: &asm::ast::Function,
+    target: &TargetInfo,
+) {
     // Filter out what to print:
     match kind {
         Kind::Asm(ref a) => {
@@ -177,10 +182,10 @@ fn write_output(kind: &Kind, function: &asm::ast::Function) {
                     } else {
                         write!(&mut buffer, "{: <7}", i.instr).unwrap();
                     }
-                    if i.is_jump() {
+                    if i.is_jump(&target) {
                         // jump instructions
                         buffer.set_color(&label_color).unwrap();
-                    } else if i.is_call() {
+                    } else if i.is_call(&target) {
                         buffer.set_color(&instr_call_arg_color).unwrap();
                     } else {
                         buffer.set_color(&instr_arg_color).unwrap();
@@ -321,7 +326,11 @@ fn make_paths_relative(
     }
 }
 
-pub fn print(function: &mut asm::ast::Function, mut rust: rust::Files) {
+pub fn print(
+    function: &mut asm::ast::Function,
+    mut rust: rust::Files,
+    target: &TargetInfo,
+) {
     make_paths_relative(function, &mut rust);
 
     if !opts.rust() {
@@ -352,7 +361,7 @@ pub fn print(function: &mut asm::ast::Function, mut rust: rust::Files) {
     let output = merge_rust_and_asm(function, &rust);
 
     for o in &output {
-        write_output(o, function);
+        write_output(o, function, &target);
     }
     return;
 }

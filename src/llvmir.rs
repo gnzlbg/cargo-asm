@@ -1,14 +1,15 @@
 use crate::options::*;
+use crate::target::TargetInfo;
 
 use log::debug;
 
-pub fn run(files: &[::std::path::PathBuf]) {
+pub fn run(files: &[::std::path::PathBuf], target: &TargetInfo) {
     let mut function_table: Option<Vec<String>> = None;
 
     for f in files {
         debug!("Scanning file: {:?}", f);;
         assert!(f.exists(), "path does not exist: {}", f.display());
-        let r = print_function(f);
+        let r = print_function(f, &target);
 
         if r.is_ok() {
             debug!("Function found, we are done!");
@@ -84,6 +85,7 @@ Tips:
 
 fn print_function(
     file_name: &::std::path::PathBuf,
+    target: &TargetInfo,
 ) -> Result<(), Vec<String>> {
     use std::io::BufRead;
 
@@ -124,10 +126,8 @@ fn print_function(
                 line
             );
             let mangled_name = &line[first + 1..last];
-            let demangled_name = crate::demangle::demangle(
-                &mangled_name,
-                &crate::target::target(),
-            );
+            let demangled_name =
+                crate::demangle::demangle(&mangled_name, &target);
             if demangled_name != path {
                 function_names.push(demangled_name);
                 continue;
@@ -158,15 +158,12 @@ fn print_function(
                 let demangled_name = if mangled_name.ends_with(".exit") {
                     let mut v = crate::demangle::demangle(
                         &mangled_name[0..mangled_name.len() - 5],
-                        &crate::target::target(),
+                        &target,
                     );
                     v += ".exit";
                     v
                 } else {
-                    crate::demangle::demangle(
-                        &mangled_name,
-                        &crate::target::target(),
-                    )
+                    crate::demangle::demangle(&mangled_name, &target)
                 };
                 debug!(
                     "  f: {}, l: {}, mn: {}, dm: {}",
