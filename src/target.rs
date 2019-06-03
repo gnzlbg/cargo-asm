@@ -1,25 +1,55 @@
 use crate::options::*;
 use log::{debug, error};
 
+use serde_derive::Deserialize;
+use std::io::prelude::*;
+
 /// Returns the target that is being compiled.
 pub fn target() -> String {
     if let Some(triple) = opts.TRIPLE() {
         // If the user specified it, we know it:
         triple
     } else {
-        // The user did not specify it, so the default target is chosen.
-        // This is very brittle, and is just a best effort:
-        let r = if cfg!(target_os = "macos") {
-            "x86_64-apple-darwin"
-        } else if cfg!(target_os = "linux") {
-            "x86_64-unknown-linux-gnu"
-        } else if cfg!(target_os = "windows") {
-            "x86_64-pc-windows-msvc"
-        } else {
-            error!("unknown target");
-            ::std::process::exit(1);
-        };
-        r.to_string()
+        // The user did not specify explicitly specify it, so the let's see whether we can find a
+        // TARGET variable in the environment
+        if let Ok(target) = ::std::env::var("TARGET") {
+            return target;
+        }
+
+        // Try reading the build target from the cargo config file
+        if let Ok(mut file) =
+            std::fs::File::open(std::path::Path::new("./.cargo/config"))
+        {
+            #[derive(Deserialize, Debug)]
+            struct Config {
+                build: Option<Build>,
+            }
+
+            #[derive(Deserialize, Debug)]
+            struct Build {
+                target: Option<String>,
+            }
+
+            let mut contents = String::new();
+            if file.read_to_string(&mut contents).is_ok() {
+                if let Ok(config) = toml::from_str::<Config>(&contents) {
+                    if let Some(build) = config.build {
+                        if let Some(target) = build.target {
+                            return target.to_owned();
+                        }
+                    }
+                }
+            }
+        }
+
+        // If everything else fails use a best effort guesstimate for the current platform
+        if let Some(target) = platforms::guess_current() {
+            return target.target_triple.to_owned();
+        }
+
+        // Let's give up
+        error!("unknown target");
+        ::std::process::exit(1);
     }
 }
 
