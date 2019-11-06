@@ -189,18 +189,25 @@ pub fn function(file: &::std::path::Path, target: &TargetInfo) -> Result {
     while let Some(line) = line_iter.next() {
         let line = line.unwrap().trim().to_string();
 
-        if function.is_none() && line.starts_with(function_label_pattern) {
+        if (function.is_none() && line.starts_with(function_label_pattern))
+            || line.starts_with(&path)
+        {
             // We haven't found the function yet:
             //
             // Assembly functions are labels that start with `_` or `__`
             // and have mangled names.
             if let Some(label) = ast::Label::new(&line, None) {
-                let demangled_function_name =
-                    crate::demangle::demangle(&label.id, &target);
-                function_table.push(demangled_function_name.clone());
-                if demangled_function_name != path {
-                    continue;
+                if &label.id != &path {
+                    let demangled_function_name =
+                        crate::demangle::demangle(&label.id, &target);
+                    function_table.push(demangled_function_name.clone());
+                    if demangled_function_name != path {
+                        continue;
+                    }
+                } else {
+                    function_table.push(label.id.clone());
                 }
+
                 // We have found the function, collect its lines and build
                 // an AST:
                 let mut lines = Vec::<String>::new();
