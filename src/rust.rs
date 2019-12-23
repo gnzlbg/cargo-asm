@@ -82,11 +82,11 @@ pub fn parse(
                 .unwrap()
                 .lines
                 .insert(l.file_line, None);
-            debug!("files: {:?}", files);;
+            debug!("files: {:?}", files);
         }
     }
 
-    debug!("Done inserting files: {:?}", files);;
+    debug!("Done inserting files: {:?}", files);
 
     // Go through the line map of each file and fill in holes smaller than N
     // lines:
@@ -106,12 +106,12 @@ pub fn parse(
         }
     }
 
-    debug!("Done filing holes in files: {:?}", files);;
+    debug!("Done filing holes in files: {:?}", files);
 
     // Corrects paths to Rust std library components:
     correct_rust_paths(&mut files);
 
-    debug!("Done correcting paths in files: {:?}", files);;
+    debug!("Done correcting paths in files: {:?}", files);
 
     // Read the required lines from each Rust file:
     for f in files.values_mut() {
@@ -137,7 +137,7 @@ pub fn parse(
         }
     }
 
-    debug!("Done reading lines in files: {:?}", files);;
+    debug!("Done reading lines in files: {:?}", files);
 
     for f in files.values_mut() {
         for (l_idx, line) in &f.lines {
@@ -193,7 +193,8 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
     let mut missing_path_warning = false;
     for f in files.values_mut() {
         debug!("correcting path: {}", f.ast.path.display());
-        // Strip the build specific prefix and replace by the determined sysroot
+        // Strip the build specific prefix and replace by the determined
+        // sysroot
         if f.ast.path.components().any(is_core_src_component) {
             debug!("prepending {}", sysroot.display());
             let mut path = sysroot.clone();

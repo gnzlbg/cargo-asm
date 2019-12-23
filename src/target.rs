@@ -86,8 +86,8 @@ fn target() -> String {
         // If the user specified it, we know it:
         triple
     } else {
-        // The user did not specify explicitly specify it, so the let's see whether we can find a
-        // TARGET variable in the environment
+        // The user did not specify explicitly specify it, so the let's see
+        // whether we can find a TARGET variable in the environment
         if let Ok(target) = ::std::env::var("TARGET") {
             return target;
         }
@@ -118,7 +118,8 @@ fn target() -> String {
             }
         }
 
-        // If everything else fails use a best effort guesstimate for the current platform
+        // If everything else fails use a best effort guesstimate for the
+        // current platform
         if let Some(target) = platforms::guess_current() {
             return target.target_triple.to_owned();
         }

@@ -7,7 +7,7 @@ pub fn run(files: &[::std::path::PathBuf], target: &TargetInfo) {
     let mut function_table: Option<Vec<String>> = None;
 
     for f in files {
-        debug!("Scanning file: {:?}", f);;
+        debug!("Scanning file: {:?}", f);
         assert!(f.exists(), "path does not exist: {}", f.display());
         let r = print_function(f, &target);
 
