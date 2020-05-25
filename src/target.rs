@@ -186,6 +186,20 @@ pub fn directory<P: AsRef<::std::path::Path>>(
     };
 
     if !is_native {
+        let target_path = ::std::path::Path::new(&t);
+
+        let t = if target_path.is_file() {
+            let file_stem = target_path
+                .file_stem()
+                .expect("expected target path to have a file name");
+            file_stem
+                .to_os_string()
+                .into_string()
+                .expect("expected file name to be valid UTF-8")
+        } else {
+            t
+        };
+
         target_directory.push(t);
     }
     target_directory.push(build_type);
