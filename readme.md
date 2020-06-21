@@ -11,11 +11,11 @@
 cargo install cargo-asm
 ```
 
-# Example 
+# Example
 
 To view the assembly of the function `double_n` in the module `bar` of the crate
 [`lib_crate`] annotated with its corresponding Rust code, go to the crate's root
-directory 
+directory
 
 ```
 git clone git@github.com:gnzlbg/cargo-asm.git
@@ -47,7 +47,7 @@ cargo llvm-ir lib_crate::bar::double_n
 
 * Platform support:
 
-  * OS: Linux, Windows, and MacOSX. 
+  * OS: Linux, Windows, and MacOSX.
   * Rust: nightly and stable.
   * Architectures: x86, x86_64, arm, aarch64, powerpc, mips, sparc.
 
@@ -59,27 +59,27 @@ cargo llvm-ir lib_crate::bar::double_n
   * LLVM-IR.
 
 * Querying:
+  * list all the symbols that you can inspect
+
+    ```
+    cargo asm
+    ```
 
   * functions, for example: `foo`:
-  
-  ```
-  cargo asm crate::path::to::foo
-  ```
-  
+    ```
+    cargo asm crate::path::to::foo
+    ```
   * inherent method, for example: `foo` of a type `Foo` (that is, `Foo::foo`):
-  
-  ```
-  cargo asm crate::path::to::Foo::foo
-  ```
-  
+    ```
+    cargo asm crate::path::to::Foo::foo
+    ```
   * trait method implementations, for example: `bar` of the trait `Bar` for the type `Foo`:
-  
-  ```
-  cargo asm "<crate::path::to::Foo as crate::path::to::Bar>::bar"
-  ```
+    ```
+    cargo asm "<crate::path::to::Foo as crate::path::to::Bar>::bar"
+    ```
 
   * generic functions, methods, ...
-  
+
 To search for a function named `foo` in some path, one can just type `cargo asm
 foo`. The command will return a list of all similarly named functions
 independently of the path.
