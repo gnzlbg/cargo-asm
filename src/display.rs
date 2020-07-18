@@ -423,16 +423,18 @@ pub fn write_error(msg: &str) {
         .set_fg(Some(Color::Red))
         .set_bold(true);
 
-    let bufwtr = if opts.use_colors() {
-        BufferWriter::stderr(ColorChoice::Auto)
-    } else {
-        BufferWriter::stderr(ColorChoice::Never)
-    };
+    let bufwtr = BufferWriter::stderr(
+        if opts.use_colors() {
+            ColorChoice::Auto
+        } else {
+            ColorChoice::Never
+        }
+    );
     let mut buffer = bufwtr.buffer();
     buffer.set_color(&error_color).unwrap();
     write!(&mut buffer, "[ERROR]: ").unwrap();
     buffer.set_color(&ColorSpec::new()).unwrap();
-    write!(&mut buffer, "{}", msg).unwrap();
+    writeln!(&mut buffer, "{}", msg).unwrap();
     bufwtr.print(&buffer).unwrap();
 }
 
