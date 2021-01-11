@@ -17,7 +17,7 @@ impl ::std::str::FromStr for Type {
         match s {
             "debug" => Ok(Type::Debug),
             "release" => Ok(Type::Release),
-            v => Err(format!("\"{}\" is not a valid build type. Try \"debug\" or \"releaes\"", v))
+            v => Err(format!("\"{}\" is not a valid build type. Try \"debug\" or \"release\"", v))
         }
     }
 }
