@@ -173,49 +173,27 @@ fn correct_rust_paths(files: &mut ::std::collections::HashMap<usize, File>) {
     };
 
     debug!("sysroot: {}", sysroot.display());
-    sysroot.parent();
-    let rust_src_path = crate::target::rust_src_path_component();
 
-    crate::path::push(&mut sysroot, &rust_src_path);
-    debug!(
-        "merging {} with sysroot results in {}",
-        rust_src_path.display(),
-        sysroot.display()
-    );
-
-    // Identify core source components by their name in the referenced path
-    let is_core_src_component = |path: std::path::Component| {
-        path.as_os_str() == "libstd"
-            || path.as_os_str() == "libcore"
-            || path.as_os_str() == "liballoc"
-    };
+    sysroot.push("lib/rustlib/src/rust");
 
     let mut missing_path_warning = false;
     for f in files.values_mut() {
         debug!("correcting path: {}", f.ast.path.display());
         // Strip the build specific prefix and replace by the determined
         // sysroot
-        if f.ast.path.components().any(is_core_src_component) {
-            debug!("prepending {}", sysroot.display());
-            let mut path = sysroot.clone();
-            path.push(
-                f.ast
-                    .path
-                    .components()
-                    .skip_while(|p| !is_core_src_component(*p))
-                    .collect::<std::path::PathBuf>()
-                    .as_path(),
-            );
-
-            debug!("  merge result: {}", path.display());
-
-            f.ast.path = path;
-            if !f.ast.path.exists() {
-                if !missing_path_warning {
-                    info!("path does not exist: {}. Maybe the rust-src component is not installed? Use `rustup component add rust-src to install it!`", f.ast.path.display());
-                    missing_path_warning = true;
+        if f.ast.path.starts_with("/rustc/") {
+            let mut it = f.ast.path.components();
+            if it.nth(2).is_some() {
+                f.ast.path = sysroot.join(&it);
+                if !f.ast.path.exists() {
+                    if !missing_path_warning {
+                        info!("path does not exist: {}. Maybe the rust-src component is not installed? Use `rustup component add rust-src to install it!`", f.ast.path.display());
+                        missing_path_warning = true;
+                    }
+                    opts.set_rust(false);
                 }
-                opts.set_rust(false);
+            } else {
+                info!("strange path /rustc/")
             }
         } else {
             debug!("couldn't correct {}", &f.ast.path.display());

@@ -130,24 +130,6 @@ fn target() -> String {
     }
 }
 
-/// Returns a path component of the rust-src path (like rust std) that can be
-/// used to identify whether a path points to a file within the
-/// rust-src component.
-///
-/// This is a bit brittle since it needs to know even if the rust-src component
-/// is not installed, so we cannot query rustup for its path nor walk the
-/// sysroot to find it.
-pub fn rust_src_path_component() -> ::std::path::PathBuf {
-    let t = target();
-    let p = if t.contains("windows") {
-        r#"lib\rustlib\src\rust\src"#
-    } else {
-        "lib/rustlib/src/rust/src"
-    };
-
-    ::std::path::PathBuf::from(p)
-}
-
 pub fn directory<P: AsRef<::std::path::Path>>(
     sub_path: P,
 ) -> ::std::path::PathBuf {
