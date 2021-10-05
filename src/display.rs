@@ -224,18 +224,13 @@ fn write_output(
 }
 
 fn format_function_name(function: &asm::ast::Function) -> String {
-    if function.file.is_some() && function.loc.is_some() {
-        if let Some(ref file) = &function.file {
-            if let Some(ref loc) = &function.loc {
-                return format!(
-                    "{} ({}:{})",
-                    function.id,
-                    file.path.display(),
-                    loc.file_line
-                );
-            }
-        }
-        unreachable!()
+    if let (Some(file), Some(loc)) = (&function.file, function.loc) {
+        format!(
+            "{} ({}:{})",
+            function.id,
+            file.path.display(),
+            loc.file_line
+        )
     } else {
         assert!(function.file.is_none());
         assert!(function.loc.is_none());
@@ -286,15 +281,24 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
     }
 
     // Trim std lib paths:
-    let rust_src_path = crate::target::rust_src_path_component();
+    let rust_src_path = std::path::Path::new("lib/rustlib/src/rust/src");
+    let rust_src_path_2 = std::path::Path::new("lib/rustlib/src/rust/library");
     let current_dir_path =
         ::std::env::current_dir().expect("cannot read the current dir");
     debug!("making paths relative: {}", path.display());
-    debug!(" * std lib paths contain: {}", rust_src_path.display());
+    debug!(
+        " * std lib paths contain: {} or {}",
+        rust_src_path.display(),
+        rust_src_path_2.display()
+    );
     debug!(" * local paths contain: {}", current_dir_path.display());
 
-    if crate::path::contains(&path, &rust_src_path) {
-        let new_path = crate::path::after(&path, &rust_src_path);
+    if crate::path::contains(&path, rust_src_path) {
+        let new_path = crate::path::after(&path, rust_src_path);
+        debug!("  * rel path std: {}", new_path.display());
+        *path = new_path;
+    } else if crate::path::contains(&path, rust_src_path_2) {
+        let new_path = crate::path::after(&path, rust_src_path_2);
         debug!("  * rel path std: {}", new_path.display());
         *path = new_path;
     } else if crate::path::contains(&path, &current_dir_path) {

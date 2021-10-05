@@ -87,12 +87,6 @@ pub fn after(
     buf
 }
 
-/// Appends the `tail` to the path:
-pub fn push(path: &mut ::std::path::PathBuf, tail: &::std::path::Path) {
-    assert!(!tail.is_absolute());
-    path.push(tail);
-}
-
 #[cfg(test)]
 mod tests {
     #[test]
