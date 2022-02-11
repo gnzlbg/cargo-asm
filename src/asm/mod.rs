@@ -5,6 +5,7 @@ use crate::target::TargetInfo;
 use log::{debug, error};
 
 #[derive(Copy, Clone, Debug)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum Style {
     Intel,
     ATT,
