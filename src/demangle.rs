@@ -20,7 +20,7 @@ fn is_ascii_hexdigit(byte: u8) -> bool {
 
 pub fn demangle(n: &str, target: &TargetInfo) -> String {
     let n = if target.is_linux() {
-        n.split("@PLT").nth(0).unwrap().to_string()
+        n.split("@PLT").next().unwrap().to_string()
     } else {
         n.to_string()
     };
