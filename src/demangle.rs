@@ -2,8 +2,6 @@
 
 use crate::target::TargetInfo;
 
-
-
 fn has_hash(name: &str) -> bool {
     let mut bytes = name.bytes().rev();
     for _ in 0..16 {

@@ -22,9 +22,7 @@ impl TargetInfo {
     }
 
     pub fn new_from_triple(triple: String) -> Self {
-        let mut ti = TargetInfo::default();
-        ti.triple = triple;
-        ti
+        TargetInfo { triple }
     }
 
     pub fn is_intel(&self) -> bool {
