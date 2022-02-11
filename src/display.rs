@@ -301,7 +301,7 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
         let new_path = crate::path::after(path, &current_dir_path);
         debug!("  * rel path loc: {}", new_path.display());
         *path = new_path;
-        return;
+        
     } else {
         debug!("  * path is neither local nor to std lib");
     }
@@ -363,7 +363,7 @@ pub fn print(
     for o in &output {
         write_output(o, function, target);
     }
-    return;
+    
 }
 
 fn merge_rust_and_asm(
