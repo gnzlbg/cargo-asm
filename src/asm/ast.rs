@@ -295,7 +295,7 @@ impl Instruction {
             args,
             rust_loc,
         };
-        v.demangle_args(&target);
+        v.demangle_args(target);
         Some(v)
     }
     pub fn is_jump(&self, target: &TargetInfo) -> bool {
@@ -351,15 +351,15 @@ impl Instruction {
                 let l = l.unwrap();
                 let name_to_demangle = &arg[f..l].to_string();
                 let demangled_name =
-                    crate::demangle::demangle(&name_to_demangle, &target);
+                    crate::demangle::demangle(name_to_demangle, target);
                 let new_arg = arg.replace(name_to_demangle, &demangled_name);
                 *arg = new_arg;
             }
-        } else if self.is_call(&target) {
+        } else if self.is_call(target) {
             // Typically, we just check if the instruction is a call
             // instruction, and the mangle the first argument.
             let demangled_function =
-                crate::demangle::demangle(&self.args[0], &target);
+                crate::demangle::demangle(&self.args[0], target);
             self.args[0] = demangled_function;
         }
     }

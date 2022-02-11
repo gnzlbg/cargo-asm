@@ -104,7 +104,7 @@ fn write_output(
     buffer.set_color(&ColorSpec::new()).unwrap();
 
     // Write the indentation:
-    write!(&mut buffer, "{}", indent).unwrap();
+    write!(buffer, "{}", indent).unwrap();
 
     let mut instr_color = ColorSpec::new();
     instr_color
@@ -125,12 +125,12 @@ fn write_output(
         .set_bold(true);
     let instr_call_arg_color = rust_color.clone();
 
-    fn debug_mode_format(mut buffer: &mut Buffer, loc: Option<asm::ast::Loc>) {
+    fn debug_mode_format(buffer: &mut Buffer, loc: Option<asm::ast::Loc>) {
         if let Some(loc) = loc {
-            write!(&mut buffer, "   [{}:{}]", loc.file_index, loc.file_line)
+            write!(buffer, "   [{}:{}]", loc.file_index, loc.file_line)
                 .unwrap();
         } else {
-            write!(&mut buffer, "   [-:-]").unwrap();
+            write!(buffer, "   [-:-]").unwrap();
         }
     }
 
@@ -140,8 +140,8 @@ fn write_output(
             match a {
                 Label(ref l) => {
                     buffer.set_color(&label_color).unwrap();
-                    write!(&mut buffer, "{}", l.id).unwrap();
-                    write!(&mut buffer, ":").unwrap();
+                    write!(buffer, "{}", l.id).unwrap();
+                    write!(buffer, ":").unwrap();
                     if opts.debug_mode() {
                         debug_mode_format(&mut buffer, l.rust_loc());
                     }
@@ -149,7 +149,7 @@ fn write_output(
                 Directive(ref d) => match d {
                     asm::ast::Directive::File(ref f) => {
                         write!(
-                            &mut buffer,
+                            buffer,
                             ".file {} \"{}\"",
                             f.index,
                             f.path.display(),
@@ -158,19 +158,19 @@ fn write_output(
                     }
                     asm::ast::Directive::Loc(ref l) => {
                         write!(
-                            &mut buffer,
+                            buffer,
                             ".loc {} {} {}",
                             l.file_index, l.file_line, l.file_column
                         )
                         .unwrap();
                     }
                     asm::ast::Directive::Generic(ref g) => {
-                        write!(&mut buffer, "{}", g.string).unwrap();
+                        write!(buffer, "{}", g.string).unwrap();
                     }
                 },
                 Comment(ref c) => {
                     buffer.set_color(&comment_color).unwrap();
-                    write!(&mut buffer, "{}", c.string).unwrap();
+                    write!(buffer, "{}", c.string).unwrap();
                     if opts.debug_mode() {
                         debug_mode_format(&mut buffer, c.rust_loc());
                     }
@@ -178,20 +178,20 @@ fn write_output(
                 Instruction(ref i) => {
                     buffer.set_color(&instr_color).unwrap();
                     if i.args.is_empty() {
-                        write!(&mut buffer, "{}", i.instr).unwrap();
+                        write!(buffer, "{}", i.instr).unwrap();
                     } else {
-                        write!(&mut buffer, "{: <7}", i.instr).unwrap();
+                        write!(buffer, "{: <7}", i.instr).unwrap();
                     }
-                    if i.is_jump(&target) {
+                    if i.is_jump(target) {
                         // jump instructions
                         buffer.set_color(&label_color).unwrap();
-                    } else if i.is_call(&target) {
+                    } else if i.is_call(target) {
                         buffer.set_color(&instr_call_arg_color).unwrap();
                     } else {
                         buffer.set_color(&instr_arg_color).unwrap();
                     }
                     if !i.args.is_empty() {
-                        write!(&mut buffer, " {}", i.args.join(", ")).unwrap();
+                        write!(buffer, " {}", i.args.join(", ")).unwrap();
                     }
                     if opts.debug_mode() {
                         debug_mode_format(&mut buffer, i.rust_loc());
@@ -202,13 +202,13 @@ fn write_output(
         Kind::Rust(ref r) => {
             buffer.set_color(&rust_color).unwrap();
             if part_of_main_function {
-                write!(&mut buffer, "{}", r.line).unwrap();
+                write!(buffer, "{}", r.line).unwrap();
                 if opts.debug_mode() {
                     debug_mode_format(&mut buffer, Some(r.loc));
                 }
             } else {
                 write!(
-                    &mut buffer,
+                    buffer,
                     "{} ({}:{})",
                     r.line,
                     r.path.display(),
@@ -219,7 +219,7 @@ fn write_output(
         }
     }
 
-    writeln!(&mut buffer).unwrap();
+    writeln!(buffer).unwrap();
     bufwtr.print(&buffer).unwrap();
 }
 
@@ -293,12 +293,12 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
     debug!(" * std lib paths contain: {}", rust_src_path.display());
     debug!(" * local paths contain: {}", current_dir_path.display());
 
-    if crate::path::contains(&path, &rust_src_path) {
-        let new_path = crate::path::after(&path, &rust_src_path);
+    if crate::path::contains(path, &rust_src_path) {
+        let new_path = crate::path::after(path, &rust_src_path);
         debug!("  * rel path std: {}", new_path.display());
         *path = new_path;
-    } else if crate::path::contains(&path, &current_dir_path) {
-        let new_path = crate::path::after(&path, &current_dir_path);
+    } else if crate::path::contains(path, &current_dir_path) {
+        let new_path = crate::path::after(path, &current_dir_path);
         debug!("  * rel path loc: {}", new_path.display());
         *path = new_path;
         return;
@@ -354,14 +354,14 @@ pub fn print(
         };
         let mut buffer = bufwtr.buffer();
         buffer.set_color(&rust_color).unwrap();
-        writeln!(&mut buffer, "{}:", format_function_name(function)).unwrap();
+        writeln!(buffer, "{}:", format_function_name(function)).unwrap();
         bufwtr.print(&buffer).unwrap();
     }
 
     let output = merge_rust_and_asm(function, &rust);
 
     for o in &output {
-        write_output(o, function, &target);
+        write_output(o, function, target);
     }
     return;
 }
@@ -430,9 +430,9 @@ pub fn write_error(msg: &str) {
     };
     let mut buffer = bufwtr.buffer();
     buffer.set_color(&error_color).unwrap();
-    write!(&mut buffer, "[ERROR]: ").unwrap();
+    write!(buffer, "[ERROR]: ").unwrap();
     buffer.set_color(&ColorSpec::new()).unwrap();
-    write!(&mut buffer, "{}", msg).unwrap();
+    write!(buffer, "{}", msg).unwrap();
     bufwtr.print(&buffer).unwrap();
 }
 
@@ -440,7 +440,7 @@ pub fn to_json(
     function: &asm::ast::Function,
     rust_files: &rust::Files,
 ) -> Option<String> {
-    let r = merge_rust_and_asm(&function, rust_files);
+    let r = merge_rust_and_asm(function, rust_files);
     match ::serde_json::to_string_pretty(&r) {
         Ok(s) => Some(s),
         Err(e) => {

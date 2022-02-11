@@ -46,7 +46,7 @@ pub fn after(
     path: &::std::path::Path,
     sub_path: &::std::path::Path,
 ) -> ::std::path::PathBuf {
-    assert!(contains(&path, &sub_path));
+    assert!(contains(path, sub_path));
 
     let mut buf = ::std::path::PathBuf::new();
 

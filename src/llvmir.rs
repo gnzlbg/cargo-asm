@@ -9,7 +9,7 @@ pub fn run(files: &[::std::path::PathBuf], target: &TargetInfo) {
     for f in files {
         debug!("Scanning file: {:?}", f);
         assert!(f.exists(), "path does not exist: {}", f.display());
-        let r = print_function(f, &target);
+        let r = print_function(f, target);
 
         if r.is_ok() {
             debug!("Function found, we are done!");
@@ -117,7 +117,7 @@ fn print_function(
             }
 
             let first = line.find('@').unwrap();
-            let last = (&line[first..]).find('(').unwrap() + first;
+            let last = line[first..].find('(').unwrap() + first;
             assert!(
                 first < last,
                 "first: {:?}, last: {:?}, line:\n{:?}",
@@ -127,7 +127,7 @@ fn print_function(
             );
             let mangled_name = &line[first + 1..last];
             let demangled_name =
-                crate::demangle::demangle(&mangled_name, &target);
+                crate::demangle::demangle(mangled_name, target);
             if demangled_name != path {
                 function_names.push(demangled_name);
                 continue;
@@ -158,12 +158,12 @@ fn print_function(
                 let demangled_name = if mangled_name.ends_with(".exit") {
                     let mut v = crate::demangle::demangle(
                         &mangled_name[0..mangled_name.len() - 5],
-                        &target,
+                        target,
                     );
                     v += ".exit";
                     v
                 } else {
-                    crate::demangle::demangle(&mangled_name, &target)
+                    crate::demangle::demangle(mangled_name, target)
                 };
                 debug!(
                     "  f: {}, l: {}, mn: {}, dm: {}",
