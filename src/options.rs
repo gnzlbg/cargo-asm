@@ -9,7 +9,7 @@ use structopt::StructOpt;
 
 lazy_static! {
     pub static ref opts: ::parking_lot::RwLock<Options> =
-        { ::parking_lot::RwLock::new(read()) };
+        ::parking_lot::RwLock::new(read());
 }
 
 /// CLI options of cargo asm.
