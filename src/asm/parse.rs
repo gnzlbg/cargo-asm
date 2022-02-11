@@ -204,7 +204,7 @@ pub fn function(file: &::std::path::Path, target: &TargetInfo) -> Result {
                 // We have found the function, collect its lines and build
                 // an AST:
                 let mut lines = Vec::<String>::new();
-                while let Some(l) = line_iter.next() {
+                for l in line_iter.by_ref() {
                     let l = l.unwrap().trim().to_string();
                     if l.starts_with(function_end_pattern) {
                         break;
