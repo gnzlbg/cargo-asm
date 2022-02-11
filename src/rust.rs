@@ -13,10 +13,8 @@ pub struct File {
 
 impl File {
     pub fn line(&self, line_idx: usize) -> Option<String> {
-        if let Some(l) = self.lines.get(&line_idx) {
-            if let Some(ref l) = l {
-                return Some(l.clone());
-            }
+        if let Some(Some(l)) = self.lines.get(&line_idx) {
+            return Some(l.clone());
         }
         None
     }

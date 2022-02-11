@@ -15,11 +15,9 @@ pub fn contains(
 
     let mut matching = false;
     for c in path.components() {
-        if let Some(next_sp) = next_sub_path {
-            if let ::std::path::Component::RootDir = next_sp {
-                if !cfg!(target_os = "windows") {
-                    next_sub_path = sub_path_iter.next();
-                }
+        if let Some(::std::path::Component::RootDir) = next_sub_path {
+            if !cfg!(target_os = "windows") {
+                next_sub_path = sub_path_iter.next();
             }
         }
         let next_sub_path_val = next_sub_path.unwrap();
@@ -59,11 +57,9 @@ pub fn after(
         if appending {
             buf.push(c.as_os_str());
         } else {
-            if let Some(next_sp) = next_sub_path {
-                if let ::std::path::Component::RootDir = next_sp {
-                    if !cfg!(target_os = "windows") {
-                        next_sub_path = sub_path_iter.next();
-                    }
+            if let Some(::std::path::Component::RootDir) = next_sub_path {
+                if !cfg!(target_os = "windows") {
+                    next_sub_path = sub_path_iter.next();
                 }
             }
 
