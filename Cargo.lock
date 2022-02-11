@@ -83,6 +83,7 @@ name = "cargo-asm"
 version = "0.1.17"
 dependencies = [
  "assert_cli",
+ "atty",
  "edit-distance",
  "lazy_static",
  "log",

@@ -88,6 +88,14 @@ fn main() {
     for f in &files {
         debug!("  {}", f.display());
     }
+
+    if !atty::is(atty::Stream::Stdout) {
+        match &mut *opts.write() {
+            Options::Asm(o) => o.no_color = true,
+            Options::LlvmIr(o) => o.no_color = true,
+        }
+    }
+
     let o = { (*opts.read()).clone() };
 
     let target = crate::target::TargetInfo::new_from_target();
