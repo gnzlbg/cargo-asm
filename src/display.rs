@@ -249,11 +249,7 @@ fn is_stmt_in_function(
     f: &asm::ast::Function,
     stmt: &asm::ast::Statement,
 ) -> bool {
-    let function_file_index = if let Some(loc) = f.loc {
-        Some(loc.file_index)
-    } else {
-        None
-    };
+    let function_file_index = f.loc.map(|loc| loc.file_index);
 
     if let Some(function_file_index) = function_file_index {
         if let Some(loc) = stmt.rust_loc() {
@@ -267,11 +263,7 @@ fn is_stmt_in_function(
 /// Returns true if the rust code belongs to the function `f`. It returns true
 /// if the question cannot be answered.
 fn is_rust_in_function(f: &asm::ast::Function, rust: &Rust) -> bool {
-    let function_file_index = if let Some(loc) = f.loc {
-        Some(loc.file_index)
-    } else {
-        None
-    };
+    let function_file_index = f.loc.map(|loc| loc.file_index);
 
     if let Some(function_file_index) = function_file_index {
         return rust.loc.file_index == function_file_index;
@@ -301,7 +293,6 @@ fn make_path_relative(path: &mut ::std::path::PathBuf) {
         let new_path = crate::path::after(path, &current_dir_path);
         debug!("  * rel path loc: {}", new_path.display());
         *path = new_path;
-        
     } else {
         debug!("  * path is neither local nor to std lib");
     }
@@ -363,7 +354,6 @@ pub fn print(
     for o in &output {
         write_output(o, function, target);
     }
-    
 }
 
 fn merge_rust_and_asm(
