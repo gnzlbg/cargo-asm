@@ -2,7 +2,7 @@
 
 use crate::target::TargetInfo;
 
-use rustc_demangle;
+
 
 fn has_hash(name: &str) -> bool {
     let mut bytes = name.bytes().rev();
