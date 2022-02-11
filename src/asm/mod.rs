@@ -5,6 +5,7 @@ use crate::target::TargetInfo;
 use log::{debug, error};
 
 #[derive(Copy, Clone, Debug)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum Style {
     Intel,
     ATT,
@@ -41,7 +42,7 @@ fn parse_files(
     let mut function_table = Vec::<String>::new();
     for f in files {
         assert!(f.exists(), "path does not exist: {}", f.display());
-        match self::parse::function(f.as_path(), &target) {
+        match self::parse::function(f.as_path(), target) {
             Result::Found(function, files) => {
                 return Result::Found(function, files)
             }
@@ -59,7 +60,7 @@ fn parse_files(
 
 pub fn run(files: &[::std::path::PathBuf], target: &TargetInfo) {
     // Parse the files
-    match parse_files(&files, &target) {
+    match parse_files(files, target) {
         self::parse::Result::Found(mut function, file_table) => {
             // If we found the assembly for the path, we parse the assembly:
             let rust = crate::rust::parse(&function, &file_table);
@@ -73,7 +74,7 @@ pub fn run(files: &[::std::path::PathBuf], target: &TargetInfo) {
             }
 
             if !opts.json() {
-                crate::display::print(&mut function, rust.clone(), &target);
+                crate::display::print(&mut function, rust, target);
             }
         }
         self::parse::Result::NotFound(mut table) => match opts.path() {

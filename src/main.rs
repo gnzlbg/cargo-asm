@@ -2,8 +2,8 @@
 #![allow(non_snake_case, non_upper_case_globals)]
 #![allow(
     clippy::missing_docs_in_private_items,
-    clippy::option_unwrap_used,
-    clippy::result_unwrap_used
+    clippy::unwrap_used,
+    clippy::unwrap_used
 )]
 
 mod asm;

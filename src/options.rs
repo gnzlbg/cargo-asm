@@ -9,13 +9,11 @@ use structopt::StructOpt;
 
 lazy_static! {
     pub static ref opts: ::parking_lot::RwLock<Options> =
-        { ::parking_lot::RwLock::new(read()) };
+        ::parking_lot::RwLock::new(read());
 }
 
 /// CLI options of cargo asm.
 #[derive(StructOpt, Debug, Clone)]
-// FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2651
-#[allow(clippy::similar_names)]
 pub struct Asm {
     #[structopt(
         help = "Path of the function to disassembly, e.g., foo::bar::baz(). If missing then all function names will be printed."
@@ -79,8 +77,6 @@ pub struct Asm {
 
 /// CLI options of cargo llvm-ir.
 #[derive(StructOpt, Debug, Clone)]
-// FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2651
-#[allow(clippy::similar_names)]
 pub struct LlvmIr {
     #[structopt(
         help = "Path of the function to disassembly, e.g., foo::bar::baz(). If missing then all function names will be printed."

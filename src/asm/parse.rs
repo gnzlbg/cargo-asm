@@ -113,7 +113,7 @@ fn function_body(
         }
 
         if let Some(instruction) =
-            Instruction::new(node_str, current_loc, &target)
+            Instruction::new(node_str, current_loc, target)
         {
             debug!(" * parsed instruction: {:?}", instruction);
 
@@ -196,7 +196,7 @@ pub fn function(file: &::std::path::Path, target: &TargetInfo) -> Result {
             // and have mangled names.
             if let Some(label) = ast::Label::new(&line, None) {
                 let demangled_function_name =
-                    crate::demangle::demangle(&label.id, &target);
+                    crate::demangle::demangle(&label.id, target);
                 function_table.push(demangled_function_name.clone());
                 if demangled_function_name != path {
                     continue;
@@ -204,7 +204,7 @@ pub fn function(file: &::std::path::Path, target: &TargetInfo) -> Result {
                 // We have found the function, collect its lines and build
                 // an AST:
                 let mut lines = Vec::<String>::new();
-                while let Some(l) = line_iter.next() {
+                for l in line_iter.by_ref() {
                     let l = l.unwrap().trim().to_string();
                     if l.starts_with(function_end_pattern) {
                         break;
@@ -218,7 +218,7 @@ pub fn function(file: &::std::path::Path, target: &TargetInfo) -> Result {
                     }
                 }
 
-                function = Some(function_body(lines, &path, &target));
+                function = Some(function_body(lines, &path, target));
                 // If the function contained a .file directive, we are
                 // done:
                 if let Some(ref function) = &function {
@@ -249,7 +249,7 @@ pub fn function(file: &::std::path::Path, target: &TargetInfo) -> Result {
 
         // If the line does not begin an assembly function try to parse the
         // line as a .file directive.
-        if let Some(file) = ast::File::new(&line, &target) {
+        if let Some(file) = ast::File::new(&line, target) {
             debug!("found file directive: {:?}", file);
             let idx = file.index;
 

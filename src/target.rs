@@ -22,9 +22,7 @@ impl TargetInfo {
     }
 
     pub fn new_from_triple(triple: String) -> Self {
-        let mut ti = TargetInfo::default();
-        ti.triple = triple.clone();
-        ti
+        TargetInfo { triple }
     }
 
     pub fn is_intel(&self) -> bool {
@@ -111,7 +109,7 @@ fn target() -> String {
                 if let Ok(config) = toml::from_str::<Config>(&contents) {
                     if let Some(build) = config.build {
                         if let Some(target) = build.target {
-                            return target.to_owned();
+                            return target;
                         }
                     }
                 }
@@ -120,7 +118,7 @@ fn target() -> String {
 
         // If everything else fails use a best effort guesstimate for the
         // current platform
-        if let Some(target) = platforms::guess_current() {
+        if let Some(target) = platforms::Platform::guess_current() {
             return target.target_triple.to_owned();
         }
 
