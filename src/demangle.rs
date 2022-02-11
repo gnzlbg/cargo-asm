@@ -15,7 +15,7 @@ fn has_hash(name: &str) -> bool {
 }
 
 fn is_ascii_hexdigit(byte: u8) -> bool {
-    byte >= b'0' && byte <= b'9' || byte >= b'a' && byte <= b'f'
+    (b'0'..=b'9').contains(&byte) || (b'a'..=b'f').contains(&byte)
 }
 
 pub fn demangle(n: &str, target: &TargetInfo) -> String {
