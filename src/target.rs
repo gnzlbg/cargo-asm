@@ -120,7 +120,7 @@ fn target() -> String {
 
         // If everything else fails use a best effort guesstimate for the
         // current platform
-        if let Some(target) = platforms::guess_current() {
+        if let Some(target) = platforms::Platform::guess_current() {
             return target.target_triple.to_owned();
         }
 
