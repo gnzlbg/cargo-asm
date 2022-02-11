@@ -23,7 +23,7 @@ impl TargetInfo {
 
     pub fn new_from_triple(triple: String) -> Self {
         let mut ti = TargetInfo::default();
-        ti.triple = triple.clone();
+        ti.triple = triple;
         ti
     }
 
@@ -111,7 +111,7 @@ fn target() -> String {
                 if let Ok(config) = toml::from_str::<Config>(&contents) {
                     if let Some(build) = config.build {
                         if let Some(target) = build.target {
-                            return target.to_owned();
+                            return target;
                         }
                     }
                 }

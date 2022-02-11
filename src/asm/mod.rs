@@ -73,7 +73,7 @@ pub fn run(files: &[::std::path::PathBuf], target: &TargetInfo) {
             }
 
             if !opts.json() {
-                crate::display::print(&mut function, rust.clone(), target);
+                crate::display::print(&mut function, rust, target);
             }
         }
         self::parse::Result::NotFound(mut table) => match opts.path() {
