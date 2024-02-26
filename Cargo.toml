@@ -27,11 +27,12 @@ name = "cargo-llvm-ir"
 path = "src/main.rs"
 
 [dependencies]
+current_platform = "0.2"
 edit-distance = "2.1"
 lazy_static = "1.4"
 log = "0.4"
 parking_lot = "0.9"
-platforms = "0.2"
+platforms = "3.3"
 rustc-demangle = "0.1"
 serde = "1.0"
 serde_derive = "1.0"
